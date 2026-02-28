@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Binary & Denary Place Value with Sidebar</title>
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: Consolas, monospace;
+  background: #f4f4f4;
+}
+
+body {
+  display: flex;
+}
+
+/* ---------- SIDEBAR ---------- */
+.sidebar {
+  width: 220px;
+  min-width: 50px;
+  padding: 20px;
+  border-right: 3px solid #888;
+  background: #f9f9f9;
+  overflow-y: auto;
+  height: 100vh;
+  box-sizing: border-box;
+  transition: width 0.1s ease;
+}
+
+.sidebar.collapsed {
+  width: 50px;
+  padding: 0; /* remove all padding when collapsed */
+  overflow: hidden;
+}
+
+/* collapse button inside sidebar */
+#collapseBtn {
+  width: 100%;
+  padding: 6px 0;
+  background: #888;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2em;
+  margin-bottom: 15px;
+  box-sizing: border-box;
+}
+
+/* sidebar content container */
+.sidebar-content {
+  display: block;
+}
+
+.sidebar.collapsed .sidebar-content {
+  display: none; /* hide all content when collapsed */
+}
+
+/* rotate triangle when collapsed */
+#collapseBtn::after {
+  content: "◀";
+}
+
+#collapseBtn.collapsed::after {
+  content: "▶";
+}
+
+/* sidebar content styles */
+.sidebar h2 {
+  font-size: 1.5em;
+  margin-bottom: 12px;
+}
+
+.step {
+  margin-bottom: 6px;
+  font-size: 1.2em; /* larger text */
+}
+
+/* ---------- MAIN PANEL ---------- */
+.main {
+  padding: 40px;
+  text-align: center;
+  flex-grow: 1;
+  transition: margin-left 0.1s ease;
+}
+
+/* ---------- HEADERS ---------- */
+h1 {
+  font-size: 2.5em;
+  margin-bottom: 20px;
+}
+
+/* ---------- BINARY VALUE DISPLAY ---------- */
+.binary {
+  font-size: 2em;
+  margin-bottom: 25px;
+}
+
+/* ---------- BINARY PANEL ---------- */
+.panel {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  border: 3px solid #888;
+  margin-bottom: 30px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-right: 2px solid #888;
+}
+
+.column:last-child {
+  border-right: none;
+}
+
+/* column headers */
+.value {
+  width: 100%;
+  background: #bbb;
+  padding: 10px 0;
+  font-size: 1.3em;
+  border-bottom: 2px solid #888;
+}
+
+/* horizontal divider under header */
+.divider {
+  width: 100%;
+  height: 2px;
+  background: #888;
+  margin: 12px 0;
+}
+
+/* ---------- BULBS ---------- */
+.bulb {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4em;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 12px;
+  transition: 0.2s;
+}
+
+.bulb.on {
+  background: #ffd700;
+  box-shadow: 0 0 18px #ffd700;
+}
+
+/* ---------- DENARY VALUE DISPLAY ---------- */
+.output {
+  font-size: 2em;
+  margin-bottom: 30px;
+}
+
+/* ---------- DENARY FRAME ---------- */
+.denary-frame {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 3px solid #888;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.denary-col {
+  border-right: 2px solid #888;
+  text-align: center;
+}
+
+.denary-col:last-child {
+  border-right: none;
+}
+
+/* denary headers */
+.denary-label {
+  background: #bbb;
+  padding: 10px 0;
+  font-size: 1.1em;
+  border-bottom: 2px solid #888;
+}
+
+.denary-divider {
+  height: 2px;
+  background: #888;
+  margin: 12px 0;
+}
+
+.denary-value {
+  font-size: 2.4em;
+  font-weight: bold;
+  padding-bottom: 16px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ---------- SIDEBAR ---------- -->
+<div class="sidebar" id="sidebar">
+  <button id="collapseBtn"></button>
+  <div class="sidebar-content">
+    <h2>Step-by-step Sum</h2>
+    <div id="steps"></div>
+  </div>
+</div>
+
+<!-- ---------- MAIN ---------- -->
+<div class="main" id="main">
+  <h1>Binary & Denary Place Value</h1>
+
+  <div class="binary">
+    Binary: <span id="binary">00000000</span>
+  </div>
+
+  <!-- BINARY WRITING FRAME -->
+  <div class="panel" id="panel"></div>
+
+  <!-- DENARY VALUE -->
+  <div class="output">
+    Denary Value: <strong id="decimal">0</strong>
+  </div>
+
+  <!-- DENARY FRAME -->
+  <div class="denary-frame">
+    <div class="denary-col">
+      <div class="denary-label">Hundreds</div>
+      <div class="denary-divider"></div>
+      <div class="denary-value" id="hundreds">0</div>
+    </div>
+    <div class="denary-col">
+      <div class="denary-label">Tens</div>
+      <div class="denary-divider"></div>
+      <div class="denary-value" id="tens">0</div>
+    </div>
+    <div class="denary-col">
+      <div class="denary-label">Units</div>
+      <div class="denary-divider"></div>
+      <div class="denary-value" id="units">0</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MAX_BITS = 8;
+
+const panel = document.getElementById("panel");
+const decimalEl = document.getElementById("decimal");
+const binaryEl = document.getElementById("binary");
+
+const hundredsEl = document.getElementById("hundreds");
+const tensEl = document.getElementById("tens");
+const unitsEl = document.getElementById("units");
+
+const stepsEl = document.getElementById("steps");
+const sidebar = document.getElementById("sidebar");
+const main = document.getElementById("main");
+const collapseBtn = document.getElementById("collapseBtn");
+const sidebarContent = document.querySelector(".sidebar-content");
+
+/* ---------- COLLAPSE/EXPAND ---------- */
+collapseBtn.addEventListener("click", () => {
+  const collapsed = sidebar.classList.toggle("collapsed");
+  collapseBtn.classList.toggle("collapsed", collapsed);
+
+  // hide content when collapsed
+  if (collapsed) {
+    sidebarContent.style.display = "none";
+  } else {
+    sidebarContent.style.display = "block";
+  }
+});
+
+/* ---------- CREATE BINARY COLUMNS ---------- */
+function createColumns() {
+  for (let i = MAX_BITS - 1; i >= 0; i--) {
+    const value = 2 ** i;
+    const col = document.createElement("div");
+    col.className = "column";
+
+    const bulb = document.createElement("div");
+    bulb.className = "bulb";
+    bulb.textContent = "0";
+    bulb.dataset.value = value;
+    bulb.dataset.on = "false";
+
+    bulb.addEventListener("click", () => {
+      bulb.dataset.on = bulb.dataset.on === "true" ? "false" : "true";
+      update();
+    });
+
+    col.innerHTML = `
+      <div class="value">${value}</div>
+      <div class="divider"></div>
+    `;
+
+    col.appendChild(bulb);
+    panel.appendChild(col);
+  }
+}
+
+/* ---------- UPDATE ---------- */
+function update() {
+  let total = 0;
+  let binary = "";
+  let runningTotal = 0;
+  const stepLines = [];
+
+  document.querySelectorAll(".bulb").forEach((bulb) => {
+    const val = +bulb.dataset.value;
+    const isOn = bulb.dataset.on === "true";
+
+    if (isOn) {
+      total += val;
+      binary += "1";
+      bulb.textContent = "1";
+      bulb.classList.add("on");
+
+      if (runningTotal === 0) {
+        stepLines.push(`${val}`);
+        runningTotal = val;
+      } else {
+        const newTotal = runningTotal + val;
+        stepLines.push(`${runningTotal} + ${val} = ${newTotal}`);
+        runningTotal = newTotal;
+      }
+
+    } else {
+      binary += "0";
+      bulb.textContent = "0";
+      bulb.classList.remove("on");
+    }
+  });
+
+  decimalEl.textContent = total;
+  binaryEl.textContent = binary;
+
+  hundredsEl.textContent = Math.floor(total / 100);
+  tensEl.textContent = Math.floor((total % 100) / 10);
+  unitsEl.textContent = total % 10;
+
+  if (!sidebar.classList.contains("collapsed")) {
+    stepsEl.innerHTML = '';
+    stepLines.forEach(line => {
+      const div = document.createElement("div");
+      div.className = "step";
+      div.textContent = line;
+      stepsEl.appendChild(div);
+    });
+  }
+}
+
+/* ---------- INIT ---------- */
+createColumns();
+update();
+</script>
+
+</body>
+</html>
