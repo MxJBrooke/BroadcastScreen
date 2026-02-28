@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Reading Benefits Timer</title>
+
+<style>
+/* ----------------- Global Styles ----------------- */
+body {
+    font-family: Consolas, monospace;
+    margin: 0;
+    background-color: #f5f5f5;
+    color: #000;
+    overflow-x: hidden;
+}
+
+/* ----------------- Header ----------------- */
+.header {
+    width: 100%;
+    height: 80px;
+    background-color: #333;
+    border-bottom: 2px solid #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    z-index: 20;
+}
+
+.header img {
+    height: 60px;
+    cursor: pointer;
+}
+
+/* ----------------- Sidebar ----------------- */
+#sidebar {
+    position: fixed;
+    top: 80px;
+    left: 0;
+    width: 250px;
+    height: calc(100vh - 160px);
+    background: #222;
+    border-right: 2px solid #555;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+    color: #fff;
+}
+
+/* Sidebar inputs and buttons: consistent full width */
+#sidebar input,
+#sidebar button {
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #555;
+    padding: 5px;
+    margin-bottom: 10px;
+    font-family: Consolas, monospace;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#zoomSlider {
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+#zoomLabel {
+    font-size: 13px;
+    margin-bottom: 10px;
+    color: #fff;
+}
+
+/* Sidebar toggle button */
+#toggleSidebar {
+    position: fixed;
+    left: 0;
+    bottom: 110px; /* above footer */
+    z-index: 20;
+    background: grey;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+}
+
+/* ----------------- Main Content ----------------- */
+#mainContainer {
+    margin-top: 80px;
+    margin-left: 250px;
+    min-height: calc(100vh - 160px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+}
+
+#contentWrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ----------------- Timer ----------------- */
+#timerContainer {
+    width: 80%;
+    max-width: 600px;
+    height: 30px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #e0e0e0;
+    margin-bottom: 20px;
+}
+
+#timerBar {
+    height: 100%;
+    width: 0%;
+    background-color: #A81769;
+    transition: width 1s linear, background-color 0.3s ease;
+}
+
+#mainTimerControls {
+    margin-bottom: 40px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    width: 80%;
+    max-width: 600px;
+}
+
+/* ----------------- Main Timer Buttons (Original Style) ----------------- */
+#playPauseMain,
+#resetMain {
+    color: #fff;
+    border: none;
+    padding: 10px 30px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: auto; /* natural width */
+    margin: 0 10px;
+}
+
+/* ----------------- Carousel ----------------- */
+#carouselContainer {
+    width: 80%;
+    max-width: 800px;
+    border: 2px solid #ccc;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #fff;
+    text-align: center;
+}
+
+#carouselTitle {
+    font-size: 24px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+#carousel {
+    position: relative;
+    height: 150px;
+    overflow: hidden;
+}
+
+.benefit {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    font-size: 22px;
+    line-height: 1.5;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+}
+
+.benefit.active {
+    opacity: 1;
+}
+
+/* ----------------- Image ----------------- */
+#underCarouselImage {
+    margin-top: 25px;
+}
+
+#underCarouselImage img {
+    width: 500px;
+    max-width: 100%;
+}
+
+/* ----------------- Footer ----------------- */
+#bookFooter {
+    width: 100%;
+    height: 90px;
+    background-color: #333;
+    border-top: 2px solid #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: 0;
+    z-index: 20;
+}
+
+#bookFooterContent {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    color: #fff;
+    text-align: center;
+    max-width: 1000px;
+}
+
+#bookCover img {
+    height: 70px;
+    border-radius: 6px;
+    border: 1px solid #555;
+}
+
+#bookTitle {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#bookMeta {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+/* ----------------- Dark Mode ----------------- */
+body.dark-mode {
+    background-color: #121212;
+    color: #fff;
+}
+
+body.dark-mode #carouselContainer {
+    background-color: #222;
+    border-color: #333;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- Header -->
+<div class="header">
+    <img src="https://clf.uk/wp-content/uploads/CLF-Logo-Transparent-White-Text.png"
+         alt="CLF Logo"
+         onclick="toggleTheme()">
+</div>
+
+<!-- Sidebar -->
+<div id="sidebar">
+    <h2>Controls</h2>
+
+    <label>Timer (minutes):</label>
+    <input type="number" id="timerInput" value="5" min="1">
+
+    <button id="startTimerBtn">Start Timer</button>
+    <button id="resetTimerBtn">Reset Timer</button>
+
+    <label>Carousel speed:</label>
+    <input type="range" id="speedSlider" min="1" max="10" value="5">
+
+    <label>Page Zoom (%):</label>
+    <input type="range" id="zoomSlider" min="50" max="150" value="100">
+    <div id="zoomLabel">100%</div>
+</div>
+
+<button id="toggleSidebar">☰</button>
+
+<!-- Main -->
+<div id="mainContainer">
+    <div id="contentWrapper">
+
+        <div id="timerContainer">
+            <div id="timerBar"></div>
+        </div>
+
+        <div id="mainTimerControls">
+            <button id="playPauseMain">Play</button>
+            <button id="resetMain">Reset</button>
+        </div>
+
+        <div id="carouselContainer">
+            <div id="carouselTitle">Benefits of Reading</div>
+
+            <div id="carousel">
+                <div class="benefit active">1. Improves vocabulary — reading regularly introduces new words.</div>
+                <div class="benefit">2. Reduces stress — reading helps you relax and unwind.</div>
+                <div class="benefit">3. Improves writing — exposure to well-written material improves style.</div>
+                <div class="benefit">4. Supports mental health — reading creates calm and clarity.</div>
+                <div class="benefit">5. Develops empathy — understand perspectives through stories.</div>
+                <div class="benefit">6. Boosts memory — following plots strengthens recall.</div>
+                <div class="benefit">7. Expands knowledge — exposes you to new ideas and cultures.</div>
+                <div class="benefit">8. Improves focus — trains your attention span.</div>
+                <div class="benefit">9. Helps sleep — calming reading before bed can aid rest.</div>
+                <div class="benefit">10. Provides escape — a healthy break from screens and distractions.</div>
+            </div>
+
+            <div id="underCarouselImage">
+                <img src="https://bristolbrunelacademy.clf.uk/wp-content/uploads/BBA-Backpack.png">
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Footer -->
+<footer id="bookFooter">
+    <div id="bookFooterContent">
+        <div id="bookCover"></div>
+        <div>
+            <div id="bookTitle">Loading Book Recommendation…</div>
+            <div id="bookMeta"></div>
+        </div>
+    </div>
+</footer>
+
+<script>
+// Theme
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+}
+
+// Sidebar toggle
+const sidebar = document.getElementById('sidebar');
+document.getElementById('toggleSidebar').onclick = () => {
+    const hidden = sidebar.style.display === 'none';
+    sidebar.style.display = hidden ? 'flex' : 'none';
+    document.getElementById('mainContainer').style.marginLeft = hidden ? '250px' : '0';
+};
+
+// Timer
+let timerDuration = 0;
+let timerInterval = null;
+let running = false;
+let completed = false;
+
+const timerInput = document.getElementById('timerInput');
+const timerBar = document.getElementById('timerBar');
+const playPauseBtn = document.getElementById('playPauseMain');
+const resetMainBtn = document.getElementById('resetMain');
+
+function setPlayingState(isPlaying) {
+    const color = isPlaying ? '#08B1DB' : '#A81769';
+    timerBar.style.backgroundColor = color;
+    playPauseBtn.style.backgroundColor = color;
+    resetMainBtn.style.backgroundColor = color;
+}
+
+function setCompletedState() {
+    const color = '#F5CC1B';
+    timerBar.style.backgroundColor = color;
+    playPauseBtn.style.backgroundColor = color;
+    resetMainBtn.style.backgroundColor = color;
+}
+
+function updateBar() {
+    const total = timerInput.value * 60;
+    timerBar.style.width = `${((total - timerDuration) / total) * 100}%`;
+}
+
+function tick() {
+    if (timerDuration > 0) {
+        timerDuration--;
+        updateBar();
+    } else {
+        clearInterval(timerInterval);
+        running = false;
+        completed = true;
+        playPauseBtn.textContent = 'Play';
+        setCompletedState();
+    }
+}
+
+function startTimer() {
+    if (completed) {
+        timerDuration = timerInput.value * 60;
+        completed = false;
+    }
+    timerInterval = setInterval(tick, 1000);
+    running = true;
+    playPauseBtn.textContent = 'Pause';
+    setPlayingState(true);
+}
+
+function resetTimer() {
+    clearInterval(timerInterval);
+    timerDuration = timerInput.value * 60;
+    timerBar.style.width = '0%';
+    running = false;
+    completed = false;
+    playPauseBtn.textContent = 'Play';
+    setPlayingState(false);
+}
+
+setPlayingState(false);
+
+document.getElementById('startTimerBtn').onclick = () => {
+    clearInterval(timerInterval);
+    timerDuration = timerInput.value * 60;
+    completed = false;
+    startTimer();
+};
+
+document.getElementById('resetTimerBtn').onclick = resetTimer;
+
+playPauseBtn.onclick = () => {
+    if (running) {
+        clearInterval(timerInterval);
+        running = false;
+        playPauseBtn.textContent = 'Play';
+        setPlayingState(false);
+    } else {
+        if (timerDuration === 0 && !completed) {
+            timerDuration = timerInput.value * 60;
+        }
+        startTimer();
+    }
+};
+
+resetMainBtn.onclick = resetTimer;
+
+// Carousel
+const slides = document.querySelectorAll('.benefit');
+let index = 0;
+let interval = 5000;
+let carouselTimer;
+
+function nextSlide() {
+    slides[index].classList.remove('active');
+    index = (index + 1) % slides.length;
+    slides[index].classList.add('active');
+}
+
+function restartCarousel() {
+    clearInterval(carouselTimer);
+    carouselTimer = setInterval(nextSlide, interval);
+}
+
+document.getElementById('speedSlider').oninput = e => {
+    interval = e.target.value * 1000;
+    restartCarousel();
+};
+
+restartCarousel();
+
+// Footer: Random book (title, author, cover only)
+async function loadRandomBook() {
+    const response = await fetch(
+        'https://openlibrary.org/search.json?q=children+middle+grade+fiction&limit=30'
+    );
+    const data = await response.json();
+    const book = data.docs[Math.floor(Math.random() * data.docs.length)];
+
+    document.getElementById('bookTitle').textContent =
+        `Recommended Book: ${book.title}`;
+
+    document.getElementById('bookMeta').textContent =
+        `Author: ${book.author_name?.[0] || 'Unknown'} • First published: ${book.first_publish_year || 'N/A'}`;
+
+    if (book.cover_i) {
+        document.getElementById('bookCover').innerHTML =
+            `<img src="https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg" alt="Book cover">`;
+    }
+}
+
+loadRandomBook();
+
+// Zoom control
+const zoomSlider = document.getElementById('zoomSlider');
+const zoomLabel = document.getElementById('zoomLabel');
+const mainContainer = document.getElementById('mainContainer');
+
+zoomSlider.oninput = e => {
+    const zoomPercent = e.target.value;
+    zoomLabel.textContent = `${zoomPercent}%`;
+    mainContainer.style.transform = `scale(${zoomPercent/100})`;
+};
+</script>
+
+</body>
+</html>

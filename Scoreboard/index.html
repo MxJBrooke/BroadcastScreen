@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rainbow Scoreboard</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Consolas, monospace;
+  background: #111;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  overflow-x: auto;
+}
+
+/* Header */
+#header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  background: #111;
+  border-bottom: 2px solid #555;
+  padding: 0 20px;
+  box-sizing: border-box;
+  z-index: 15;
+}
+
+#animateButton {
+  background: #333;
+  color: white;
+  border: 1px solid #555;
+  font-size: 18px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+#header img {
+  justify-self: center;
+  max-height: 60px;
+}
+
+#pointsDisplay {
+  color: white;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+/* Sidebar */
+#sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;
+  background: #222;
+  border-right: 2px solid #555;
+  padding: 20px;
+  box-sizing: border-box;
+  color: white;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+#sidebar button,
+#sidebar input,
+#sidebar textarea {
+  width: 100%;
+  margin-bottom: 10px;
+  background: #333;
+  color: white;
+  border: 1px solid #555;
+  padding: 6px;
+  font-family: Consolas, monospace;
+}
+
+#sidebar label {
+  display: block;
+  margin-top: 8px;
+}
+
+#sidebar textarea {
+  resize: vertical;
+}
+
+/* Toggle button */
+#toggleSidebar {
+  position: fixed;
+  left: 0;
+  bottom: 10px;
+  z-index: 20;
+  padding: 10px 15px;
+  background: grey;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+/* Board container */
+#boardContainer {
+  margin-top: 80px;
+  margin-left: 260px;
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 80px);
+}
+
+#boardZoom {
+  transform-origin: bottom center;
+}
+
+#board {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Columns */
+.column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-left: 2px solid #555;
+  border-right: 2px solid #555;
+  padding: 2px;
+}
+
+/* Column text */
+.column-text {
+  margin-bottom: 16px;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  visibility: hidden;
+}
+
+.column-text div {
+  writing-mode: vertical-rl;
+}
+
+.column:hover .column-text {
+  transform: scale(1.5);
+  color: gold;
+}
+
+/* Medals */
+.gold { box-shadow: 0 0 25px 8px gold; }
+.silver { box-shadow: 0 0 25px 8px silver; }
+.bronze { box-shadow: 0 0 25px 8px #cd7f32; }
+
+/* Blocks */
+.blocks-wrapper {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.block-row {
+  display: grid;
+  gap: 1px;
+  margin-bottom: 1px;
+}
+
+.block {
+  width: 22px;
+  height: 22px;
+  border: 1px solid #000;
+  opacity: 0;
+  transform: translateY(-30px);
+}
+
+@keyframes fallIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.block.animate {
+  animation: fallIn 0.3s ease forwards;
+}
+</style>
+</head>
+
+<body>
+
+<header id="header">
+  <button id="animateButton">▶ Play</button>
+  <img src="https://clf.uk/wp-content/uploads/CLF-Logo-Transparent-White-Text.png">
+  <div id="pointsDisplay">5 points per block</div>
+</header>
+
+<div id="sidebar">
+  <h2>Controls</h2>
+
+  <label>Student data (Name,Points)</label>
+  <textarea id="dataInput" rows="14"></textarea>
+
+  <button id="fileButton">Choose File</button>
+  <input type="file" id="fileInput" accept=".txt" hidden>
+
+  <label>Points per block</label>
+  <input type="number" id="scaleInput" value="5" min="1">
+
+  <label>Blocks per row</label>
+  <input type="range" id="widthSlider" min="1" max="20" value="8">
+
+  <label>Bunching</label>
+  <input type="range" id="gapSlider" min="0" max="30" value="10">
+
+  <label>Zoom</label>
+  <input type="range" id="zoomSlider" min="50" max="150" value="100">
+
+  <label>Animation speed</label>
+  <input type="range" id="speedSlider" min="10" max="100" value="25">
+
+  <label>
+    <input type="checkbox" id="medalCheckbox" checked> Show Gold/Silver/Bronze
+  </label>
+</div>
+
+<button id="toggleSidebar">☰</button>
+
+<div id="boardContainer">
+  <div id="boardZoom">
+    <div id="board"></div>
+  </div>
+</div>
+
+<script>
+const board = document.getElementById('board');
+const boardZoom = document.getElementById('boardZoom');
+const boardContainer = document.getElementById('boardContainer');
+const dataInput = document.getElementById('dataInput');
+const fileInput = document.getElementById('fileInput');
+const fileButton = document.getElementById('fileButton');
+const animateButton = document.getElementById('animateButton');
+const scaleInput = document.getElementById('scaleInput');
+const widthSlider = document.getElementById('widthSlider');
+const gapSlider = document.getElementById('gapSlider');
+const zoomSlider = document.getElementById('zoomSlider');
+const speedSlider = document.getElementById('speedSlider');
+const medalCheckbox = document.getElementById('medalCheckbox');
+const sidebar = document.getElementById('sidebar');
+const pointsDisplay = document.getElementById('pointsDisplay');
+
+const rainbowColors = ['#FF0000','#FF7F00','#FFFF00','#00FF00','#0000FF','#4B0082','#8B00FF'];
+let dataStore = [];
+
+/* Sidebar toggle */
+toggleSidebar.onclick = () => {
+  sidebar.style.display = sidebar.style.display === 'none' ? 'block' : 'none';
+  boardContainer.style.marginLeft = sidebar.style.display === 'none' ? '0' : '260px';
+};
+
+zoomSlider.oninput = () => boardZoom.style.transform = `scale(${zoomSlider.value/100})`;
+gapSlider.oninput = () => board.style.gap = gapSlider.value + 'px';
+widthSlider.oninput = renderBoard;
+scaleInput.oninput = renderBoard;
+
+/* Data parsing */
+function parseData() {
+  dataStore = dataInput.value.trim().split(/\r?\n/)
+    .map(line => {
+      const [n,p] = line.split(',');
+      if (!n || isNaN(p)) return null;
+      return { name: n.trim(), points: +p };
+    })
+    .filter(Boolean);
+  renderBoard();
+}
+
+dataInput.addEventListener('input', parseData);
+
+fileButton.onclick = () => fileInput.click();
+fileInput.onchange = async e => {
+  dataInput.value = await e.target.files[0].text();
+  parseData();
+};
+
+/* Render board */
+function renderBoard() {
+  board.innerHTML = '';
+  if (!dataStore.length) return;
+
+  const sorted = [...dataStore].sort((a,b)=>b.points-a.points);
+  const blocksPerRow = +widthSlider.value;
+  const pointsPerBlock = Math.max(1, +scaleInput.value);
+  pointsDisplay.textContent = `${pointsPerBlock} points per block`;
+
+  const maxRows = Math.max(...sorted.map(s =>
+    Math.ceil(s.points / pointsPerBlock / blocksPerRow)
+  ));
+
+  sorted.forEach((item, index) => {
+    const col = document.createElement('div');
+    col.className = 'column';
+    col.dataset.points = item.points;
+
+    const text = document.createElement('div');
+    text.className = 'column-text';
+    text.innerHTML = `<div>${item.name}</div><div style="margin-top:6px">${item.points} pts</div>`;
+    col.appendChild(text);
+
+    const wrap = document.createElement('div');
+    wrap.className = 'blocks-wrapper';
+
+    const totalBlocks = Math.ceil(item.points / pointsPerBlock);
+
+    for (let r=0; r<maxRows; r++) {
+      const row = document.createElement('div');
+      row.className = 'block-row';
+      row.style.gridTemplateColumns = `repeat(${blocksPerRow},22px)`;
+
+      for (let c=0; c<blocksPerRow; c++) {
+        const i = r*blocksPerRow + c;
+        const b = document.createElement('div');
+        b.className = 'block';
+
+        if (i < totalBlocks) {
+          b.dataset.active = '1';
+          b.style.backgroundColor = rainbowColors[index % rainbowColors.length];
+        } else {
+          b.style.visibility = 'hidden';
+        }
+        row.appendChild(b);
+      }
+      wrap.appendChild(row);
+    }
+
+    col.appendChild(wrap);
+    board.appendChild(col);
+  });
+}
+
+/* Animate columns sequentially */
+animateButton.onclick = () => {
+  const columns = [...document.querySelectorAll('.column')];
+  const speed = +speedSlider.value;
+
+  columns.forEach(col => {
+    col.classList.remove('gold','silver','bronze');
+    col.querySelector('.column-text').style.visibility = 'hidden';
+    col.querySelectorAll('.block').forEach(b => {
+      b.classList.remove('animate');
+      b.style.opacity = 0;
+    });
+  });
+
+  const ordered = [...columns].sort(
+    (a,b) => a.dataset.points - b.dataset.points
+  );
+
+  function animateColumn(i) {
+    if (i >= ordered.length) {
+      if (medalCheckbox.checked) {
+        ordered.slice(-3).forEach((c,idx)=>{
+          c.classList.add(['bronze','silver','gold'][idx]);
+        });
+      }
+      return;
+    }
+
+    const blocks = [...ordered[i].querySelectorAll('[data-active]')];
+    blocks.forEach((b,j)=> {
+      setTimeout(()=>b.classList.add('animate'), j * speed);
+    });
+
+    setTimeout(()=>{
+      ordered[i].querySelector('.column-text').style.visibility = 'visible';
+      animateColumn(i+1);
+    }, blocks.length * speed);
+  }
+
+  animateColumn(0);
+};
+
+/* Seed data */
+dataInput.value=`Alan Turing,400
+Grace Hopper,380
+Donald Knuth,360
+Edsger Dijkstra,340
+Barbara Liskov,320`;
+parseData();
+</script>
+
+</body>
+</html>

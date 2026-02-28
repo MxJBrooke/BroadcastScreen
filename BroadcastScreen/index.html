@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classroom Noise Meter</title>
+
+<style>
+/* ----------------- Global Styles ----------------- */
+body {
+    font-family: Consolas, monospace;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+    background-color: #f5f5f5;
+    color: #000;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+/* ----------------- Header ----------------- */
+.header {
+    width: 100%;
+    height: 80px;
+    background-color: #333;
+    border-bottom: 2px solid #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.logo-box {
+    background-color: #333;        
+    padding: 5px 10px;             
+    border-radius: 0 0 12px 12px;  /* only bottom-left and bottom-right rounded */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.logo-box img {
+    height: 60px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* ----------------- Global Font Controls ----------------- */
+.global-font-controls {
+    width: 100%;
+    background-color: #ddd;
+    padding: 8px 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    border-bottom: 1px solid #ccc;
+}
+
+.global-font-controls button {
+    padding: 8px 12px; 
+    cursor: pointer;
+}
+
+body.dark-mode .global-font-controls {
+    background-color: #1e1e1e;
+    border-color: #333;
+}
+
+/* ----------------- Main Content ----------------- */
+.main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* ----------------- Resizable Split Divider ----------------- */
+.divider {
+    width: 6px;
+    background-color: #ccc;
+    cursor: col-resize;
+    transition: background 0.2s;
+}
+
+.divider:hover {
+    background-color: #999;
+}
+
+body.dark-mode .divider {
+    background-color: #444;
+}
+
+body.dark-mode .divider:hover {
+    background-color: #666;
+}
+
+/* ----------------- Left Panel ----------------- */
+.left {
+    flex: 1 1 50%;
+    padding: 20px;
+    border-right: 2px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+    min-width: 200px;
+}
+
+#expectations, #custom {
+    display: flex;
+    flex-direction: column;
+    width: 90%;
+    max-width: 600px;
+    margin-top: 20px;
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    color: #000;
+    transition: all 0.3s ease;
+}
+
+#custom textarea {
+    width: 100%;
+    height: 40px;   
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    resize: vertical;
+    font-size: 14px;
+    background-color: #fff;
+    color: #000;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+/* ----------------- Font Controls ----------------- */
+.font-controls {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px; 
+    margin-bottom: 5px;
+}
+
+.font-controls button {
+    padding: 8px 12px; 
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* ----------------- Task Instructions ----------------- */
+.timer-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 15px;
+    color: #555;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+/* ----------------- Right Panel ----------------- */
+.right {
+    flex: 1 1 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 50px 20px;
+    overflow-y: auto;
+    min-width: 200px;
+    gap: 50px;
+}
+
+.right h2 {
+    margin-bottom: 20px;
+    color: #555;
+    transition: all 0.3s ease;
+}
+
+/* ----------------- Noise Meter ----------------- */
+.bar-container {
+    position: relative;
+    width: 80%;
+    max-width: 600px;
+    height: 50px;
+    display: flex;
+    border-radius: 10px;
+    overflow: visible;
+    border: 2px solid #ccc;
+    background-color: #e0e0e0;
+    transition: all 0.3s ease;
+}
+
+.segment {
+    flex: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #000;
+    user-select: none;
+    transition: transform 0.2s, background-color 0.3s;
+    z-index: 1;
+    border-radius: 5px;
+    margin: 2px;
+    padding: 12px 0;
+}
+
+.segment.silent { background-color: #B1166F; color: #fff; }
+.segment.quiet { background-color: #FED41A; color: #000; }
+.segment.peer { background-color: #0DB2E1; color: #000; }
+.segment.team { background-color: #E72B37; color: #fff; }
+
+.segment.active {
+    outline: 3px solid #000;
+    transform: scale(1.05);
+}
+
+.arrow-svg, .arrow-bottom-svg {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    transition: left 0.3s ease;
+    z-index: 10;
+}
+
+.arrow-svg { top: -35px; }
+.arrow-bottom-svg { bottom: -35px; transform: rotate(180deg); }
+
+/* ----------------- Timer ----------------- */
+.timer-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80%;
+    max-width: 600px;
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    transition: all 0.3s ease;
+}
+
+.timer {
+    font-size: 80px;
+    font-weight: bold;
+    color: #000;
+    text-align: center;
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.timer-buttons, .timer-control {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.timer-buttons button, .timer-control button {
+    background-color: #e0e0e0;
+    color: #000;
+    border: 1px solid #aaa;
+    padding: 8px 16px;
+    font-size: 16px;
+    border-radius: 5px;
+}
+
+.timer-buttons button.active {
+    background-color: #bbb;
+    color: #000;
+}
+
+/* ----------------- Dark Mode ----------------- */
+body.dark-mode {
+    background-color: #121212;
+    color: #fff;
+}
+
+body.dark-mode .header {
+    border-color: #333;
+}
+
+body.dark-mode h2,
+body.dark-mode .timer-header {
+    color: #bbb;
+}
+
+body.dark-mode #expectations,
+body.dark-mode #custom,
+body.dark-mode .timer-container {
+    background-color: #222;
+    color: #fff;
+    border-color: #333;
+}
+
+body.dark-mode textarea.rules-box,
+body.dark-mode #custom textarea {
+    background-color: #222;
+    color: #fff;
+    border-color: #333;
+}
+
+body.dark-mode .bar-container {
+    background-color: #1c1c1c;
+    border-color: #333;
+}
+
+body.dark-mode .timer {
+    color: #fff;
+}
+
+body.dark-mode .timer-buttons button,
+body.dark-mode .timer-control button {
+    background-color: #333;
+    color: #fff;
+    border-color: #555;
+}
+
+body.dark-mode .segment.active {
+    outline-color: #fff;
+}
+</style>
+</head>
+<body>
+
+<!-- Header Bar -->
+<div class="header">
+    <div class="logo-box">
+        <img src="https://clf.uk/wp-content/uploads/CLF-Logo-Transparent-White-Text.png"
+             alt="CLF Logo" onclick="toggleTheme()">
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+
+    <!-- Left Panel -->
+    <div class="left">
+
+        <div id="custom">
+            <div class="timer-header">
+                <span>Now Do:</span>
+            </div>
+            <div>
+                <button onclick="adjustAllFonts(-2)">A−</button>
+                <button onclick="adjustAllFonts(2)">A+</button>
+            </div>
+            <div id="custom-content">
+                <textarea placeholder="Type your instructions here..."></textarea>
+            </div>
+        </div>
+
+        <div id="custom">
+            <div class="timer-header">
+                <span>Next Do:</span>
+            </div>
+            <div id="custom-content">
+                <textarea placeholder="Type your instructions here..."></textarea>
+            </div>
+        </div>
+
+        <div id="custom">
+            <div class="timer-header">
+                <span>Then Do:</span>
+            </div>
+            <div id="custom-content">
+                <textarea placeholder="Type your instructions here..."></textarea>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Divider -->
+    <div class="divider" id="divider"></div>
+
+    <!-- Right Panel -->
+    <div class="right">
+        <div class="bar-container" id="bar">
+            <div class="segment silent" onclick="setNoise(0)">Silent Work</div>
+            <div class="segment quiet" onclick="setNoise(1)">Quiet Voices</div>
+            <div class="segment peer" onclick="setNoise(2)">Turn & Talk</div>
+            <div class="segment team" onclick="setNoise(3)">Team Talk</div>
+
+            <svg class="arrow-svg" id="arrow-top" viewBox="0 0 30 30">
+                <polygon points="15,0 0,30 30,30" fill="black" stroke="white" stroke-width="2"/>
+            </svg>
+
+            <svg class="arrow-bottom-svg" id="arrow-bottom" viewBox="0 0 30 30">
+                <polygon points="15,0 0,30 30,30" fill="black" stroke="white" stroke-width="2"/>
+            </svg>
+        </div>
+
+        <!-- Timer -->
+        <div class="timer-container" id="timer-container">
+            <div class="timer-header" onclick="toggleTimer()">
+                <span>Timer</span>
+                <span id="collapse-symbol">▼</span>
+            </div>
+
+            <div id="timer-content">
+                <div class="timer" id="timer">05:00</div>
+
+                <div class="timer-buttons">
+                    <button onclick="setQuickTime(1, this)">1 min</button>
+                    <button onclick="setQuickTime(2, this)">2 min</button>
+                    <button onclick="setQuickTime(5, this)" class="active">5 min</button>
+                    <button onclick="setQuickTime(10, this)">10 min</button>
+                    <input type="number" id="customTimeInput" placeholder="Custom (min)" style="width:100px; padding:4px; font-size:16px;" min="1">
+                    <button onclick="setCustomTime()">Set</button>
+                </div>
+
+                <div class="timer-control">
+                    <button id="playPauseBtn" onclick="toggleTimerRun()">Play</button>
+                    <button onclick="resetTimer()">Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+/* ----------------- Noise Meter ----------------- */
+const arrowTop = document.getElementById('arrow-top');
+const arrowBottom = document.getElementById('arrow-bottom');
+const bar = document.getElementById('bar');
+const segmentsEls = document.querySelectorAll('.segment');
+const segmentsCount = segmentsEls.length;
+let currentNoiseIndex = 0;
+
+function setNoise(index) {
+    currentNoiseIndex = index;
+    segmentsEls.forEach((seg, i) => seg.classList.toggle('active', i === index));
+
+    const barWidth = bar.clientWidth;
+    const segmentWidth = barWidth / segmentsCount;
+    const arrowPos = segmentWidth * index + segmentWidth / 2 - 15;
+
+    arrowTop.style.left = `${arrowPos}px`;
+    arrowBottom.style.left = `${arrowPos}px`;
+
+    // ------------------ Gradient header & logo border ------------------
+    const colors = ['#B1166F', '#FED41A', '#0DB2E1', '#E72B37'];
+    const header = document.querySelector('.header');
+    const logoBox = document.querySelector('.logo-box');
+
+    const topColor = '#333'; // dark gray at top
+    const bottomColor = colors[index]; // noise color at bottom
+
+    header.style.background = `linear-gradient(to bottom, ${topColor}, ${bottomColor})`;
+    header.style.borderBottomColor = bottomColor;
+    logoBox.style.borderColor = bottomColor;
+}
+
+setNoise(0);
+window.addEventListener('resize', () => setNoise(currentNoiseIndex));
+
+/* ----------------- Collapsible Sections ----------------- */
+function toggleCollapse(contentId, symbolId) {
+    const content = document.getElementById(contentId);
+    const symbol = document.getElementById(symbolId);
+
+    if (content.style.display === 'none' || content.style.display === '') {
+        content.style.display = 'block';
+        symbol.textContent = '▼';
+    } else {
+        content.style.display = 'none';
+        symbol.textContent = '▲';
+    }
+}
+
+/* ----------------- Timer ----------------- */
+let timerDuration = 5 * 60;
+let timerRunning = false;
+let timerInterval = null;
+
+const timerDisplay = document.getElementById('timer');
+const playPauseBtn = document.getElementById('playPauseBtn');
+
+function updateTimerDisplay() {
+    const minutes = Math.floor(timerDuration / 60).toString().padStart(2, '0');
+    const seconds = (timerDuration % 60).toString().padStart(2, '0');
+    timerDisplay.textContent = `${minutes}:${seconds}`;
+}
+
+function timerTick() {
+    if (timerDuration > 0) {
+        timerDuration--;
+        updateTimerDisplay();
+    } else {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        playPauseBtn.textContent = "Play";
+    }
+}
+
+function toggleTimerRun() {
+    if (timerRunning) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        playPauseBtn.textContent = "Play";
+    } else {
+        timerInterval = setInterval(timerTick, 1000);
+        timerRunning = true;
+        playPauseBtn.textContent = "Pause";
+    }
+}
+
+function resetTimer() {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    timerDuration = 5 * 60;
+    updateTimerDisplay();
+    playPauseBtn.textContent = "Play";
+}
+
+function setQuickTime(mins, btn) {
+    timerDuration = mins * 60;
+    updateTimerDisplay();
+
+    document.querySelectorAll('.timer-buttons button')
+        .forEach(b => b.classList.remove('active'));
+
+    btn.classList.add('active');
+}
+
+function setCustomTime() {
+    const input = document.getElementById('customTimeInput');
+    let mins = parseInt(input.value);
+    if (isNaN(mins) || mins < 1) {
+        alert("Please enter a valid number of minutes (>=1)");
+        return;
+    }
+    timerDuration = mins * 60;
+    updateTimerDisplay();
+
+    document.querySelectorAll('.timer-buttons button').forEach(b => b.classList.remove('active'));
+}
+
+function toggleTimer() {
+    const content = document.getElementById('timer-content');
+    const symbol = document.getElementById('collapse-symbol');
+
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        symbol.textContent = '▼';
+    } else {
+        content.style.display = 'none';
+        symbol.textContent = '▲';
+    }
+}
+
+/* ----------------- Dark Mode ----------------- */
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+}
+
+/* ----------------- Resizable Split Pane ----------------- */
+const divider = document.getElementById("divider");
+const leftPanel = document.querySelector(".left");
+const rightPanel = document.querySelector(".right");
+let dragging = false;
+
+divider.addEventListener("mousedown", (e) => {
+    dragging = true;
+    document.body.style.userSelect = "none";
+});
+
+window.addEventListener("mousemove", (e) => {
+    if (!dragging) return;
+
+    const mainRect = document.querySelector(".main").getBoundingClientRect();
+    let newLeftWidth = e.clientX - mainRect.left;
+
+    newLeftWidth = Math.max(200, Math.min(newLeftWidth, mainRect.width - 200));
+
+    leftPanel.style.flex = `0 0 ${newLeftWidth}px`;
+    rightPanel.style.flex = `1 1 auto`;
+});
+
+window.addEventListener("mouseup", () => {
+    dragging = false;
+    document.body.style.userSelect = "";
+});
+
+/* ----------------- Global Font Size Control ----------------- */
+function adjustAllFonts(delta) {
+    const textareas = document.querySelectorAll('#custom textarea');
+
+    textareas.forEach(textarea => {
+        const style = window.getComputedStyle(textarea).getPropertyValue('font-size');
+        let currentSize = parseFloat(style);
+        currentSize += delta;
+        if (currentSize < 10) currentSize = 10;
+        if (currentSize > 36) currentSize = 36;
+        textarea.style.fontSize = currentSize + 'px';
+    });
+}
+
+updateTimerDisplay();
+</script>
+
+</body>
+</html>
