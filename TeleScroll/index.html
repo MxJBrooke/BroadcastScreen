@@ -3,79 +3,143 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Teleprompter with Chunked Loading + Search</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;700&display=swap" rel="stylesheet">
+<title>Teleprompter</title>
 
 <style>
-@font-face {
-  font-family: 'OpenDyslexic';
-  src: url('https://cdn.jsdelivr.net/gh/antijingoist/open-dyslexic/woff/OpenDyslexic-Regular.woff') format('woff');
-}
-
+/* ----------------- Global ----------------- */
 body {
-  margin:0; padding:0;
-  font-family: Arial, sans-serif;
-  display:flex;
-  height:100vh;
-  overflow:hidden;
-  background:#f4f4f4;
+    font-family: Consolas, monospace;
+    margin: 0;
+    background-color: #f5f5f5;
+    color: #000;
+    overflow: hidden;
 }
 
+/* ----------------- Header ----------------- */
+.header {
+    width: 100%;
+    height: 80px;
+    background-color: #333;
+    border-bottom: 2px solid #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    z-index: 20;
+}
+
+.header img {
+    height: 60px;
+    cursor: pointer;
+}
+
+/* ----------------- Sidebar ----------------- */
 #panel {
-  width:280px;
-  background:#fff;
-  border-right:2px solid #ccc;
-  padding:20px;
-  overflow-y:auto;
-  transition: transform .3s ease, width .3s ease;
+    position: fixed;
+    top: 80px;
+    left: 0;
+    width: 280px;
+    height: calc(100vh - 80px);
+    background: #222;
+    border-right: 2px solid #555;
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    transition: transform .3s ease;
+    color: #fff;
+    z-index: 10;
 }
 
 #panel.collapsed {
-  transform: translateX(-100%);
-  width:0;
-  padding:0;
-  border:none;
+    transform: translateX(-100%);
 }
 
-#panel label { margin-top:15px; display:block; font-weight:bold; }
-#panel input, #panel select { width:100%; margin-top:5px; padding:5px; }
+#panel label {
+    margin-top: 15px;
+    display: block;
+    font-weight: bold;
+}
 
+#panel input,
+#panel select,
+#panel button {
+    width: 100%;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    padding: 6px;
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #555;
+    font-family: Consolas, monospace;
+    box-sizing: border-box;
+}
+
+/* Toggle Button */
 #togglePanel {
-  position:absolute; bottom:10px; left:10px;
-  background:#007bff; color:white;
-  padding:10px 15px; cursor:pointer;
-  border-radius:6px; font-size:1.1em;
+    position: fixed;
+    left: 0;
+    bottom: 110px;
+    z-index: 25;
+    background: grey;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
 }
 
+/* ----------------- Main ----------------- */
 #main {
-  flex:1;
-  display:flex;
-  justify-content:center;
-  align-items:stretch;
-  padding:5px;
-  transition: padding-left .3s ease;
+    margin-top: 80px;
+    margin-left: 280px;
+    height: calc(100vh - 80px);
+    padding: 20px;
+    box-sizing: border-box;
+    transition: margin-left .3s ease;
 }
 
 #display {
-  flex:1;
-  background:white;
-  border-radius:10px;
-  padding:10px;
-  overflow-y:auto;
-  font-size:1.6em;
-  line-height:2em;
+    height: 100%;
+    background: #fff;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    overflow-y: auto;
+    font-size: 1.6em;
+    line-height: 2em;
 }
 
-.line { margin-bottom:10px; transition:font-size .2s ease; }
-.active { font-weight:bold; }
+.line {
+    margin-bottom: 12px;
+}
+
+.active {
+    font-weight: bold;
+}
+
+/* Dark Mode */
+body.dark-mode {
+    background-color: #121212;
+    color: #fff;
+}
+
+body.dark-mode #display {
+    background-color: #222;
+    border-color: #333;
+}
 </style>
 </head>
 
 <body>
 
+<div class="header">
+    <img src="https://clf.uk/wp-content/uploads/CLF-Logo-Transparent-White-Text.png"
+         alt="CLF Logo"
+         onclick="toggleTheme()">
+</div>
+
 <div id="panel">
-<h3>Settings</h3>
+<h2>Settings</h2>
 
 <label>Choose File</label>
 <input type="file" id="fileInput" accept=".txt">
@@ -86,10 +150,9 @@ body {
 
 <label>Font Family</label>
 <select id="fontFamily">
+  <option value="Consolas">Consolas</option>
   <option value="Arial">Arial</option>
   <option value="Helvetica">Helvetica</option>
-  <option value="'Lexend', sans-serif">Lexend</option>
-  <option value="'OpenDyslexic', sans-serif">OpenDyslexic</option>
 </select>
 
 <label>Font Size</label>
@@ -102,7 +165,7 @@ body {
 <input type="range" id="kerning" min="0" max="10" step="0.5" value="0">
 
 <label>Active Color</label>
-<input type="color" id="textColor" value="#000000">
+<input type="color" id="textColor" value="#A81769">
 
 <label>Defocus Color</label>
 <input type="color" id="defocusColor" value="#b0b0b0">
@@ -110,11 +173,11 @@ body {
 <label>Background Color</label>
 <input type="color" id="bgColor" value="#ffffff">
 
-<label>Scroll Speed (higher=slower)</label>
+<label>Scroll Speed</label>
 <input type="range" id="scrollSpeed" min="1" max="20" value="10">
 </div>
 
-<div id="togglePanel">☰</div>
+<button id="togglePanel">☰</button>
 
 <div id="main">
   <div id="display"></div>
@@ -125,6 +188,10 @@ body {
 </audio>
 
 <script>
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+}
+
 //ELEMENTS
 const display = document.getElementById("display");
 const fileInput = document.getElementById("fileInput");
@@ -143,7 +210,6 @@ const bgColorInput=document.getElementById('bgColor');
 const textColorInput=document.getElementById('textColor');
 const defocusColorInput=document.getElementById('defocusColor');
 const scrollSpeedInput=document.getElementById('scrollSpeed');
-
 const clickSound=document.getElementById('clickSound');
 
 let lines = [];
@@ -154,16 +220,15 @@ let fileObj=null, reader=null;
 let fileOffset=0, fileSize=0;
 const chunkSize = 50000;
 
-//UTILITIES
-function playClick() {
+function playClick(){
   clickSound.currentTime=0;
   clickSound.play().catch(()=>{});
 }
-function splitSentences(t) {
-  return t.replace(/\n+/g, " ").split(/(?<=[.!?])\s+/).filter(x=>x.trim());
+
+function splitSentences(t){
+  return t.replace(/\n+/g," ").split(/(?<=[.!?])\s+/).filter(x=>x.trim());
 }
 
-//CHUNKING
 function loadNextChunk(cb){
   if(fileOffset >= fileSize){
     if(cb) cb();
@@ -172,10 +237,9 @@ function loadNextChunk(cb){
 
   const blob = fileObj.slice(fileOffset, fileOffset + chunkSize);
   reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = e=>{
     const newLines = splitSentences(e.target.result || "");
     if(newLines.length > 0) lines = lines.concat(newLines);
-
     fileOffset += chunkSize;
     render();
     if(cb) cb();
@@ -183,7 +247,6 @@ function loadNextChunk(cb){
   reader.readAsText(blob);
 }
 
-//RENDER
 function render(){
   const baseSize = parseFloat(fontSizeInput.value);
   display.innerHTML = "";
@@ -191,7 +254,7 @@ function render(){
   lines.forEach((text,i)=>{
     const div = document.createElement("div");
     div.classList.add("line");
-    div.textContent = text;
+    div.textContent = (i+1) + ". " + text;
 
     if(i === currentIndex){
       div.classList.add("active");
@@ -200,52 +263,44 @@ function render(){
       div.style.color = defocusColorInput.value;
     }
 
-    // SAME size for ALL lines — no zoom effect
     div.style.fontSize = baseSize + "em";
-
     display.appendChild(div);
   });
 }
 
-//AUTO_SCROLL
 function updateScroll(){
   const active = document.querySelector(".active");
   if(active){
     const target = active.offsetTop - display.clientHeight/2 + active.clientHeight/2;
     const dist = target - display.scrollTop;
-
-    const t = (20 - scrollFactor + 1) / 20;
+    const t = (20 - scrollFactor + 1)/20;
     const ease = t*t*t;
-
     display.scrollTop += dist * ease;
   }
   requestAnimationFrame(updateScroll);
 }
 updateScroll();
 
-//NAVIGATION
-document.addEventListener("keydown", e=>{
-  if(e.key === "ArrowDown"){
-    if(currentIndex < lines.length - 1){
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowDown"){
+    if(currentIndex < lines.length-1){
       currentIndex++;
       render();
     } else {
       loadNextChunk(()=>{ currentIndex++; render(); });
     }
   }
-
-  if(e.key === "ArrowUp" && currentIndex > 0){
+  if(e.key==="ArrowUp" && currentIndex>0){
     currentIndex--;
     render();
   }
 });
 
-//SEARCH
 function jumpToMatch(q){
-  q = q.toLowerCase();
-  const idx = lines.findIndex(l => l.toLowerCase().includes(q));
-  if(idx !== -1){
-    currentIndex = idx;
+  q=q.toLowerCase();
+  const idx=lines.findIndex(l=>l.toLowerCase().includes(q));
+  if(idx!==-1){
+    currentIndex=idx;
     render();
     return true;
   }
@@ -255,7 +310,6 @@ function jumpToMatch(q){
 function progressiveSearch(q){
   function attempt(){
     if(jumpToMatch(q)) return;
-
     if(fileOffset < fileSize){
       loadNextChunk(attempt);
     } else {
@@ -265,42 +319,37 @@ function progressiveSearch(q){
   attempt();
 }
 
-searchBtn.addEventListener("click", ()=>{
-  const q = searchBox.value.trim();
-  if(q.length > 0) progressiveSearch(q);
+searchBtn.addEventListener("click",()=>{
+  const q=searchBox.value.trim();
+  if(q.length>0) progressiveSearch(q);
 });
 
-//LOAD_FILE
-fileInput.addEventListener("change", ()=>{
-  fileObj = fileInput.files[0];
+fileInput.addEventListener("change",()=>{
+  fileObj=fileInput.files[0];
   if(!fileObj) return;
-
-  fileSize = fileObj.size;
-  fileOffset = 0;
-  lines = [];
-  currentIndex = 0;
-
+  fileSize=fileObj.size;
+  fileOffset=0;
+  lines=[];
+  currentIndex=0;
   loadNextChunk();
 });
 
-//STYLE_SETTINGS
 [fontFamilyInput,fontSizeInput,lineHeightInput,kerningInput,bgColorInput,textColorInput,defocusColorInput,scrollSpeedInput]
 .forEach(el=>{
-  el.addEventListener("input", ()=>{
+  el.addEventListener("input",()=>{
     playClick();
-    display.style.fontFamily = fontFamilyInput.value;
-    display.style.lineHeight = lineHeightInput.value + "em";
-    display.style.letterSpacing = kerningInput.value + "px";
-    display.style.backgroundColor = bgColorInput.value;
-    scrollFactor = parseInt(scrollSpeedInput.value);
+    display.style.fontFamily=fontFamilyInput.value;
+    display.style.lineHeight=lineHeightInput.value+"em";
+    display.style.letterSpacing=kerningInput.value+"px";
+    display.style.backgroundColor=bgColorInput.value;
+    scrollFactor=parseInt(scrollSpeedInput.value);
     render();
   });
 });
 
-//PANEL_TOGGLE
-toggleBtn.addEventListener("click", ()=>{
+toggleBtn.addEventListener("click",()=>{
   panel.classList.toggle("collapsed");
-  main.style.paddingLeft = panel.classList.contains("collapsed") ? "5px" : "20px";
+  main.style.marginLeft = panel.classList.contains("collapsed") ? "0" : "280px";
 });
 </script>
 
