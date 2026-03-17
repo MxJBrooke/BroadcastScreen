@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Data Types</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="logo-box">
+        <img src="https://clf.uk/wp-content/uploads/CLF-Logo-Transparent-White-Text.png" alt="CLF Logo" onclick="toggleTheme()">
+    </div>
+    <button class="dark-toggle" onclick="toggleTheme()">Toggle Dark Mode</button>
+</div>
+
+<h1 style="text-align:center; margin-top:20px;">Data Types</h1>
+
+<!-- MAIN WRAPPER -->
+<div class="main-wrapper">
+
+    <!-- SIDE BY SIDE PANELS -->
+    <div class="top-panels">
+
+        <!-- INFO PANEL -->
+        <div class="rules-panel">
+            <h2>Python Data Types</h2>
+            <ul>
+                <li>Python uses different <strong>data types</strong> to store information in variables.</li>
+                <li><strong>int()</strong>: Whole numbers (e.g., 1, 42)</li>
+                <li><strong>float()</strong>: Decimal numbers (e.g., 3.14, 0.5)</li>
+                <li><strong>str()</strong>: Text/strings (e.g., "hello")</li>
+                <li><strong>bool()</strong>: True/False values</li>
+            </ul>
+            
+            <h2>Python Operators</h2>
+            <h3>Python uses different symbols or <i> "operators"</i> to complete maths statements.</h3>
+
+            <i><strong>Existing Operators</strong>: These are calculations you should be familiar with from maths.</i>
+
+            <ul>
+                <li><strong>+</strong>: Addition</li>
+                <li><strong>-</strong>: Subtraction</li>
+                <li><strong>*</strong>: Multiplication</li>
+                <li><strong>/</strong>: Division</li>
+            </ul>
+            
+            <i><strong>New Operators</strong>: These are a little more complex and might be new to you.</i>
+            <ul>
+                <li><strong>New Operators</strong>: These are a little more complex and might be new to you.</li>
+                <li><strong>//</strong>: Floor Division</li>
+                <li><strong>%</strong>: Modulus</li>
+                <li><strong>**</strong>: Exponentiation</li>
+            </ul>
+        </div>
+
+        <!-- QUIZ PANEL -->
+        <div class="quiz-panel">
+            <h2>Data Types Quiz</h2>
+            <i>Select the correct data type for each value.</i>
+
+            <!-- Question 1 -->
+            <div class="quiz-question" data-answer="int" data-explanation="Whole numbers like 5 are stored as int.">
+                <p><strong>1.</strong> 42</p>
+                <div class="quiz-columns">
+                    <div class="quiz-answers">
+                        <button class="quiz-option">a) str</button>
+                        <button class="quiz-option">b) float</button>
+                        <button class="quiz-option">c) int</button>
+                        <button class="quiz-option">d) bool</button>
+                    </div>
+                    <div class="quiz-explanation-box">
+                        <p class="quiz-explanation"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="quiz-question" data-answer="float" data-explanation="Decimal numbers like 3.14 are stored as float.">
+                <p><strong>2.</strong> 3.14</p>
+                <div class="quiz-columns">
+                    <div class="quiz-answers">
+                        <button class="quiz-option">a) int</button>
+                        <button class="quiz-option">b) float</button>
+                        <button class="quiz-option">c) str</button>
+                        <button class="quiz-option">d) bool</button>
+                    </div>
+                    <div class="quiz-explanation-box">
+                        <p class="quiz-explanation"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="quiz-question" data-answer="str" data-explanation="Text like 'Hello' is stored as str.">
+                <p><strong>3.</strong> "Hello"</p>
+                <div class="quiz-columns">
+                    <div class="quiz-answers">
+                        <button class="quiz-option">a) int</button>
+                        <button class="quiz-option">b) float</button>
+                        <button class="quiz-option">c) str</button>
+                        <button class="quiz-option">d) bool</button>
+                    </div>
+                    <div class="quiz-explanation-box">
+                        <p class="quiz-explanation"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question 4 -->
+            <div class="quiz-question" data-answer="bool" data-explanation="True/False values are stored as bool.">
+                <p><strong>4.</strong> True</p>
+                <div class="quiz-columns">
+                    <div class="quiz-answers">
+                        <button class="quiz-option">a) int</button>
+                        <button class="quiz-option">b) float</button>
+                        <button class="quiz-option">c) str</button>
+                        <button class="quiz-option">d) bool</button>
+                    </div>
+                    <div class="quiz-explanation-box">
+                        <p class="quiz-explanation"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="quiz-panel">
+        <h2>Operators Experiment</h2>
+        <ul>
+            <li>Modify the code below using each of the operators above to find out how they work in python.</li>
+            <li>In your book you should write down what each operator does [+, -, *, /, //, %, **]</li>
+            <li>In your book answer the question: What was the difference between <strong>division</strong> and <strong>floor division</strong></li>
+        </ul>
+        <iframe src="https://trinket.io/embed/python/3ae0e633cc2e" width="100%" height="356" frameborder="0" marginwidth="0" marginheight="0" allowfullscreen></iframe>    </div>
+
+</div>
+
+<script>
+// QUIZ INTERACTIVITY
+document.querySelectorAll('.quiz-question').forEach(q => {
+    const correct = q.getAttribute('data-answer');
+    const explanation = q.getAttribute('data-explanation');
+    q.querySelectorAll('.quiz-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            q.querySelectorAll('.quiz-option').forEach(b => b.disabled = true);
+            const answerText = btn.textContent.replace(/^.*\) /, '').trim();
+            const explanationEl = q.querySelector('.quiz-explanation');
+            if(answerText === correct){
+                btn.classList.add('correct');
+                explanationEl.textContent = "✅ Correct! " + explanation;
+            } else {
+                btn.classList.add('incorrect');
+                q.querySelectorAll('.quiz-option').forEach(b => {
+                    const bText = b.textContent.replace(/^.*\) /, '').trim();
+                    if(bText === correct) b.classList.add('correct');
+                });
+                explanationEl.textContent = "❌ Not quite. " + explanation;
+            }
+        });
+    });
+});
+
+// DARK MODE TOGGLE
+function toggleTheme(){
+    document.body.classList.toggle('dark-mode');
+}
+</script>
+
+</body>
+</html>
