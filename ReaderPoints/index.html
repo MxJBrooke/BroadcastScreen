@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sweets Tracker</title>
+
+<style>
+/* ----------------- Global ----------------- */
+body {
+    font-family: Consolas, monospace;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+    background-color: #f5f5f5;
+    overflow: hidden;
+}
+
+/* ----------------- Header ----------------- */
+.header {
+    width: 100%;
+    height: 80px;
+    background-color: #333;
+    border-bottom: 2px solid #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.logo-box {
+    padding: 5px 10px;
+}
+
+.logo-box img {
+    height: 60px;
+    cursor: pointer;
+}
+
+/* ----------------- Layout ----------------- */
+.main {
+    flex: 1;
+    display: flex;
+}
+
+/* Sidebar */
+.left {
+    flex: 0 0 300px;
+    padding: 20px;
+    border-right: 2px solid #ccc;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+/* Divider */
+.divider {
+    width: 6px;
+    background: #ccc;
+    cursor: col-resize;
+}
+
+/* Main area */
+.right {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* ----------------- Input Box ----------------- */
+#custom {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#custom textarea {
+    width: 100%;
+    height: 150px;
+    padding: 8px;
+    font-family: Consolas;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+#custom button {
+    padding: 8px;
+    cursor: pointer;
+    border: 1px solid #aaa;
+    background: #e0e0e0;
+    border-radius: 5px;
+}
+
+/* ----------------- Students Grid ----------------- */
+.student-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 15px;
+}
+
+/* Student card */
+.student {
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    transition: 0.2s;
+    background: #fff;
+    font-weight: bold;
+}
+
+.student .count {
+    font-size: 22px;
+    margin-top: 5px;
+}
+
+/* Disabled */
+.student.disabled {
+    color: #999;
+    background: #eee;
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
+/* Hover + bump animation */
+.student:hover {
+    transform: scale(1.03);
+}
+
+.student.bump {
+    transform: scale(1.1);
+    transition: 0.2s;
+}
+
+/* ----------------- Dark Mode ----------------- */
+body.dark-mode {
+    background-color: #121212;
+    color: #fff;
+}
+
+body.dark-mode .left {
+    background: #222;
+    border-color: #333;
+}
+
+body.dark-mode textarea {
+    background: #333;
+    color: #fff;
+    border-color: #555;
+}
+
+body.dark-mode .student {
+    background: #222;
+    border-color: #444;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="logo-box">
+        <img src="https://clf.uk/wp-content/uploads/CLF-Logo-Transparent-White-Text.png"
+             onclick="toggleTheme()">
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+    <!-- Sidebar -->
+    <div class="left">
+        <div id="custom">
+            <strong>Paste CSV (name,count)</strong>
+            <textarea id="csvInput" placeholder="Lois,5&#10;Tom,2"></textarea>
+
+            <button onclick="loadCSV()">Load Students</button>
+            <button onclick="addSweet()">+ Sweet to Active</button>
+            <button onclick="removeSweet()">- Sweet from Active</button>
+            <button onclick="selectAll(true)">Select All</button>
+            <button onclick="selectAll(false)">Deselect All</button>
+            <button onclick="downloadCSV()">Download CSV</button>
+        </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="divider" id="divider"></div>
+
+    <!-- Grid -->
+    <div class="right">
+        <h2><center><i>Reliable Readers Points</i></center></h2>
+        <div class="student-grid" id="studentGrid"></div>
+    </div>
+
+</div>
+
+<script>
+/* ----------------- THEME ----------------- */
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+}
+
+/* ----------------- DIVIDER RESIZE ----------------- */
+const divider = document.getElementById("divider");
+const left = document.querySelector(".left");
+
+let dragging = false;
+
+divider.addEventListener("mousedown", () => dragging = true);
+window.addEventListener("mouseup", () => dragging = false);
+window.addEventListener("mousemove", (e) => {
+    if (!dragging) return;
+    left.style.flex = `0 0 ${e.clientX}px`;
+});
+
+/* ----------------- STUDENTS ----------------- */
+let students = [];
+
+/* Load saved data */
+function saveData() {
+    localStorage.setItem("students", JSON.stringify(students));
+}
+
+function loadSavedData() {
+    const saved = localStorage.getItem("students");
+    if (saved) {
+        students = JSON.parse(saved);
+        render();
+    }
+}
+
+loadSavedData();
+
+/* Load CSV */
+function loadCSV() {
+    const input = document.getElementById("csvInput").value;
+    const lines = input.split("\n").filter(l => l.trim() !== "");
+
+    students = [];
+    lines.forEach(line => {
+        const parts = line.split(",");
+        if (parts.length < 1) return;
+
+        const name = parts[0].trim();
+        const count = parseInt(parts[1]) || 0;
+
+        if (!name) return;
+
+        students.push({ name, count, active: true });
+    });
+
+    render();
+}
+
+/* Render */
+function render() {
+    const grid = document.getElementById("studentGrid");
+    grid.innerHTML = "";
+
+    // Only consider active students for color scaling
+    const activeStudents = students.filter(s => s.active);
+    const counts = activeStudents.map(s => s.count);
+    const min = counts.length ? Math.min(...counts) : 0;
+    const max = counts.length ? Math.max(...counts) : 0;
+
+    students.forEach(student => {
+        const div = document.createElement("div");
+        div.className = "student" + (student.active ? "" : " disabled");
+
+        const color = getColor(student.count, min, max);
+
+        div.innerHTML = `
+            ${student.name}
+            <div class="count" style="color:${color}">
+                ${student.count}
+            </div>
+        `;
+
+        div.onclick = () => {
+            student.active = !student.active;
+            render();
+        };
+
+        grid.appendChild(div);
+    });
+
+    saveData();
+}
+
+/* ----------------- COLOR GRADIENT ----------------- */
+function getColor(value, min, max) {
+    if (max === min) return "#0DACDA"; // all same score
+
+    const t = (value - min) / (max - min);
+
+    const teal = { r: 13, g: 172, b: 218 };       // #0DACDA
+    const purple = { r: 177, g: 21, b: 110 };     // #B1156E
+
+    const r = Math.round(teal.r + (purple.r - teal.r) * t);
+    const g = Math.round(teal.g + (purple.g - teal.g) * t);
+    const b = Math.round(teal.b + (purple.b - teal.b) * t);
+
+    return `rgb(${r}, ${g}, ${b})`;
+}
+
+/* ----------------- ADD / REMOVE SWEETS ----------------- */
+function addSweet() {
+    const cards = document.querySelectorAll(".student");
+    students.forEach((student, i) => {
+        if (student.active) {
+            student.count++;
+            cards[i]?.classList.add("bump");
+            setTimeout(() => cards[i]?.classList.remove("bump"), 200);
+        }
+    });
+    render();
+}
+
+function removeSweet() {
+    students.forEach(student => {
+        if (student.active && student.count > 0) student.count--;
+    });
+    render();
+}
+
+/* ----------------- SELECT / DESELECT ----------------- */
+function selectAll(state) {
+    students.forEach(s => s.active = state);
+    render();
+}
+
+/* ----------------- DOWNLOAD CSV ----------------- */
+function downloadCSV() {
+    const csv = students.map(s => `${s.name},${s.count}`).join("\n");
+    const today = new Date();
+    const dateStamp = today.toISOString().split('T')[0];
+
+    const blob = new Blob([csv], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `sweets_${dateStamp}.txt`;
+    a.click();
+}
+</script>
+
+</body>
+</html>
