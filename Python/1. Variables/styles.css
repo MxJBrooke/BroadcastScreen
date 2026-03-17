@@ -1,0 +1,290 @@
+body {
+    font-family: Consolas, monospace;
+    background-color: #f5f5f5;
+    color: #000;
+    margin: 0;
+    padding: 0;
+    transition: all 0.3s ease;
+}
+
+/* ===== HEADER ===== */
+.header {
+    width: 100%;
+    height: 80px;
+    background-color: #333;
+    border-bottom: 2px solid #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.logo-box img {
+    height: 60px;
+    cursor: pointer;
+}
+
+.dark-toggle {
+    position: absolute;
+    right: 20px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #e0e0e0;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* ===== MAIN WRAPPER ===== */
+.main-wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    padding: 40px;
+    box-sizing: border-box;
+}
+
+/* ===== TOP PANELS SIDE BY SIDE ===== */
+.top-panels {
+    display: flex;
+    gap: 20px;
+}
+
+.rules-panel, .checker-panel {
+    flex: 1;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* RULES */
+.rules-panel ul {
+    line-height: 1.8;
+    font-size: 16px;
+}
+
+/* CHECKER */
+.checker-panel input {
+    padding: 10px;
+    font-size: 16px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.checker-panel button {
+    padding: 10px 16px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #aaa;
+    background-color: #e0e0e0;
+    cursor: pointer;
+}
+
+#result {
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+/* ===== QUIZ PANEL ===== */
+.quiz-panel {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.quiz-panel h2 {
+    margin-bottom: 20px;
+}
+
+.quiz-question {
+    margin-bottom: 25px;
+}
+
+.quiz-columns {
+    display: flex;
+    gap: 20px;
+}
+
+.quiz-answers {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.quiz-option {
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 1px solid #aaa;
+    background: #e0e0e0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.quiz-option.correct { background-color: #4CAF50; color: white; }
+.quiz-option.incorrect { background-color: #E74C3C; color: white; }
+
+.quiz-explanation-box {
+    flex: 1;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 10px;
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+}
+
+.quiz-explanation-box p {
+    margin: 0;
+    font-weight: bold;
+}
+
+/* ===== DARK MODE ===== */
+body.dark-mode {
+    background-color: #121212;
+    color: #fff;
+}
+
+body.dark-mode .rules-panel,
+body.dark-mode .checker-panel,
+body.dark-mode .quiz-panel,
+body.dark-mode .quiz-answers,
+body.dark-mode .quiz-explanation-box {
+    background-color: #222;
+    border-color: #444;
+    color: #fff;
+}
+
+body.dark-mode input {
+    background-color: #333;
+    color: #fff;
+    border: 1px solid #555;
+}
+
+body.dark-mode button,
+body.dark-mode .quiz-option {
+    background-color: #333;
+    border: 1px solid #555;
+    color: #fff;
+}
+
+body.dark-mode .quiz-option.correct { background-color: #4CAF50; }
+body.dark-mode .quiz-option.incorrect { background-color: #E74C3C; }
+
+
+/* ===== MAIN WRAPPER ===== */
+.main-wrapper {
+    max-width: 10000px;  /* increased from 1000px to 1200px */
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    padding: 40px;
+    box-sizing: border-box;
+}
+
+/* ===== TOP PANELS SIDE BY SIDE ===== */
+.top-panels {
+    display: flex;
+    gap: 20px;
+}
+
+/* rules and checker flex 1 ensures equal width */
+.rules-panel, .checker-panel {
+    flex: 1;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 30px; /* increased padding for a more spacious look */
+    box-sizing: border-box;
+}
+
+/* ===== QUIZ PANEL ===== */
+.quiz-panel {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 30px;  /* increased padding */
+    box-sizing: border-box;
+}
+
+/* ===== TOP PANELS SIDE BY SIDE ===== */
+.top-panels {
+    display: flex;
+    gap: 20px;
+}
+
+/* rules and checker flex 1 ensures equal width */
+.rules-panel, .checker-panel {
+    flex: 1;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 30px; /* consistent internal spacing */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column; /* stack content nicely */
+    align-items: center;    /* center horizontally */
+}
+
+/* ===== CHECKER PANEL INPUT ===== */
+.checker-panel input {
+    padding: 10px;
+    font-size: 16px;
+    width: 80%;         /* now narrower than full width */
+    max-width: 400px;   /* prevent overly wide input */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    box-sizing: border-box;
+}
+
+/* CHECKER BUTTON */
+.checker-panel button {
+    padding: 10px 16px;
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #aaa;
+    background-color: #e0e0e0;
+    cursor: pointer;
+}
+
+/* RESULT TEXT */
+#result {
+    margin-top: 20px;
+    font-weight: bold;
+    text-align: center; /* center result message */
+}
+
+/* QUIZ PANEL SPACING */
+.quiz-panel {
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 30px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* QUIZ EXPLANATION BOX */
+.quiz-explanation-box {
+    flex: 1;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 15px;   /* add spacing inside explanation */
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+}
