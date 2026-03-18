@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Data Types</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="logo-box">
+        <img src="https://clf.uk/wp-content/uploads/CLF-Logo-Transparent-White-Text.png" alt="CLF Logo" onclick="toggleTheme()">
+    </div>
+    <button class="dark-toggle" onclick="toggleTheme()">Toggle Dark Mode</button>
+</div>
+
+<h1 style="text-align:center; margin-top:20px;">Denary to Hexadecimal Conversion Coding Challenge</h1>
+
+<div class="info-panel">
+
+    <h2>Hexadecimal to Denary (2 Digits)</h2>
+
+    <p>
+        Hexadecimal uses the digits 0–9 and the letters A–F.
+    </p>
+
+    <ul>
+        <li>A = 10</li>
+        <li>B = 11</li>
+        <li>C = 12</li>
+        <li>D = 13</li>
+        <li>E = 14</li>
+        <li>F = 15</li>
+    </ul>
+
+    <h3>Your Task</h3>
+
+    <ul>
+        <li>Ask the user to input a 2-digit hexadecimal number</li>
+        <li>Convert each digit into its denary value</li>
+        <li>Multiply the first digit by 16</li>
+        <li>Add the second digit</li>
+        <li>Display the result</li>
+    </ul>
+
+    <h4>Hints</h4>
+
+    <ul>
+        <li>You can access digits using indexing (e.g. number[0], number[1])</li>
+        <li>You will need to convert letters (A–F) into numbers</li>
+        <li>Consider using a list to hold these conversion</li>
+    </ul>
+
+</div>
+
+<div>
+    <iframe src="https://trinket.io/embed/python/062a4fd41ff5" width="100%" height="756" frameborder="0" marginwidth="0" marginheight="0" allowfullscreen></iframe>
+</div>
+
+
+
+
+
+
+
+
+</div>
+
+<script>
+// DARK MODE TOGGLE
+function toggleTheme(){
+    document.body.classList.toggle('dark-mode');
+}
+</script>
+
+</body>
+</html>
