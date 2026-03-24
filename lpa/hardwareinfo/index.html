@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Computer Hardware Info</title>
+<style>
+/* GENERAL BODY */
+body {
+    font-family: Consolas, monospace;
+    margin: 0;
+    transition: all 0.3s ease;
+}
+
+/* HEADER */
+.header {
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    color: #000;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* ACCESSIBILITY TOGGLE BUTTON */
+.accessibility-toggle {
+    position: absolute;
+    left: 20px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* ACCESSIBILITY PANEL */
+.accessibility-panel {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 250px;
+    height: 100%;
+    background: #f0f0f0;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: left 0.3s ease, background 0.3s ease;
+    z-index: 1000;
+}
+
+.accessibility-panel.open { left: 0; }
+
+.accessibility-panel .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.accessibility-panel .color-spot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 4px;
+    cursor: pointer;
+    border: 1px solid #777;
+}
+
+/* MAIN WRAPPER */
+.main-wrapper { max-width: 900px; margin: 40px auto; position: relative; }
+
+/* INFO CARDS */
+.card {
+    background: #fff;
+    padding: 20px;
+    margin: 15px 0;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    transition: all 0.3s ease;
+}
+.card h2 { margin-top: 0; }
+.links a {
+    display: inline-block;
+    margin: 5px 10px 5px 0;
+    padding: 8px 12px;
+    background: #e0e0e0;
+    color: #000;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+.links a:hover { background: #d0d0d0; }
+
+/* CARD COLORS MATCH BODY */
+body.access-white .card { background: #f5f5f5; border-color:#ccc; }
+body.access-red .card { background: #ffcccc; border-color:#aa9999; }
+body.access-orange .card { background: #ffe5cc; border-color:#ccb299; }
+body.access-yellow .card { background: #fff9c4; border-color:#d9d9a3; }
+body.access-green .card { background: #e8f5e9; border-color:#b6d7bb; }
+body.access-blue .card { background: #e3f2fd; border-color:#b0d4ee; }
+body.access-purple .card { background: #e6e0f8; border-color:#c0b7e0; }
+body.access-pink .card { background: #fce4ec; border-color:#f2c6d0; }
+body.access-dark .card { background: #222; border-color:#444; color:#fff; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .card { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<div class="header" id="header">
+    <button class="accessibility-toggle" id="accessToggle" onclick="toggleAccessibility()">Accessibility</button>
+    <h1>Computer Hardware Info</h1>
+</div>
+
+<div class="accessibility-panel" id="accessPanel">
+    <button class="close-btn" onclick="toggleAccessibility()">✖</button>
+    <h3>Background Colours</h3>
+    <div class="color-spot" style="background:#f5f5f5" onclick="setBackground('white')"></div>
+    <div class="color-spot" style="background:#ffcccc" onclick="setBackground('red')"></div>
+    <div class="color-spot" style="background:#ffe5cc" onclick="setBackground('orange')"></div>
+    <div class="color-spot" style="background:#fff9c4" onclick="setBackground('yellow')"></div>
+    <div class="color-spot" style="background:#e8f5e9" onclick="setBackground('green')"></div>
+    <div class="color-spot" style="background:#e3f2fd" onclick="setBackground('blue')"></div>
+    <div class="color-spot" style="background:#e6e0f8" onclick="setBackground('purple')"></div>
+    <div class="color-spot" style="background:#fce4ec" onclick="setBackground('pink')"></div>
+    <div class="color-spot" style="background:#121212" onclick="setBackground('dark')"></div>
+</div>
+
+<div class="main-wrapper">
+    <div class="card">
+        <h2>Motherboard</h2>
+        <div class="links">
+            <a href="https://simple.wikipedia.org/wiki/Motherboard" target="_blank">Simple English Wikipedia</a>
+            <a href="https://www.britannica.com/technology/motherboard" target="_blank">Encyclopedia Britannica</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>CPU (Central Processing Unit)</h2>
+        <div class="links">
+            <a href="https://simple.wikipedia.org/wiki/Central_processing_unit" target="_blank">Simple English Wikipedia</a>
+            <a href="https://www.britannica.com/technology/central-processing-unit" target="_blank">Encyclopedia Britannica</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>RAM (Random Access Memory)</h2>
+        <div class="links">
+            <a href="https://simple.wikipedia.org/wiki/Random-access_memory" target="_blank">Simple English Wikipedia</a>
+            <a href="https://www.britannica.com/technology/RAM-computing" target="_blank">Encyclopedia Britannica</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>HDD (Hard Disk Drive)</h2>
+        <div class="links">
+            <a href="https://simple.wikipedia.org/wiki/Hard_disk_drive" target="_blank">Simple English Wikipedia</a>
+            <a href="https://www.britannica.com/technology/hard-drive" target="_blank">Encyclopedia Britannica</a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Accessibility
+function toggleAccessibility() {
+    document.getElementById('accessPanel').classList.toggle('open');
+}
+function darkenColor(hex, percent) {
+    hex = hex.replace(/^#/, '');
+    let r = parseInt(hex.substring(0,2),16),
+        g = parseInt(hex.substring(2,4),16),
+        b = parseInt(hex.substring(4,6),16);
+    r = Math.floor(r*(1-percent/100));
+    g = Math.floor(g*(1-percent/100));
+    b = Math.floor(b*(1-percent/100));
+    return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+function setBackground(color) {
+    document.body.className='';
+    document.body.classList.add('access-'+color);
+    const colorMap = {
+        white:'#f5f5f5', red:'#ffcccc', orange:'#ffe5cc',
+        yellow:'#fff9c4', green:'#e8f5e9', blue:'#e3f2fd',
+        purple:'#e6e0f8', pink:'#fce4ec', dark:'#121212'
+    };
+    document.body.style.background = colorMap[color]||'#f5f5f5';
+    const darkHex=color==='dark'? '#000' : darkenColor(colorMap[color],40);
+    document.getElementById('header').style.background = darkHex;
+}
+
+// Initialize
+window.onload=function(){ setBackground('white'); };
+</script>
+
+</body>
+</html>

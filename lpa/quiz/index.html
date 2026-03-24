@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hardware Quiz</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header" id="header">
+    <button class="accessibility-toggle" id="accessToggle" onclick="toggleAccessibility()">Accessibility</button>
+    <h1>Hardware Quiz</h1>
+</div>
+
+<!-- ACCESSIBILITY PANEL -->
+<div class="accessibility-panel" id="accessPanel">
+    <button class="close-btn" onclick="toggleAccessibility()">✖</button>
+    <h3>Background Colours</h3>
+    <div class="color-spot" style="background:#f5f5f5" onclick="setBackground('white')"></div>
+    <div class="color-spot" style="background:#ffcccc" onclick="setBackground('red')"></div>
+    <div class="color-spot" style="background:#ffe5cc" onclick="setBackground('orange')"></div>
+    <div class="color-spot" style="background:#fff9c4" onclick="setBackground('yellow')"></div>
+    <div class="color-spot" style="background:#e8f5e9" onclick="setBackground('green')"></div>
+    <div class="color-spot" style="background:#e3f2fd" onclick="setBackground('blue')"></div>
+    <div class="color-spot" style="background:#e6e0f8" onclick="setBackground('purple')"></div>
+    <div class="color-spot" style="background:#fce4ec" onclick="setBackground('pink')"></div>
+    <div class="color-spot" style="background:#121212" onclick="setBackground('dark')"></div>
+</div>
+
+<!-- MAIN QUIZ WRAPPER -->
+<div class="main-wrapper">
+    <div class="score">Score: <span id="score">0</span></div>
+    <div id="quiz"></div>
+</div>
+
+<script>
+// Accessibility
+function toggleAccessibility() {
+    document.getElementById('accessPanel').classList.toggle('open');
+}
+
+function darkenColor(hex, percent) {
+    hex = hex.replace(/^#/, '');
+    let r = parseInt(hex.substring(0,2),16),
+        g = parseInt(hex.substring(2,4),16),
+        b = parseInt(hex.substring(4,6),16);
+    r = Math.floor(r*(1-percent/100));
+    g = Math.floor(g*(1-percent/100));
+    b = Math.floor(b*(1-percent/100));
+    return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+
+function setBackground(color) {
+    // Remove previous classes
+    document.body.className='';
+    document.body.classList.add('access-'+color);
+
+    // Body background
+    const colorMap = {
+        white:'#f5f5f5', red:'#ffcccc', orange:'#ffe5cc', yellow:'#fff9c4',
+        green:'#e8f5e9', blue:'#e3f2fd', purple:'#e6e0f8', pink:'#fce4ec', dark:'#121212'
+    };
+    document.body.style.background = colorMap[color] || '#f5f5f5';
+
+    // Darker header tone
+    const darkHex = color==='dark' ? '#000' : darkenColor(colorMap[color],40);
+    document.getElementById('header').style.background = darkHex;
+}
+
+// QUESTIONS JSON FRAME
+const questionsJSON = [
+    {
+        "question": "Identify the component that processes instructions.",
+        "options": ["RAM","CPU","HDD"],
+        "answer": 1,
+        "stars": 3,
+        "image": "https://upload.wikimedia.org/wikipedia/commons/3/3a/Intel_CPU.jpg",
+        "explanation": "The CPU executes instructions from programs."
+    },
+    {
+        "question": "Which component temporarily stores data while programs run?",
+        "options": ["RAM","CPU","Motherboard"],
+        "answer": 0,
+        "stars": 2,
+        "image": null,
+        "explanation": "RAM holds temporary data for CPU access."
+    },
+    {
+        "question": "Which is the main circuit board connecting all components?",
+        "options": ["Motherboard","CPU","HDD"],
+        "answer": 0,
+        "stars": 2,
+        "image": "https://upload.wikimedia.org/wikipedia/commons/6/6f/Motherboard_diagram.svg",
+        "explanation": "The Motherboard connects all major components."
+    },
+    {
+        "question": "Which stores data permanently?",
+        "options": ["RAM","CPU","HDD"],
+        "answer": 2,
+        "stars": 1,
+        "image": "https://upload.wikimedia.org/wikipedia/commons/f/f8/Laptop-hard-drive-exposed.jpg",
+        "explanation": "HDD stores data permanently, even when the computer is off."
+    }
+];
+
+// Quiz state
+let queue = [...questionsJSON];
+let current = 0;
+let score = 0;
+let attempts = 0;
+let correctCount = 0;
+
+// RENDER QUESTION
+function render() {
+    if(queue.length === 0){
+        showResults();
+        return;
+    }
+
+    const q = queue[current];
+    const imageHTML = q.image ? `<div class="quiz-image"><img src="${q.image}" alt="question image"></div>` : "";
+    document.getElementById('quiz').innerHTML = `
+        <div class="quiz-card">
+            <div class="quiz-content">
+                <div class="stars">${'★'.repeat(q.stars)}</div>
+                <h2>${q.question}</h2>
+                ${q.options.map((o,i)=>`<button onclick="answer(${i})">${o}</button>`).join('')}
+                <div class="feedback" id="feedback"></div>
+                <p class="explanation" id="explanation"></p>
+            </div>
+            ${imageHTML}
+            <button class="next-btn" id="nextBtn" disabled onclick="next()">Next</button>
+        </div>
+    `;
+}
+
+// CHECK ANSWER
+function answer(selected) {
+    const q = queue[current];
+    const fb = document.getElementById('feedback');
+    const exp = document.getElementById('explanation');
+    const nextBtn = document.getElementById('nextBtn');
+
+    attempts++; // track total attempts
+
+    if(selected === q.answer){
+        score += q.stars;
+        document.getElementById('score').textContent = score;
+        fb.textContent = "✅ Correct!";
+        exp.textContent = "";
+        correctCount++;
+        nextBtn.disabled = false;
+
+        // Remove question from queue
+        queue.splice(current,1);
+        if(current >= queue.length) current = 0;
+    } else {
+        fb.textContent = "❌ Incorrect.";
+        exp.textContent = q.explanation;
+        q.stars = Math.max(1,q.stars-1);
+        nextBtn.disabled = true;
+        setTimeout(()=>{ nextBtn.disabled = false; }, 5000);
+        // Keep question in queue to repeat later
+    }
+}
+
+// NEXT QUESTION
+function next() {
+    if(queue.length === 0){
+        showResults();
+        return;
+    }
+    current++;
+    if(current >= queue.length) current = 0;
+    render();
+}
+
+// SHOW FINAL RESULTS
+function showResults() {
+    const accuracy = ((correctCount / attempts) * 100).toFixed(1);
+    document.getElementById('quiz').innerHTML = `
+        <div class="quiz-card">
+            <div class="quiz-content">
+                <h2>🎉 Quiz Completed!</h2>
+                <p>Total Points: <strong>${score}</strong></p>
+                <p>Accuracy Rate: <strong>${accuracy}%</strong></p>
+                <p>Congratulations! You answered all questions correctly.</p>
+            </div>
+        </div>
+    `;
+}
+
+// INIT
+window.onload = function() {
+    setBackground('white');
+    render();
+};
+</script>
+</body>
+</html>
