@@ -73,7 +73,7 @@ function setBackground(color) {
 const questionsJSON = [
     {
         "question": "Identify the component that processes instructions.",
-        "options": ["RAM","CPU","HDD"],
+        "options": ["RAM","CPU","Hard Disk Drive","Motherboard"],
         "answer": 1,
         "stars": 3,
         "image": null,
@@ -81,7 +81,7 @@ const questionsJSON = [
     },
     {
         "question": "Which component temporarily stores data while programs run?",
-        "options": ["RAM","CPU","Motherboard"],
+        "options": ["RAM","CPU","Motherboard","Hard Disk Drive"],
         "answer": 0,
         "stars": 2,
         "image": null,
@@ -89,7 +89,7 @@ const questionsJSON = [
     },
     {
         "question": "Which is the main circuit board connecting all components?",
-        "options": ["Motherboard","CPU","HDD"],
+        "options": ["Motherboard","CPU","Hard Disk Drive", "RAM"],
         "answer": 0,
         "stars": 2,
         "image": null,
@@ -97,20 +97,92 @@ const questionsJSON = [
     },
     {
         "question": "Which stores data permanently?",
-        "options": ["RAM","CPU","HDD"],
+        "options": ["RAM","CPU","Hard Disk Drive","Motherboard"],
         "answer": 2,
         "stars": 1,
         "image": null,
         "explanation": "HDD stores data permanently, even when the computer is off."
     },
 	{
-        "question": "Which component is RAM",
-        "options": ["A","B","C","D"],
+        "question": "Which component is the RAM?",
+        "options": ["a","b","c","d"],
+        "answer": 2,
+        "stars": 1,
+        "image": "https://raw.githubusercontent.com/MxJBrooke/BroadcastScreen/refs/heads/main/lpa/quiz/images/allhardware.jpg",
+        "explanation": "In the image C is a stick of RAM you would find in most desktop computers."
+    },
+	{
+        "question": "Which component is a CPU?",
+        "options": ["a","b","c","d"],
+        "answer": 1,
+        "stars": 1,
+        "image": "https://raw.githubusercontent.com/MxJBrooke/BroadcastScreen/refs/heads/main/lpa/quiz/images/allhardware.jpg",
+        "explanation": "In the image b is a CPU."
+    },
+	{
+        "question": "Which component is a Motherboard?",
+        "options": ["a","b","c","d"],
+        "answer": 0,
+        "stars": 1,
+        "image": "https://raw.githubusercontent.com/MxJBrooke/BroadcastScreen/refs/heads/main/lpa/quiz/images/allhardware.jpg",
+        "explanation": "In the image A is a motherboard."
+    },
+	{
+        "question": "Which component is a Hard Drive?",
+        "options": ["a","b","c","d"],
         "answer": 3,
         "stars": 1,
-        "image": https://raw.githubusercontent.com/MxJBrooke/BroadcastScreen/refs/heads/main/lpa/quiz/images/allhardware.jpg,
-        "explanation": "In the image C is a stick of RAM you would find in most desktop computers."
-    }
+        "image": "https://raw.githubusercontent.com/MxJBrooke/BroadcastScreen/refs/heads/main/lpa/quiz/images/allhardware.jpg",
+        "explanation": "In the image D is a hard drive."
+    },
+	{
+		"question": "Which component is known as the 'brain' of the computer?",
+		"options": ["RAM","CPU","Motherboard","Hard Disk Drive"],
+		"answer": 1,
+		"stars": 1,
+		"image": null,
+		"explanation": "The CPU is called the brain because it processes instructions."
+	},
+	{
+		"question": "What happens to data in RAM when the computer is turned off?",
+		"options": ["It is saved permanently","It is deleted","It moves to the CPU","It is printed"],
+		"answer": 1,
+		"stars": 2,
+		"image": null,
+		"explanation": "RAM is volatile, so all data is lost when power is off."
+	},
+	{
+		"question": "Which component would you upgrade to store more files?",
+		"options": ["CPU","RAM","Hard Disk Drive","Motherboard"],
+		"answer": 2,
+		"stars": 2,
+		"image": null,
+		"explanation": "The hard drive stores files permanently, so increasing it gives more storage."
+	},
+	{
+		"question": "Which component stores the operating system?",
+		"options": ["CPU","RAM","Hard Disk Drive","Motherboard"],
+		"answer": 2,
+		"stars": 2,
+		"image": null,
+		"explanation": "The operating system is stored on the hard drive."
+	},
+	{
+		"question": "Which component performs calculations?",
+		"options": ["CPU","RAM","Motherboard","Hard Disk Drive"],
+		"answer": 0,
+		"stars": 1,
+		"image": null,
+		"explanation": "The CPU performs calculations and processes data."
+	},
+	{
+		"question": "Which component is required for all other components to be connected together?",
+		"options": ["CPU","Motherboard","RAM","Hard Disk Drive"],
+		"answer": 1,
+		"stars": 1,
+		"image": null,
+		"explanation": "All components plug into the motherboard."
+	}
 ];
 
 // Quiz state
