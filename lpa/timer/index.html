@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Classroom Noise Meter</title>
+
+<style>
+/* ----------------- Global Styles ----------------- */
+body {
+    font-family: Consolas, monospace;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+    background-color: #f5f5f5;
+    color: #000;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+/* ----------------- Header ----------------- */
+.header {
+    width: 100%;
+    height: 80px;
+    background-color: #333;
+    border-bottom: 2px solid #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.logo-box {
+    background-color: #FFF;        
+    padding: 5px 10px;             
+    border-radius: 0 0 12px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.logo-box img {
+    height: 60px;
+    cursor: pointer;
+}
+
+/* Exam Toggle */
+.exam-toggle {
+    position: absolute;
+    right: 20px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #e0e0e0;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* ----------------- Main Content ----------------- */
+.main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* ----------------- Divider ----------------- */
+.divider {
+    width: 6px;
+    background-color: #ccc;
+    cursor: col-resize;
+    transition: background 0.2s;
+}
+.divider:hover { background-color: #999; }
+
+/* ----------------- Left Panel ----------------- */
+.left {
+    flex: 1 1 50%;
+    padding: 20px;
+    border-right: 2px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+    min-width: 200px;
+}
+
+/* ----------------- Exam Sidebar ----------------- */
+.exam-sidebar {
+    flex: 0 0 350px;
+    padding: 20px;
+    border-right: 2px solid #ccc;
+    display: none;
+    flex-direction: column;
+    overflow-y: auto;
+    background: #fff;
+}
+
+.exam-sidebar h2 {
+    margin-bottom: 15px;
+}
+
+.exam-sidebar ul {
+    padding-left: 20px;
+    line-height: 1.8;
+    font-size: 18px;
+}
+
+/* Exam font controls */
+.exam-font-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.exam-font-controls button {
+    padding: 6px 12px;
+    cursor: pointer;
+}
+
+/* ----------------- Custom Sections ----------------- */
+#custom {
+    display: flex;
+    flex-direction: column;
+    width: 90%;
+    max-width: 600px;
+    margin-top: 20px;
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+#custom textarea {
+    width: 100%;
+    height: 40px;   
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    resize: vertical;
+    font-size: 14px;
+}
+
+/* ----------------- Right Panel ----------------- */
+.right {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 50px 20px;
+    overflow-y: auto;
+    min-width: 200px;
+    gap: 50px;
+}
+
+/* ----------------- Noise Meter ----------------- */
+.bar-container {
+    position: relative;
+    width: 80%;
+    max-width: 600px;
+    height: 50px;
+    display: flex;
+    border-radius: 10px;
+    overflow: visible;
+    border: 2px solid #ccc;
+    background-color: #e0e0e0;
+}
+
+.segment {
+    flex: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    user-select: none;
+    transition: transform 0.2s;
+    border-radius: 5px;
+    margin: 2px;
+    padding: 12px 0;
+}
+
+.segment.silent { background-color: #7273EE; color: #fff; }
+.segment.quiet { background-color: #E331EE; }
+.segment.peer { background-color: #64CFC7; }
+.segment.team { background-color: #E3323B; color: #fff; }
+
+.segment.active {
+    outline: 3px solid #000;
+    transform: scale(1.05);
+}
+
+.arrow-svg, .arrow-bottom-svg {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    transition: left 0.3s ease;
+    z-index: 10;
+}
+
+.arrow-svg { top: -35px; }
+.arrow-bottom-svg { bottom: -35px; transform: rotate(180deg); }
+
+/* ----------------- Timer ----------------- */
+.timer-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 80%;
+    max-width: 600px;
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+.timer {
+    font-size: 80px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.timer-buttons, .timer-control {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.timer-buttons button, .timer-control button {
+    background-color: #e0e0e0;
+    border: 1px solid #aaa;
+    padding: 8px 16px;
+    font-size: 16px;
+    border-radius: 5px;
+}
+
+/* ----------------- Dark Mode ----------------- */
+body.dark-mode {
+    background-color: #121212;
+    color: #fff;
+}
+body.dark-mode #custom,
+body.dark-mode .timer-container,
+body.dark-mode .exam-sidebar {
+    background-color: #222;
+    border-color: #333;
+}
+/* ----------------- Left Panel ----------------- */
+.left {
+    flex: 0 0 50%;
+    width: 50%;
+    padding: 20px;
+    border-right: 2px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    overflow-y: auto;
+    min-width: 250px;
+    box-sizing: border-box;
+}
+
+/* ----------------- Custom Sections (Now/Next/Then Do) ----------------- */
+#custom {
+    width: 100%;
+    max-width: 100%;
+    margin-top: 20px;
+    background-color: #fff;
+    padding: 15px;           /* even padding around content */
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    color: #000;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Textareas */
+#custom textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    resize: vertical;
+    box-sizing: border-box;   /* ensures padding included in width */
+}
+
+/* ----------------- Exam Sidebar ----------------- */
+.exam-sidebar {
+    flex: 0 0 350px;
+    padding: 20px;
+    border-right: 2px solid #ccc;
+    display: none;
+    flex-direction: column;
+    overflow-y: auto;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.exam-sidebar h2 {
+    margin-bottom: 10px;
+}
+
+.exam-sidebar ul {
+    padding-left: 20px;
+    line-height: 1.8;
+    font-size: 16px;   /* default font size */
+}
+
+/* Exam sidebar font controls */
+.exam-font-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+.exam-font-controls button {
+    padding: 6px 12px;
+    font-size: 14px;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<body>
+
+<!-- ================= HEADER ================= -->
+<div class="header">
+    <div class="logo-box">
+        <img src="https://www.theparkacademiestrust.com/images/Pat_logo.png"
+             alt="CLF Logo"
+             onclick="toggleTheme()">
+    </div>
+
+    <button class="exam-toggle" onclick="toggleExamMode()">
+        Exam Mode
+    </button>
+</div>
+
+
+<!-- ================= MAIN ================= -->
+<div class="main">
+
+    <!-- ===== EXAM SIDEBAR ===== -->
+    <div class="exam-sidebar" id="examSidebar">
+
+        <div class="exam-font-controls">
+            <button onclick="adjustExamFont(-2)">A−</button>
+            <button onclick="adjustExamFont(2)">A+</button>
+        </div>
+
+        <div id="examContent">
+
+            <h2>Exam Conditions</h2>
+            <ul>
+                <li>Absolute silence must be maintained from the moment you enter until you leave.</li>
+                <li>Phones, smartwatches, and notes are banned. Use may lead to disqualification.</li>
+                <li>Only clear, unlabelled water bottles allowed. No food or sweets.</li>
+                <li>Only permitted equipment on desk.</li>
+                <li>Enter quietly, find your seat, and raise your hand if you need assistance.</li>
+            </ul>
+
+            <h2>Exam Advice</h2>
+            <ul>
+                <li>Read through every question fully.</li>
+                <li>Check your work carefully at the end.</li>
+                <li>If stuck, move on and return later.</li>
+                <li>Use a black pen.</li>
+                <li>Raise your hand if you need assistance.</li>
+		<li>Check the back page for questions.</li>
+		<li>Attempt every question.</li>
+            </ul>
+
+        </div>
+    </div>
+
+
+    <!-- ===== NORMAL SIDEBAR ===== -->
+    <div class="left" id="normalSidebar">
+
+        <div id="custom">
+            <strong>Now Do:</strong>
+            <textarea placeholder="Type your instructions here..."></textarea>
+        </div>
+
+        <div id="custom">
+            <strong>Next Do:</strong>
+            <textarea placeholder="Type your instructions here..."></textarea>
+        </div>
+
+        <div id="custom">
+            <strong>Then Do:</strong>
+            <textarea placeholder="Type your instructions here..."></textarea>
+        </div>
+
+    </div>
+
+
+    <!-- ===== DRAG DIVIDER ===== -->
+    <div class="divider" id="divider"></div>
+
+
+    <!-- ===== RIGHT PANEL ===== -->
+    <div class="right">
+
+        <!-- ==== NOISE METER ==== -->
+        <div class="bar-container" id="bar">
+
+            <div class="segment silent" onclick="setNoise(0)">
+                Silent Work
+            </div>
+
+            <div class="segment quiet" onclick="setNoise(1)">
+                Quiet Voices
+            </div>
+
+            <div class="segment peer" onclick="setNoise(2)">
+                Turn & Talk
+            </div>
+
+            <div class="segment team" onclick="setNoise(3)">
+                Team Talk
+            </div>
+
+            <svg class="arrow-svg" id="arrow-top" viewBox="0 0 30 30">
+                <polygon points="15,0 0,30 30,30"
+                         fill="black"
+                         stroke="white"
+                         stroke-width="2"/>
+            </svg>
+
+            <svg class="arrow-bottom-svg" id="arrow-bottom" viewBox="0 0 30 30">
+                <polygon points="15,0 0,30 30,30"
+                         fill="black"
+                         stroke="white"
+                         stroke-width="2"/>
+            </svg>
+
+        </div>
+
+
+        <!-- ==== TIMER ==== -->
+        <div class="timer-container" id="timer-container">
+
+            <div class="timer" id="timer">
+                05:00
+            </div>
+
+            <div class="timer-buttons">
+                <button onclick="setQuickTime(1, this)">1 min</button>
+                <button onclick="setQuickTime(2, this)">2 min</button>
+                <button onclick="setQuickTime(5, this)" class="active">5 min</button>
+                <button onclick="setQuickTime(10, this)">10 min</button>
+
+                <input type="number"
+                       id="customTimeInput"
+                       placeholder="Custom (min)"
+                       style="width:100px; padding:4px; font-size:16px;"
+                       min="1">
+
+                <button onclick="setCustomTime()">Set</button>
+            </div>
+
+            <div class="timer-control">
+                <button id="playPauseBtn" onclick="toggleTimerRun()">Play</button>
+                <button onclick="resetTimer()">Reset</button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+<script>
+
+/* ----------------- Exam Mode ----------------- */
+let examMode = false;
+
+function toggleExamMode() {
+    examMode = !examMode;
+
+    document.getElementById("examSidebar").style.display = examMode ? "flex" : "none";
+    document.getElementById("normalSidebar").style.display = examMode ? "none" : "flex";
+}
+
+/* ----------------- Global Font Size Control for Exam Sidebar ----------------- */
+function adjustExamFont(delta) {
+    const examSidebar = document.getElementById('examSidebar');
+    if (!examSidebar) return;
+
+    // adjust font size for all headings and lists inside exam sidebar
+    const elements = examSidebar.querySelectorAll('h2, ul, li');
+    elements.forEach(el => {
+        const style = window.getComputedStyle(el).getPropertyValue('font-size');
+        let currentSize = parseFloat(style);
+        currentSize += delta;
+        if (currentSize < 10) currentSize = 10;
+        if (currentSize > 36) currentSize = 36;
+        el.style.fontSize = currentSize + 'px';
+    });
+}
+
+/* ----------------- Divider Resize ----------------- */
+const divider = document.getElementById("divider");
+const leftPanel = document.querySelector(".left");
+const rightPanel = document.querySelector(".right");
+const examSidebar = document.getElementById("examSidebar");
+
+let dragging = false;
+
+divider.addEventListener("mousedown", () => {
+    dragging = true;
+    document.body.style.userSelect = "none";
+});
+
+window.addEventListener("mousemove", (e) => {
+    if (!dragging) return;
+
+    const mainRect = document.querySelector(".main").getBoundingClientRect();
+    let newLeftWidth = e.clientX - mainRect.left;
+
+    newLeftWidth = Math.max(200, Math.min(newLeftWidth, mainRect.width - 200));
+
+    if (examMode) {
+        examSidebar.style.flex = `0 0 ${newLeftWidth}px`;
+    } else {
+        leftPanel.style.flex = `0 0 ${newLeftWidth}px`;
+    }
+
+    rightPanel.style.flex = "1 1 auto";
+});
+
+window.addEventListener("mouseup", () => {
+    dragging = false;
+    document.body.style.userSelect = "";
+});
+
+/* ----------------- Noise Meter ----------------- */
+const arrowTop = document.getElementById('arrow-top');
+const arrowBottom = document.getElementById('arrow-bottom');
+const bar = document.getElementById('bar');
+const segmentsEls = document.querySelectorAll('.segment');
+const segmentsCount = segmentsEls.length;
+let currentNoiseIndex = 0;
+
+function setNoise(index) {
+    currentNoiseIndex = index;
+    segmentsEls.forEach((seg, i) => seg.classList.toggle('active', i === index));
+
+    const barWidth = bar.clientWidth;
+    const segmentWidth = barWidth / segmentsCount;
+    const arrowPos = segmentWidth * index + segmentWidth / 2 - 15;
+
+    arrowTop.style.left = `${arrowPos}px`;
+    arrowBottom.style.left = `${arrowPos}px`;
+
+    const colors = ['#7273EE', '#E331EE', '#64CFC7', '#E3323B'];
+    const header = document.querySelector('.header');
+    header.style.background = `linear-gradient(to bottom, #FFF, ${colors[index]})`;
+    header.style.borderBottomColor = colors[index];
+}
+
+setNoise(0);
+window.addEventListener('resize', () => setNoise(currentNoiseIndex));
+
+/* ----------------- Timer ----------------- */
+let timerDuration = 5 * 60;
+let timerRunning = false;
+let timerInterval = null;
+
+const timerDisplay = document.getElementById('timer');
+const playPauseBtn = document.getElementById('playPauseBtn');
+
+function updateTimerDisplay() {
+    const minutes = Math.floor(timerDuration / 60).toString().padStart(2, '0');
+    const seconds = (timerDuration % 60).toString().padStart(2, '0');
+    timerDisplay.textContent = `${minutes}:${seconds}`;
+}
+
+function timerTick() {
+    if (timerDuration > 0) {
+        timerDuration--;
+        updateTimerDisplay();
+    } else {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        playPauseBtn.textContent = "Play";
+    }
+}
+
+function toggleTimerRun() {
+    if (timerRunning) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        playPauseBtn.textContent = "Play";
+    } else {
+        timerInterval = setInterval(timerTick, 1000);
+        timerRunning = true;
+        playPauseBtn.textContent = "Pause";
+    }
+}
+
+function resetTimer() {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    timerDuration = 5 * 60;
+    updateTimerDisplay();
+    playPauseBtn.textContent = "Play";
+}
+
+function setQuickTime(mins, btn) {
+    timerDuration = mins * 60;
+    updateTimerDisplay();
+    document.querySelectorAll('.timer-buttons button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+function setCustomTime() {
+    const input = document.getElementById('customTimeInput');
+    let mins = parseInt(input.value);
+    if (isNaN(mins) || mins < 1) {
+        alert("Please enter a valid number of minutes (>=1)");
+        return;
+    }
+    timerDuration = mins * 60;
+    updateTimerDisplay();
+    document.querySelectorAll('.timer-buttons button').forEach(b => b.classList.remove('active'));
+}
+
+/* ----------------- Dark Mode ----------------- */
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+}
+
+updateTimerDisplay();
+
+</script>
+</body>
+</html>
