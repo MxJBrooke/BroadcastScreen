@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Computer Hardware Info</title>
+<style>
+body {
+    font-family: Consolas, monospace;
+    margin: 0;
+    transition: all 0.3s ease;
+    word-spacing: normal;
+    font-size: 16px;
+}
+
+.header {
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    color: #000;
+    transition: all 0.3s ease;
+}
+
+.header h1 {
+    color: #fff;
+}
+
+.accessibility-toggle {
+    position: absolute;
+    left: 20px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.accessibility-scale {
+    left: 20px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* FIXED PANEL */
+.accessibility-panel {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 250px;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: left 0.3s ease;
+    z-index: 1000;
+    background: #fff; /* default panel background same as button */
+}
+
+.accessibility-panel.open {
+    left: 0;
+}
+
+.color-spot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin: 5px;
+    cursor: pointer;
+    border: 1px solid #777;
+}
+
+.main-wrapper {
+    max-width: 90%;
+    margin: 40px auto;
+}
+
+.card {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    background: #fff;
+    padding: 20px;
+    margin: 15px 0;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+}
+
+.card-content { flex: 1; }
+
+.card img {
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.card img[src=""] { display: none; }
+
+.links a {
+    display: inline-block;
+    margin: 5px 10px 5px 0;
+    padding: 8px 12px;
+    background: #e0e0e0;
+    color: #000;
+    text-decoration: none;
+    border-radius: 6px;
+    border: 1px solid #000;
+}
+
+/* RESTORED CARD COLOURS */
+body.access-white .card { background: #f5f5f5; }
+body.access-red .card { background: #ffcccc; }
+body.access-orange .card { background: #ffe5cc; }
+body.access-yellow .card { background: #fff9c4; }
+body.access-green .card { background: #e8f5e9; }
+body.access-blue .card { background: #e3f2fd; }
+body.access-purple .card { background: #e6e0f8; }
+body.access-pink .card { background: #fce4ec; }
+body.access-dark .card { background: #222; color:#fff; }
+
+.az-nav {
+    position: fixed;
+    right: 10px;
+    top: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.az-nav button {
+    font-size: 12px;
+    padding: 4px;
+    cursor: pointer;
+    background: #e0e0e0;
+    color: #000;
+    border-radius: 6px;
+    border: 1px solid #000;
+}
+
+.accessibility-control {
+    margin: 10px 0;
+}
+</style>
+</head>
+<body>
+
+<div class="header" id="header">
+    <button class="accessibility-toggle" onclick="toggleAccessibility()">Accessibility</button>
+    <h1>Mx Brooke's Encyclopedia</h1>
+</div>
+
+<div class="accessibility-panel" id="accessPanel">
+    <button onclick="toggleAccessibility()">✖</button>
+    <h3>Colours</h3>
+    <button class="color-spot" style="background:#f5f5f5" onclick="setBackground('white')"></button>
+    <button class="color-spot" style="background:#ffcccc" onclick="setBackground('red')"></button>
+    <button class="color-spot" style="background:#ffe5cc" onclick="setBackground('orange')"></button>
+    <button class="color-spot" style="background:#fff9c4" onclick="setBackground('yellow')"></button>
+    <button class="color-spot" style="background:#e8f5e9" onclick="setBackground('green')"></button>
+    <button class="color-spot" style="background:#e3f2fd" onclick="setBackground('blue')"></button>
+    <button class="color-spot" style="background:#e6e0f8" onclick="setBackground('purple')"></button>
+    <button class="color-spot" style="background:#fce4ec" onclick="setBackground('pink')"></button>
+    <button class="color-spot" style="background:#121212" onclick="setBackground('dark')"></button>
+
+    <h3>Word Spacing</h3>
+    <div class="accessibility-control">
+        <button class = "accessibility-scale" onclick="adjustWordSpacing(0.1)">Increase</button>
+        <button class = "accessibility-scale" onclick="adjustWordSpacing(-0.1)">Decrease</button>
+    </div>
+
+    <h3>Font Size</h3>
+    <div class="accessibility-control">
+        <button class = "accessibility-scale" onclick="adjustFontSize(1)">Increase</button>
+        <button class = "accessibility-scale" onclick="adjustFontSize(-1)">Decrease</button>
+    </div>
+</div>
+
+<div class="az-nav" id="azNav"></div>
+
+<div class="main-wrapper">
+<!-- CARDS -->
+<div class="card" id="cpu" data-letter="C">
+    <div class="card-content">
+        <h2>CPU (Central Processing Unit)</h2>
+        <center><i><p>Processes instructions and performs calculations.</p></i></center>
+        <div class="links">
+            <a href="https://simple.wikipedia.org/wiki/Central_processing_unit" target="_blank">Simple English Wikipedia</a>
+            <a href="https://www.britannica.com/technology/central-processing-unit" target="_blank">Encyclopedia Britannica</a>
+            <a href="https://www.csnewbs.com/ks3-thecpu" target="_blank">csnewbs</a>
+        </div>
+    </div>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/0/0a/Intel_i9-14900KF_CPU.jpg" alt="CPU Image">
+</div>
+
+<div class="card" id="hdd" data-letter="H">
+    <div class="card-content">
+        <h2>HDD (Hard Disk Drive)</h2>
+        <center><i><p>Stores data permanently on spinning disks.</p></i></center>
+        <div class="links">
+            <a href="https://simple.wikipedia.org/wiki/Hard_disk_drive" target="_blank">Simple English Wikipedia</a>
+            <a href="https://www.britannica.com/technology/hard-drive" target="_blank">Encyclopedia Britannica</a>
+            <a href="https://www.csnewbs.com/ocr2020-2-2-secondarystorage" target="_blank">csnewbs</a>
+        </div>
+    </div>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/b/b2/Hatachi_500_GB_hard_drive%2C_2011.jpg" alt="HDD Image">
+</div>
+
+<div class="card" id="motherboard" data-letter="M">
+    <div class="card-content">
+        <h2>Motherboard</h2>
+        <center><i><p>Connects components together.</p></i></center>
+        <div class="links">
+            <a href="https://simple.wikipedia.org/wiki/Motherboard" target="_blank">Simple English Wikipedia</a>
+            <a href="https://www.britannica.com/technology/motherboard" target="_blank">Encyclopedia Britannica</a>
+            <a href="https://www.csnewbs.com/ks3-themotherboard" target="_blank">csnewbs</a>
+        </div>
+    </div>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/50/Xbox_360E_Winchester_Top_View.png" alt="Motherboard Image">
+</div>
+
+<div class="card" id="passwords" data-letter="P">
+    <div class="card-content">
+        <h2>Passwords</h2>
+        <center><i><p>Controls access to your data.</p></i></center>
+        <div class="links">
+            <a href="https://simple.wikipedia.org/wiki/Password" target="_blank">Simple English Wikipedia</a>
+            <a href="https://www.britannica.com/technology/password-computing" target="_blank">Encyclopedia Britannica</a>
+            <a href="https://www.csnewbs.com/ctech-5-5-digitalsecurity" target="_blank">csnewbs</a>
+            <a href="https://www.bbc.co.uk/bitesize/guides/z9n9q6f/revision/3" target="_blank">Bitesize</a>
+        </div>
+    </div>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/f/f1/Mediawiki_1.25_sign_in_form.png" alt="Passwords Image">
+</div>
+
+<div class="card" id="ram" data-letter="R">
+    <div class="card-content">
+        <h2>RAM (Random Access Memory)</h2>
+        <center><i><p>Stores data while a program or file is in use.</p></i></center>
+        <div class="links">
+            <a href="https://simple.wikipedia.org/wiki/Random-access_memory" target="_blank">Simple English Wikipedia</a>
+            <a href="https://www.britannica.com/technology/RAM-computing" target="_blank">Encyclopedia Britannica</a>
+            <a href="https://www.csnewbs.com/ks3-memory" target="_blank">csnewbs</a>
+        </div>
+    </div>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/d/db/Swissbit_2GB_PC2-5300U-555.jpg" alt="RAM Image">
+</div>
+
+</div>
+
+<script>
+function toggleAccessibility() {
+    document.getElementById('accessPanel').classList.toggle('open');
+}
+
+function darkenColor(hex, percent) {
+    hex = hex.replace('#','');
+    let r=parseInt(hex.substring(0,2),16);
+    let g=parseInt(hex.substring(2,4),16);
+    let b=parseInt(hex.substring(4,6),16);
+    r=Math.floor(r*(1-percent/100));
+    g=Math.floor(g*(1-percent/100));
+    b=Math.floor(b*(1-percent/100));
+    return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+
+function setBackground(color) {
+    localStorage.setItem('bgColor', color);
+
+    document.body.className='';
+    document.body.classList.add('access-'+color);
+
+    const map={
+        white:'#f5f5f5', red:'#ffcccc', orange:'#ffe5cc',
+        yellow:'#fff9c4', green:'#e8f5e9', blue:'#e3f2fd',
+        purple:'#e6e0f8', pink:'#fce4ec', dark:'#121212'
+    };
+
+    document.body.style.background = map[color];
+
+    const header=document.getElementById('header');
+    const panel=document.getElementById('accessPanel');
+
+    // Header darkened
+    const darkHex=color==='dark' ? '#000' : darkenColor(map[color],40);
+    header.style.background=darkHex;
+
+    // Flyout background = actual page background (not darkened)
+    panel.style.background = map[color];
+
+    // Buttons inside flyout = same style as accessibility-toggle
+    panel.querySelectorAll('button:not(.color-spot)').forEach(el=>{
+        el.style.background = '#fff';
+        el.style.color = '#000';
+        el.style.border = '1px solid #aaa';
+    });
+
+    if(color==='dark'){
+        document.body.style.color='#fff';
+        header.style.color='#fff';
+    } else {
+        document.body.style.color='#000';
+        header.style.color='#000';
+    }
+}
+
+function adjustWordSpacing(amount){
+    let current = parseFloat(localStorage.getItem('wordSpacing')||'0');
+    current += amount;
+    document.body.style.wordSpacing = current + 'em';
+    localStorage.setItem('wordSpacing', current);
+}
+
+function adjustFontSize(amount){
+    let current = parseFloat(localStorage.getItem('fontSize')||'16');
+    current += amount;
+    document.body.style.fontSize = current + 'px';
+    localStorage.setItem('fontSize', current);
+}
+
+window.onload=function(){
+    const saved=localStorage.getItem('bgColor')||'white';
+    setBackground(saved);
+
+    const ws = parseFloat(localStorage.getItem('wordSpacing')||'0');
+    const fs = parseFloat(localStorage.getItem('fontSize')||'16');
+    document.body.style.wordSpacing = ws+'em';
+    document.body.style.fontSize = fs+'px';
+
+    generateAZ();
+};
+
+function generateAZ(){
+    const nav=document.getElementById('azNav');
+    const cards=document.querySelectorAll('.card');
+    const letters=new Set();
+
+    cards.forEach(c=>letters.add(c.dataset.letter));
+
+    [...letters].sort().forEach(letter=>{
+        const btn=document.createElement('button');
+        btn.textContent=letter;
+        btn.onclick=()=>{
+            document.querySelector(`[data-letter='${letter}']`).scrollIntoView({behavior:'smooth'});
+        };
+        nav.appendChild(btn);
+    });
+}
+
+window.addEventListener('click', function(e){
+    const panel = document.getElementById('accessPanel');
+    if (!panel.contains(e.target) && !e.target.closest('.accessibility-toggle')) {
+        panel.classList.remove('open');
+    }
+});
+</script>
+
+</body>
+</html>
