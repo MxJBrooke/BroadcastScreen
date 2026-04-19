@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hardware Quiz</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header" id="header">
+    <button class="accessibility-toggle" onclick="toggleAccessibility()">Accessibility</button>
+    <h1>Hardware Quiz</h1>
+</div>
+
+<!-- OVERLAY (for closing sidebar) -->
+<div id="overlay" onclick="toggleAccessibility()"></div>
+
+<!-- ACCESSIBILITY PANEL -->
+<div class="accessibility-panel" id="accessPanel">
+    <button class="close-btn" onclick="toggleAccessibility()">✖</button>
+    <h3>Background Colours</h3>
+
+    <div class="color-spot" style="background:#f5f5f5" onclick="setBackground('white')"></div>
+    <div class="color-spot" style="background:#ffcccc" onclick="setBackground('red')"></div>
+    <div class="color-spot" style="background:#ffe5cc" onclick="setBackground('orange')"></div>
+    <div class="color-spot" style="background:#fff9c4" onclick="setBackground('yellow')"></div>
+    <div class="color-spot" style="background:#e8f5e9" onclick="setBackground('green')"></div>
+    <div class="color-spot" style="background:#e3f2fd" onclick="setBackground('blue')"></div>
+    <div class="color-spot" style="background:#e6e0f8" onclick="setBackground('purple')"></div>
+    <div class="color-spot" style="background:#fce4ec" onclick="setBackground('pink')"></div>
+</div>
+
+<!-- MAIN -->
+<div class="main-wrapper">
+    <div class="score">Score: <span id="score">0</span></div>
+    <div id="quiz"></div>
+</div>
+
+<script>
+let attempts = 0;
+let correctAttempts = 0;
+
+let score = 0;
+
+let scoredQuestions = new Set();
+let failedFirstAttempt = new Set();
+let completedQuestions = new Set();
+
+// ---------- ACCESSIBILITY ----------
+function toggleAccessibility() {
+    const panel = document.getElementById('accessPanel');
+    const overlay = document.getElementById('overlay');
+
+    panel.classList.toggle('open');
+    overlay.classList.toggle('show');
+}
+
+document.addEventListener('keydown', function(e){
+    if(e.key === "Escape"){
+        document.getElementById('accessPanel').classList.remove('open');
+        document.getElementById('overlay').classList.remove('show');
+    }
+});
+
+function darkenColor(hex, percent) {
+    hex = hex.replace(/^#/, '');
+    let r = parseInt(hex.substring(0,2),16),
+        g = parseInt(hex.substring(2,4),16),
+        b = parseInt(hex.substring(4,6),16);
+
+    r = Math.floor(r*(1-percent/100));
+    g = Math.floor(g*(1-percent/100));
+    b = Math.floor(b*(1-percent/100));
+
+    return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+
+function setBackground(color) {
+    document.body.className='';
+    document.body.classList.add('access-'+color);
+
+    const colorMap = {
+        white:'#f5f5f5', red:'#ffcccc', orange:'#ffe5cc', yellow:'#fff9c4',
+        green:'#e8f5e9', blue:'#e3f2fd', purple:'#e6e0f8', pink:'#fce4ec', dark:'#121212'
+    };
+
+    document.body.style.background = colorMap[color] || '#f5f5f5';
+
+    const darkHex = color==='dark' ? '#000' : darkenColor(colorMap[color],40);
+    document.getElementById('header').style.background = darkHex;
+}
+
+// ---------- DATA ----------
+const questionsJSON = [
+
+/* =========================
+   MCQs (14)
+========================= */
+
+{
+    id: "q1",
+    question: "What does LAN stand for?",
+    options: ["Local Area Network", "Large Access Node", "Long Area Network", "Linked Area Net"],
+    answer: 0,
+    stars: 1
+},
+{
+    id: "q2",
+    question: "Which device connects different networks together?",
+    options: ["Switch", "Router", "NIC", "Hub"],
+    answer: 1,
+    stars: 1
+},
+{
+    id: "q3",
+    question: "What is the main purpose of a switch?",
+    options: ["Encrypt data", "Connect devices on a network together", "Connect Networks Together", "Store files"],
+    answer: 1,
+    stars: 1
+},
+{
+    id: "q4",
+    question: "Which topology connects all devices to a central hub?",
+    options: ["Ring", "Mesh", "Bus", "Star"],
+    answer: 3,
+    stars: 2
+},
+{
+    id: "q5",
+    question: "What does WAN stand for?",
+    options: ["Wireless Access Node", "Web Area Network", "Wide Area Network", "Wide Access Net"],
+    answer: 2,
+    stars: 1
+},
+{
+    id: "q6",
+    question: "Which is an advantage of a star network?",
+    options: ["Each device has a direct connection to every other device, increasing redundancy", "A single cable failure only affects one device, not the whole network", "Data is automatically routed through multiple alternative paths if a device fails", "It is more fault-tolerant because traffic is evenly distributed across all connections"],
+    answer: 1,
+    stars: 3
+},
+{
+    id: "q7",
+    question: "What is bandwidth?",
+    options: ["Distance data travels", "Amount of data transferred per second", "Security level", "Network type"],
+    answer: 1,
+    stars: 1
+},
+{
+    id: "q8",
+    question: "What best describes a WAN?",
+    options: [
+        "A network covering a small geographical area like a school",
+        "A network connecting devices within a single building",
+        "A network covering a large geographical area such as countries",
+        "A network only used for wireless communication"
+    ],
+    answer: 2,
+    stars: 1
+},
+{
+    id: "q9",
+    question: "What does IP stand for?",
+    options: ["Internet Provider", "Internet Protocol", "Internal Process", "Interface Protocol"],
+    answer: 1,
+    stars: 1
+},
+{
+    id: "q10",
+    question: "Which of these is a valid IP address?",
+    options: ["192.168.1.1","192:168:1:1","192:168:1", "392.168.1.1"],
+    answer: 0,
+    stars: 1
+},
+{
+    id: "q11",
+    question: "What is latency?",
+    options: [
+        "The speed of a processor",
+        "The bandwidth of a network",
+        "The size of data packets",
+        "The delay in data transfer"
+    ],
+    answer: 3,
+    stars: 3
+},
+{
+    id: "q12",
+    question: "What does MAC address identify?",
+    options: ["Network speed", "Device hardware address", "IP location", "Website"],
+    answer: 1,
+    stars: 2
+},
+{
+    id: "q13",
+    question: "What is the role of a firewall?",
+    options: ["Speed up internet", "Store files", "Block unauthorised access", "Assign IP addresses"],
+    answer: 2,
+    stars: 1
+},
+{
+    id: "q14",
+    question: "Which is a disadvantage of Wi-Fi compared to wired connections?",
+    options: [
+        "Greater instability",
+        "Higher installation cost",
+        "Less mobility",
+        "Requires physical cables"
+    ],
+    answer: 0,
+    stars: 2
+},
+
+/* =========================
+   FLASHCARDS (6)
+========================= */
+
+{
+    id: "f1",
+    type: "flashcard",
+    question: "Define LAN",
+    answerText: "A LAN is a network that connects devices within a small geographical area such as a school or home",
+    stars: 2
+},
+{
+    id: "f2",
+    type: "flashcard",
+    question: "Define WAN",
+    answerText: "A WAN is a network that covers a large geographical area such as countries or continents",
+    stars: 2
+},
+{
+    id: "f3",
+    type: "flashcard",
+    question: "What is a router?",
+    answerText: "A router is a device that forwards data packets between different networks",
+    stars: 2
+},
+{
+    id: "f4",
+    type: "flashcard",
+    question: "What is bandwidth?",
+    answerText: "Bandwidth is the amount of data that can be transmitted over a network in a given time",
+    stars: 2
+},
+{
+    id: "f5",
+    type: "flashcard",
+    question: "What is packet switching?",
+    answerText: "Packet switching is the process of breaking data into packets that are sent independently across a network",
+    stars: 3
+},
+{
+    id: "f6",
+    type: "flashcard",
+    question: "What is an IP address?",
+    answerText: "A unique number that identifies a device on a network",
+    stars: 2
+},
+{
+    id: "f7",
+    type: "flashcard",
+    question: "What is a topology?",
+    answerText: "A topology is the arrangement of devices and connections in a network",
+    stars: 2
+},
+{
+    id: "f8",
+    type: "flashcard",
+    question: "What are the four layers of the TCP/IP model?",
+    answerText: "Application layer, Transport layer, Internet layer, Link layer",
+    stars: 3
+},
+];
+
+// ---------- STATE ----------
+let queue = [...questionsJSON];
+let current = 0;
+
+// ---------- RENDER ----------
+function render() {
+
+    document.querySelector('.quiz-content')?.classList.remove('locked');
+
+    if(queue.length === 0){
+        showResults();
+        return;
+    }
+
+    let safety = 0;
+    while(completedQuestions.has(queue[current].id)) {
+        current++;
+        if(current >= queue.length) current = 0;
+
+        safety++;
+        if(safety > queue.length) {
+            showResults();
+            return;
+        }
+    }
+
+    const q = queue[current];
+
+    if(q.type === "flashcard"){
+        renderFlashcard(q);
+        return;
+    }
+
+    document.getElementById('quiz').innerHTML = `
+        <div class="quiz-card">
+            <div class="quiz-content">
+                <div class="stars">${'★'.repeat(q.stars)}</div>
+                <h2>${q.question}</h2>
+
+                ${q.options.map((o,i)=>`<button onclick="answer(${i})">${o}</button>`).join('')}
+
+                <div id="feedback"></div>
+                <div id="explanation"></div>
+            </div>
+
+            <button class="next-btn" id="nextBtn" disabled onclick="next()">Next</button>
+        </div>
+    `;
+}
+
+// ---------- FLASHCARD ----------
+function renderFlashcard(q){
+    document.getElementById('quiz').innerHTML = `
+        <div class="quiz-card">
+            <div class="quiz-content">
+                <div class="stars">${'★'.repeat(q.stars)}</div>
+                <h2>${q.question}</h2>
+
+                <textarea id="userAnswer" rows="4"></textarea>
+                <button onclick="checkFlashcard()">Check</button>
+
+                <div id="result"></div>
+                <div id="correctAnswer" class="explanation"></div>
+            </div>
+
+            <button class="next-btn" id="nextBtn" disabled onclick="next()">Next</button>
+        </div>
+    `;
+}
+
+function normalize(text){
+    return text.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(Boolean);
+}
+
+// ---------- FLASHCARD ----------
+function checkFlashcard(){
+
+    const q = queue[current];
+    const userText = document.getElementById("userAnswer").value;
+    const resultDiv = document.getElementById("result");
+    const correctDiv = document.getElementById("correctAnswer");
+    const nextBtn = document.getElementById("nextBtn");
+
+    attempts++;
+
+    const correctWords = normalize(q.answerText);
+    const userWords = normalize(userText);
+
+    let matchCount = 0;
+
+    const highlighted = correctWords.map(word => {
+        if(userWords.includes(word)){
+            matchCount++;
+            return `<span class="correct-word">${word}</span>`;
+        }
+        return word;
+    });
+
+    const percent = matchCount / correctWords.length;
+
+    correctDiv.innerHTML = `
+        <div><strong>Your answer:</strong><br>${userText}</div><br>
+        <div><strong>Correct answer:</strong><br>${highlighted.join(" ")}</div>
+    `;
+
+    // ALWAYS reset next first
+    nextBtn.disabled = true;
+
+    if(percent >= 0.5){
+
+        resultDiv.innerHTML = `Correct (${Math.round(percent*100)}%)`;
+
+        // scoring rule
+        if(!scoredQuestions.has(q.id) && !failedFirstAttempt.has(q.id)){
+            score += q.stars;
+            correctAttempts++;
+            scoredQuestions.add(q.id);
+        }
+
+        completedQuestions.add(q.id);
+
+        document.getElementById('score').textContent = score;
+
+        nextBtn.disabled = false;
+
+    } else {
+
+        resultDiv.innerHTML = `Try again (need 50%+)`;
+
+        document.getElementById("userAnswer").value = "";
+
+        failedFirstAttempt.add(q.id);
+
+        // ❌ DO NOT mutate queue here anymore
+        // instead just keep same question active
+
+        nextBtn.disabled = true;
+    }
+}
+
+// ---------- MCQ ----------
+function answer(selected) {
+
+    const q = queue[current];
+    const fb = document.getElementById('feedback');
+    const exp = document.getElementById('explanation');
+    const nextBtn = document.getElementById('nextBtn');
+
+    attempts++;
+
+    const isCorrect = selected === q.answer;
+
+    // LOCK next immediately
+    nextBtn.disabled = true;
+
+    if (isCorrect) {
+
+        fb.textContent = "Correct!";
+
+        if (!scoredQuestions.has(q.id) && !failedFirstAttempt.has(q.id)) {
+            score += q.stars;
+            correctAttempts++;
+            scoredQuestions.add(q.id);
+        }
+
+        completedQuestions.add(q.id);
+
+        document.getElementById('score').textContent = score;
+
+        // allow immediate next
+        nextBtn.disabled = false;
+
+    } else {
+
+        fb.textContent = "Incorrect.";
+
+        exp.innerHTML = `<strong>Correct answer:</strong> ${q.options[q.answer]}`;
+
+        failedFirstAttempt.add(q.id);
+
+        let countdown = 3;
+
+        fb.textContent = `Incorrect. Next in ${countdown}...`;
+
+        const interval = setInterval(() => {
+            countdown--;
+            fb.textContent = `Incorrect. Next in ${countdown}...`;
+
+            if (countdown <= 0) {
+                clearInterval(interval);
+                fb.textContent = "You can continue.";
+                nextBtn.disabled = false;
+            }
+        }, 1000);
+
+        // IMPORTANT: requeue AFTER setting timer (not before UI updates)
+        setTimeout(() => {
+            queue.push(queue.splice(current, 1)[0]);
+        }, 0);
+    }
+}
+
+// ---------- NAV ----------
+function next() {
+    current++;
+    if(current >= queue.length) current = 0;
+    render();
+}
+
+// ---------- RESULTS ----------
+function showResults() {
+
+    const accuracy = attempts === 0
+        ? 0
+        : (correctAttempts / attempts) * 100;
+
+    document.getElementById('quiz').innerHTML = `
+        <div class="quiz-card">
+            <h2>Quiz Completed</h2>
+
+            <p><strong>Score:</strong> ${score}</p>
+            <p><strong>Accuracy:</strong> ${accuracy.toFixed(1)}%</p>
+
+            <p>${
+                accuracy >= 80 ? "Excellent work!" :
+                accuracy >= 50 ? "Good effort!" :
+                "Keep practicing!"
+            }</p>
+        </div>
+    `;
+}
+
+// ---------- INIT ----------
+window.onload = function() {
+    setBackground('white');
+    render();
+};
+</script>
+
+</body>
+</html>
