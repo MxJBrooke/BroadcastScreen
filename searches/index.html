@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binary Search Split Visualiser</title>
+
+<style>
+body {
+    font-family: Consolas, monospace;
+    margin: 0;
+    transition: all 0.3s ease;
+    word-spacing: normal;
+    font-size: 16px;
+}
+
+/* HEADER (UNCHANGED) */
+.header {
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    color: #000;
+    transition: background 0.3s ease;
+}
+
+.header h1 {
+    color: #000;
+}
+
+/* ACCESSIBILITY PANEL (UNCHANGED) */
+.accessibility-toggle {
+    position: absolute;
+    left: 20px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.accessibility-panel {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 250px;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: left 0.3s ease;
+    z-index: 1000;
+    background: #fff;
+}
+
+.accessibility-panel.open {
+    left: 0;
+}
+
+.color-spot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin: 5px;
+    cursor: pointer;
+    border: 1px solid #777;
+}
+
+.accessibility-scale {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* LAYOUT */
+.main-wrapper {
+    width: 100%;
+    margin: 30px 0;
+    text-align: center;
+}
+
+.step-counter {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: #fff;
+    border: 2px solid #000;
+    padding: 8px 12px;
+    border-radius: 8px;
+    z-index: 2000;
+}
+
+/* PLAY AREA */
+.play-area {
+    border: 2px solid #000;
+    border-radius: 10px;
+    padding: 25px;
+    margin: 0;
+}
+
+/* GROUPS */
+.group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    cursor: grab;
+}
+
+.split-layout {
+    display: flex;
+    justify-content: space-between;
+    gap: 60px;
+}
+
+/* CARDS */
+.card {
+    width: 80px;
+    height: 120px;
+    border: 2px solid #000;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    position: relative;
+    margin: 6px;
+}
+
+.card::before,
+.card::after {
+    content: attr(data-value);
+    position: absolute;
+    font-size: 12px;
+}
+
+.card::before { top: 5px; left: 8px; }
+.card::after { bottom: 5px; right: 8px; }
+
+.red { color: red; }
+
+/* binary search found */
+.found {
+    transform: scale(1.15);
+    border: 3px solid green;
+}
+
+/* NEW: linear search highlight */
+.selected {
+    background: #c8f7c5;
+}
+
+/* BIN */
+.bin {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 90px;
+    border-top: 3px dashed #000;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    z-index: 3000;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header" id="header">
+    <button class="accessibility-toggle" onclick="toggleAccessibility()">Accessibility</button>
+    <h1>Mx Brooke's Encyclopedia</h1>
+</div>
+
+<!-- ACCESSIBILITY PANEL (UNCHANGED) -->
+<div class="accessibility-panel" id="accessPanel">
+    <button onclick="toggleAccessibility()">✖</button>
+
+    <h3>Colours</h3>
+    <button class="color-spot" style="background:#f5f5f5" onclick="setBackground('white')"></button>
+    <button class="color-spot" style="background:#ffcccc" onclick="setBackground('red')"></button>
+    <button class="color-spot" style="background:#ffe5cc" onclick="setBackground('orange')"></button>
+    <button class="color-spot" style="background:#fff9c4" onclick="setBackground('yellow')"></button>
+    <button class="color-spot" style="background:#e8f5e9" onclick="setBackground('green')"></button>
+    <button class="color-spot" style="background:#e3f2fd" onclick="setBackground('blue')"></button>
+    <button class="color-spot" style="background:#e6e0f8" onclick="setBackground('purple')"></button>
+    <button class="color-spot" style="background:#fce4ec" onclick="setBackground('pink')"></button>
+    <button class="color-spot" style="background:#121212" onclick="setBackground('dark')"></button>
+
+    <h3>Word Spacing</h3>
+    <button class="accessibility-scale" onclick="adjustWordSpacing(0.1)">Increase</button>
+    <button class="accessibility-scale" onclick="adjustWordSpacing(-0.1)">Decrease</button>
+
+    <h3>Font Size</h3>
+    <button class="accessibility-scale" onclick="adjustFontSize(1)">Increase</button>
+    <button class="accessibility-scale" onclick="adjustFontSize(-1)">Decrease</button>
+
+    <h3>Page Scale</h3>
+    <button class="accessibility-scale" onclick="adjustScale(0.1)">Increase</button>
+    <button class="accessibility-scale" onclick="adjustScale(-0.1)">Decrease</button>
+</div>
+
+<div class="step-counter" id="stepCounter">Steps: 0</div>
+
+<div class="main-wrapper">
+
+<div class="counter">
+    <button onclick="changeCount(-1)">−</button>
+    <span id="countDisplay">10</span>
+    <button onclick="changeCount(1)">+</button>
+    <button onclick="generateNumbers()">Generate</button>
+    <button onclick="resetSame()">Reset Same</button>
+</div>
+
+<h2>Target: <span id="targetNumber"></span></h2>
+
+<div class="play-area" id="playArea"></div>
+
+</div>
+
+<div class="bin" id="bin">🗑 Drop here</div>
+
+<script>
+
+let numbers=[], originalNumbers=[], target=null;
+let count=10, steps=0;
+let groups=[[]];
+
+/* NO DUPLICATES */
+function generateNumbers(){
+    numbers=[];
+    let set=new Set();
+
+    while(set.size<count){
+        set.add(Math.floor(Math.random()*100));
+    }
+
+    numbers=[...set].sort((a,b)=>a-b);
+
+    originalNumbers=[...numbers];
+    target=numbers[Math.floor(Math.random()*numbers.length)];
+
+    document.getElementById("targetNumber").textContent=target;
+
+    groups=[numbers];
+    steps=0;
+    updateSteps();
+    render();
+}
+
+function resetSame(){
+    groups=[originalNumbers];
+    steps=0;
+    updateSteps();
+    render();
+}
+
+function updateSteps(){
+    document.getElementById("stepCounter").textContent="Steps: "+steps;
+}
+
+/* RENDER */
+function render(){
+    const area=document.getElementById("playArea");
+    area.innerHTML="";
+
+    if(groups.length===1){
+        area.appendChild(createGroup(groups[0],0));
+    } else {
+        const wrap=document.createElement("div");
+        wrap.className="split-layout";
+
+        groups.forEach((g,i)=>{
+            wrap.appendChild(createGroup(g,i));
+        });
+
+        area.appendChild(wrap);
+    }
+}
+
+/* GROUP */
+function createGroup(arr,index){
+    const div=document.createElement("div");
+    div.className="group";
+    div.draggable=true;
+    div.dataset.index=index;
+
+    div.ondragstart=(e)=>{
+        e.dataTransfer.setData("index",index);
+    };
+
+    arr.forEach((num,i)=>{
+        const card=document.createElement("div");
+        card.className="card";
+        card.textContent=num;
+        card.setAttribute("data-value",num);
+
+        if(num%2!==0) card.classList.add("red");
+
+        /* NEW: toggle green for linear search demo */
+        card.onclick=(e)=>{
+            e.stopPropagation();
+            card.classList.toggle("selected");
+        };
+
+        if(i<arr.length-1){
+            const gap=document.createElement("div");
+            gap.style.width="12px";
+            gap.onclick=(e)=>{
+                e.stopPropagation();
+                split(arr,i+1);
+            };
+
+            div.appendChild(card);
+            div.appendChild(gap);
+        } else {
+            div.appendChild(card);
+        }
+    });
+
+    return div;
+}
+
+/* SPLIT */
+function split(arr,index){
+    groups=[arr.slice(0,index),arr.slice(index)];
+    steps++;
+    updateSteps();
+    render();
+}
+
+/* MERGE (UNDO STEP) */
+document.getElementById("playArea").onclick=function(){
+    if(groups.length>1){
+        groups=[groups.flat()];
+        if(steps>0) steps--;
+        updateSteps();
+        render();
+    }
+};
+
+/* BIN */
+const bin=document.getElementById("bin");
+
+bin.addEventListener("dragover",(e)=>e.preventDefault());
+
+bin.addEventListener("drop",(e)=>{
+    e.preventDefault();
+    let i=e.dataTransfer.getData("index");
+
+    if(i==="") return;
+
+    groups.splice(i,1);
+
+    if(groups.length===1){
+        groups=[groups[0]];
+    }
+
+    steps++;
+    updateSteps();
+    render();
+});
+
+/* SIDEBAR */
+function toggleAccessibility(){
+    document.getElementById('accessPanel').classList.toggle('open');
+}
+
+/* BACKGROUND */
+function setBackground(color){
+    const map={
+        white:'#f5f5f5',
+        red:'#ffcccc',
+        orange:'#ffe5cc',
+        yellow:'#fff9c4',
+        green:'#e8f5e9',
+        blue:'#e3f2fd',
+        purple:'#e6e0f8',
+        pink:'#fce4ec',
+        dark:'#121212'
+    };
+
+    const headerMap={
+        white:'#dcdcdc',
+        red:'#cc8888',
+        orange:'#ccaa88',
+        yellow:'#cccc88',
+        green:'#88cc88',
+        blue:'#88aacc',
+        purple:'#aaa0cc',
+        pink:'#cc88aa',
+        dark:'#000000'
+    };
+
+    document.body.style.background=map[color];
+    document.getElementById("header").style.background=headerMap[color];
+}
+
+/* SCALE */
+let scale=1;
+
+function adjustScale(amount){
+    scale+=amount;
+    if(scale<0.6) scale=0.6;
+    if(scale>2) scale=2;
+    document.body.style.fontSize=(16*scale)+"px";
+}
+
+function adjustWordSpacing(amount){
+    let c=parseFloat(localStorage.getItem('ws')||0);
+    c+=amount;
+    document.body.style.wordSpacing=c+'em';
+    localStorage.setItem('ws',c);
+}
+
+function adjustFontSize(amount){
+    let c=parseFloat(localStorage.getItem('fs')||16);
+    c+=amount;
+    document.body.style.fontSize=c+'px';
+    localStorage.setItem('fs',c);
+}
+
+/* INIT */
+window.onload=function(){
+    document.body.style.fontSize=(localStorage.getItem('fs')||16)+'px';
+    document.body.style.wordSpacing=(localStorage.getItem('ws')||0)+'em';
+
+    setBackground('white');
+};
+
+</script>
+
+</body>
+</html>
