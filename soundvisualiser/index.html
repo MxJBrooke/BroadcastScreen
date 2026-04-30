@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Audio Sampling Teaching Tool</title>
+
+<style>
+body {
+    font-family: Consolas, monospace;
+    margin: 0;
+    background: #f5f5f5;
+}
+
+.header {
+    height: 100px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#222;
+    color:#fff;
+}
+
+.main {
+    max-width:1100px;
+    margin:30px auto;
+    padding:20px;
+}
+
+.card {
+    display:flex;
+    gap:20px;
+    background:#fff;
+    padding:20px;
+    border-radius:10px;
+}
+
+.controls { width:320px; }
+
+input { width:100%; margin:10px 0; }
+
+.preview {
+    flex:1;
+    border:1px solid #ccc;
+    position:relative;
+    overflow:hidden;
+}
+
+canvas {
+    width:100%;
+    height:300px;
+    display:block;
+}
+
+#info {
+    position:absolute;
+    top:10px;
+    left:10px;
+    background:rgba(0,0,0,0.7);
+    color:#fff;
+    padding:10px;
+    font-size:12px;
+    max-width: 250px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<h1>Audio Sampling & Bit Depth Visualiser</h1>
+</div>
+
+<div class="main">
+<div class="card">
+
+<div class="controls">
+
+<input type="file" id="fileInput" accept="audio/*">
+
+<label>Sample Rate: <span id="srVal">44100</span> Hz</label>
+<input type="range" id="sampleRate" min="100" max="44100" step="100" value="44100">
+
+<label>Bit Depth: <span id="bitVal">16</span></label>
+<input type="range" id="bitDepth" min="1" max="16" value="16">
+
+<label>Pan: <span id="panVal">0</span></label>
+<input type="range" id="pan" min="-1" max="1" step="0.1" value="0">
+
+<label>Zoom</label>
+<input type="range" id="zoom" min="1" max="500" value="1">
+
+<label>Scroll</label>
+<input type="range" id="scroll" min="0" max="0" value="0">
+
+<button id="playBtn">Play</button>
+
+</div>
+
+<div class="preview">
+<canvas id="canvas"></canvas>
+</div>
+
+</div>
+</div>
+
+<script>
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas(){
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+const fileInput = document.getElementById("fileInput");
+const sampleRate = document.getElementById("sampleRate");
+const bitDepth = document.getElementById("bitDepth");
+const pan = document.getElementById("pan");
+const zoomControl = document.getElementById("zoom");
+const scrollControl = document.getElementById("scroll");
+const playBtn = document.getElementById("playBtn");
+
+const srVal = document.getElementById("srVal");
+const bitVal = document.getElementById("bitVal");
+const panVal = document.getElementById("panVal");
+const info = document.getElementById("info");
+
+let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let originalBuffer = null;
+let processed = null;
+let panner = audioCtx.createStereoPanner();
+let currentSource = null;
+
+let zoom = 1;
+let offset = 0;
+
+const MAX_ZOOM = 500; // higher = more zoomed out range
+
+/* LOAD */
+fileInput.onchange = async e => {
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const buf = await file.arrayBuffer();
+    originalBuffer = await audioCtx.decodeAudioData(buf);
+
+    process();
+};
+
+/* UI */
+sampleRate.oninput = process;
+bitDepth.oninput = process;
+
+pan.oninput = function(){
+    panner.pan.value = +this.value;
+    panVal.innerText = this.value;
+};
+
+zoomControl.oninput = function(){
+    zoom = MAX_ZOOM / +this.value;
+    process();
+};
+
+scrollControl.oninput = function(){
+    offset = +this.value;
+    draw(processed, +bitDepth.value);
+};
+
+/* PROCESS */
+function process(){
+
+    if(!originalBuffer) return;
+
+    const sr = +sampleRate.value;
+    const bd = +bitDepth.value;
+
+    srVal.innerText = sr;
+    bitVal.innerText = bd;
+
+    const input = originalBuffer.getChannelData(0);
+
+    const step = Math.max(1, Math.floor(originalBuffer.sampleRate / sr));
+    const levels = Math.pow(2, bd);
+
+    processed = new Float32Array(input.length);
+
+    for(let i = 0; i < input.length; i++){
+
+        const idx = Math.floor(i / step) * step;
+        const held = input[idx] || 0;
+
+        const q = Math.round(held * (levels / 2)) * (2 / levels);
+
+        processed[i] = q;
+    }
+
+    const visibleSamples = canvas.width * zoom;
+    scrollControl.max = Math.max(0, processed.length - visibleSamples);
+    scrollControl.value = offset = Math.min(offset, scrollControl.max);
+
+    draw(processed, bd, step);
+    updateInfo(sr, bd);
+}
+
+/* DRAW */
+function draw(data, bd, step){
+
+    if(!step){
+        const sr = +sampleRate.value;
+        step = Math.max(1, Math.floor(originalBuffer.sampleRate / sr));
+    }
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    const mid = canvas.height / 2;
+    const axisY = canvas.height - 25;
+
+    ctx.strokeStyle = "#000";
+    ctx.beginPath();
+
+    let prevY = mid;
+
+    for(let x = 0; x < canvas.width; x++){
+
+        const sampleIndex = Math.floor(offset + x * zoom);
+        if(sampleIndex >= data.length) break;
+
+        const s = data[sampleIndex];
+        const y = mid + s * mid;
+
+        ctx.lineTo(x, prevY);
+        ctx.lineTo(x, y);
+
+        prevY = y;
+    }
+
+    ctx.stroke();
+
+    ctx.fillStyle = "red";
+
+    for(let i = offset; i < offset + canvas.width * zoom; i += step){
+
+        const x = (i - offset) / zoom;
+        if(x >= canvas.width) break;
+
+        const s = data[i];
+        const y = mid + s * mid;
+
+        ctx.fillRect(x, y, 3, 3);
+    }
+
+    /* TIME AXIS */
+
+    const sr = +sampleRate.value;
+    const secPerPixel = zoom / sr;
+    const timeStart = offset / sr;
+
+    ctx.strokeStyle = "#444";
+    ctx.fillStyle = "#444";
+    ctx.font = "10px monospace";
+
+    ctx.beginPath();
+    ctx.moveTo(0, axisY);
+    ctx.lineTo(canvas.width, axisY);
+    ctx.stroke();
+
+    let stepSec = 0.1;
+
+    if(secPerPixel > 0.01) stepSec = 0.5;
+    if(secPerPixel > 0.05) stepSec = 1;
+    if(secPerPixel > 0.2) stepSec = 2;
+    if(secPerPixel > 1) stepSec = 5;
+
+    for(let t = 0; t < canvas.width; t++){
+
+        const time = timeStart + t * secPerPixel;
+
+        if(Math.abs(time % stepSec) < stepSec * secPerPixel){
+
+            const x = t;
+
+            ctx.beginPath();
+            ctx.moveTo(x, axisY);
+            ctx.lineTo(x, axisY + 6);
+            ctx.stroke();
+
+            ctx.fillText(time.toFixed(2) + "s", x + 2, axisY + 18);
+        }
+    }
+
+    if(bd <= 8){
+        const levels = Math.pow(2, bd);
+
+        ctx.strokeStyle = "rgba(0,0,255,0.15)";
+
+        for(let i = 0; i < levels; i++){
+            const y = (i/(levels-1)) * canvas.height;
+
+            ctx.beginPath();
+            ctx.moveTo(0,y);
+            ctx.lineTo(canvas.width,y);
+            ctx.stroke();
+        }
+    }
+}
+
+/* PLAY */
+playBtn.onclick = () => {
+
+    if(!processed) return;
+
+    if(currentSource){
+        try { currentSource.stop(); } catch(e){}
+    }
+
+    const buffer = audioCtx.createBuffer(1, processed.length, audioCtx.sampleRate);
+    buffer.copyToChannel(processed, 0);
+
+    const src = audioCtx.createBufferSource();
+    src.buffer = buffer;
+
+    src.connect(panner).connect(audioCtx.destination);
+
+    src.start();
+
+    currentSource = src;
+};
+
+/* INFO */
+function updateInfo(sr, bd){
+
+    const nyquist = (sr / 2).toFixed(0);
+    const levels = Math.pow(2, bd);
+
+    info.innerHTML = `
+        <b>Sample Rate:</b> ${sr} Hz<br>
+        <b>Nyquist:</b> ${nyquist} Hz<br>
+        <b>Bit Depth:</b> ${bd}-bit<br>
+        <b>Levels:</b> ${levels}<br>
+        <b>Duration:</b> ${originalBuffer.duration.toFixed(2)}s
+    `;
+}
+
+</script>
+</body>
+</html>
