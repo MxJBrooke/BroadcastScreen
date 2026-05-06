@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Python Challenge Vault</title>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+
+<style>
+body {
+    font-family: Consolas, monospace;
+    margin: 0;
+    background: #fff;
+    color: #000;
+    font-size: 16px;
+    word-spacing: normal;
+    transition: all 0.3s ease;
+}
+
+/* HEADER */
+.header {
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    background: #d9d9d9;
+    transition: all 0.3s ease;
+}
+
+.header h1 {
+    color: #000;
+    transition: all 0.3s ease;
+}
+
+/* ACCESSIBILITY PANEL (FULL RESTORE) */
+.accessibility-panel {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 250px;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: left 0.3s ease;
+    z-index: 1000;
+    background: #fff;
+}
+
+.accessibility-panel.open {
+    left: 0;
+}
+
+.accessibility-toggle {
+    position: absolute;
+    left: 20px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.color-spot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin: 5px;
+    cursor: pointer;
+    border: 1px solid #777;
+}
+
+.accessibility-scale {
+    margin: 5px 0;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* A-Z NAV */
+.az-nav {
+    position: fixed;
+    right: 10px;
+    top: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.az-nav button {
+    font-size: 12px;
+    padding: 4px;
+    background: #e0e0e0;
+    border: 1px solid #000;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* MAIN */
+.main-wrapper {
+    max-width: 800px;
+    margin: 40px auto;
+}
+
+/* CHALLENGES */
+.challenge {
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 10px;
+}
+
+.challenge-title {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+/* hidden until unlock */
+.challenge-body {
+    display: none;
+    margin-top: 10px;
+}
+
+.challenge.unlocked .challenge-body {
+    display: block;
+}
+
+/* snippet box */
+.snippet {
+    background: #f3f3f3;
+    padding: 10px;
+    border-radius: 6px;
+    font-family: monospace;
+    margin: 8px 0;
+    border-left: 3px solid #999;
+}
+
+/* textarea */
+textarea {
+    width: 100%;
+    height: 120px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    padding: 10px;
+    font-family: monospace;
+    background: inherit;
+    color: inherit;
+}
+
+/* buttons */
+button {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #000;
+    background: #e0e0e0;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.retry {
+    background: #ffe5cc;
+}
+
+.result {
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.stats {
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+/* THEMES */
+body.access-white .challenge { background:#f5f5f5; }
+body.access-red .challenge { background:#ffcccc; }
+body.access-orange .challenge { background:#ffe5cc; }
+body.access-yellow .challenge { background:#fff9c4; }
+body.access-green .challenge { background:#e8f5e9; }
+body.access-blue .challenge { background:#e3f2fd; }
+body.access-purple .challenge { background:#e6e0f8; }
+body.access-pink .challenge { background:#fce4ec; }
+
+body.access-dark {
+    background:#121212;
+    color:#fff;
+}
+
+body.access-dark .challenge {
+    background:#1a1a1a;
+    border:1px solid #333;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header" id="header">
+    <button class="accessibility-toggle" onclick="toggleAccessibility()">Accessibility</button>
+    <h1>Python Challenge Vault</h1>
+</div>
+
+<!-- ACCESSIBILITY PANEL -->
+<div class="accessibility-panel" id="accessPanel">
+
+    <button onclick="toggleAccessibility()">✖</button>
+
+    <h3>Colours</h3>
+    <button class="color-spot" style="background:#f5f5f5" onclick="setBackground('white')"></button>
+    <button class="color-spot" style="background:#ffcccc" onclick="setBackground('red')"></button>
+    <button class="color-spot" style="background:#ffe5cc" onclick="setBackground('orange')"></button>
+    <button class="color-spot" style="background:#fff9c4" onclick="setBackground('yellow')"></button>
+    <button class="color-spot" style="background:#e8f5e9" onclick="setBackground('green')"></button>
+    <button class="color-spot" style="background:#e3f2fd" onclick="setBackground('blue')"></button>
+    <button class="color-spot" style="background:#e6e0f8" onclick="setBackground('purple')"></button>
+    <button class="color-spot" style="background:#fce4ec" onclick="setBackground('pink')"></button>
+    <button class="color-spot" style="background:#121212" onclick="setBackground('dark')"></button>
+
+    <h3>Word Spacing</h3>
+    <button class="accessibility-scale" onclick="adjustWordSpacing(0.1)">Increase</button>
+    <button class="accessibility-scale" onclick="adjustWordSpacing(-0.1)">Decrease</button>
+
+    <h3>Font Size</h3>
+    <button class="accessibility-scale" onclick="adjustFontSize(1)">Increase</button>
+    <button class="accessibility-scale" onclick="adjustFontSize(-1)">Decrease</button>
+</div>
+
+<div class="az-nav" id="azNav"></div>
+
+<div class="main-wrapper">
+
+<!-- CHALLENGE 1 -->
+<div id="c1" class="challenge">
+    <div class="challenge-title">Challenge 1</div>
+    <div class="challenge-body">
+
+        <div class="snippet">
+i = 1<br>
+while i <= 5:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;print(i)
+        </div>
+
+        <p>Fix the loop so it prints numbers 1–5.</p>
+
+        <textarea id="code1" placeholder="Paste code here..."></textarea>
+
+        <button onclick="runTest(1)">Run</button>
+        <button class="retry" onclick="reset(1)">Try Again</button>
+
+        <div id="result1" class="result"></div>
+        <div id="stats1" class="stats"></div>
+    </div>
+</div>
+
+<!-- CHALLENGE 2 -->
+<div id="c2" class="challenge">
+    <div class="challenge-title">Challenge 2</div>
+    <div class="challenge-body">
+
+        <div class="snippet">
+print numbers from 1 to 10 using a loop
+        </div>
+
+        <p>Print numbers 1–10.</p>
+
+        <textarea id="code2" placeholder="Paste code here..."></textarea>
+
+        <button onclick="runTest(2)">Run</button>
+        <button class="retry" onclick="reset(2)">Try Again</button>
+
+        <div id="result2" class="result"></div>
+        <div id="stats2" class="stats"></div>
+    </div>
+</div>
+
+<!-- CHALLENGE 3 -->
+<div id="c3" class="challenge">
+    <div class="challenge-title">Challenge 3</div>
+    <div class="challenge-body">
+
+        <div class="snippet">
+set count so that it equals 5
+        </div>
+
+        <p>Create a variable <b>count</b> that equals 5.</p>
+
+        <textarea id="code3" placeholder="Paste code here..."></textarea>
+
+        <button onclick="runTest(3)">Run</button>
+        <button class="retry" onclick="reset(3)">Try Again</button>
+
+        <div id="result3" class="result"></div>
+        <div id="stats3" class="stats"></div>
+    </div>
+</div>
+
+<!-- CHALLENGE 4 -->
+<div id="c4" class="challenge">
+    <div class="challenge-title">Challenge 4</div>
+    <div class="challenge-body">
+
+        <div class="snippet">
+print only even numbers from 1–10
+        </div>
+
+        <p>Even numbers 1–10.</p>
+
+        <textarea id="code4" placeholder="Paste code here..."></textarea>
+
+        <button onclick="runTest(4)">Run</button>
+        <button class="retry" onclick="reset(4)">Try Again</button>
+
+        <div id="result4" class="result"></div>
+        <div id="stats4" class="stats"></div>
+    </div>
+</div>
+
+<!-- CHALLENGE 5 -->
+<div id="c5" class="challenge">
+    <div class="challenge-title">Challenge 5</div>
+    <div class="challenge-body">
+
+        <div class="snippet">
+score = 60
+        </div>
+
+        <p>Set result = "pass" if score > 50.</p>
+
+        <textarea id="code5" placeholder="Paste code here..."></textarea>
+
+        <button onclick="runTest(5)">Run</button>
+        <button class="retry" onclick="reset(5)">Try Again</button>
+
+        <div id="result5" class="result"></div>
+        <div id="stats5" class="stats"></div>
+    </div>
+</div>
+
+</div>
+
+<script>
+let pyodideReady = loadPyodide();
+let startTimes = {};
+let bestTimes = {};
+
+/* ACCESSIBILITY */
+function toggleAccessibility(){
+    document.getElementById("accessPanel").classList.toggle("open");
+}
+
+/* UNLOCK */
+function unlock(id){
+    document.getElementById(`c${id}`).classList.add("unlocked");
+    startTimes[id]=Date.now();
+}
+
+/* RESET */
+function reset(id){
+    document.getElementById(`code${id}`).value="";
+    startTimes[id]=Date.now();
+}
+
+/* TESTS */
+async function runTest(id){
+    const pyodide=await pyodideReady;
+    const code=document.getElementById(`code${id}`).value;
+
+    try{
+        let test="";
+
+        if(id===1){
+            test=`import sys\nfrom io import StringIO\no=StringIO();sys.stdout=o\n${code}\nsys.stdout=sys.__stdout__\nr=o.getvalue().strip().splitlines()\nassert r==["1","2","3","4","5"]`;
+        }
+
+        if(id===2){
+            test=`import sys\nfrom io import StringIO\no=StringIO();sys.stdout=o\n${code}\nsys.stdout=sys.__stdout__\nr=o.getvalue().strip().splitlines()\nassert r==[str(i) for i in range(1,11)]`;
+        }
+
+        if(id===3) test=`${code}\nassert count==5`;
+
+        if(id===4){
+            test=`import sys\nfrom io import StringIO\no=StringIO();sys.stdout=o\n${code}\nsys.stdout=sys.__stdout__\nr=o.getvalue().strip().splitlines()\nassert r==["2","4","6","8","10"]`;
+        }
+
+        if(id===5) test=`score=60\n${code}\nassert result=="pass"`;
+
+        await pyodide.runPythonAsync(test);
+
+        const time=Math.floor((Date.now()-startTimes[id])/1000);
+
+        if(!bestTimes[id]||time<bestTimes[id]) bestTimes[id]=time;
+
+        document.getElementById(`result${id}`).textContent="✅ Passed!";
+        document.getElementById(`stats${id}`).textContent=
+            `⏱ ${time}s | 🏆 Best: ${bestTimes[id]}s`;
+
+        if(id<5) unlock(id+1);
+
+    } catch(e){
+        document.getElementById(`result${id}`).textContent="❌ Failed";
+    }
+}
+
+/* THEME + HEADER LOGIC */
+function setBackground(color){
+    const map={
+        white:'#f5f5f5',red:'#ffcccc',orange:'#ffe5cc',
+        yellow:'#fff9c4',green:'#e8f5e9',blue:'#e3f2fd',
+        purple:'#e6e0f8',pink:'#fce4ec',dark:'#121212'
+    };
+
+    document.body.className="access-"+color;
+    document.body.style.background=map[color];
+
+    const header=document.getElementById("header");
+    const title=header.querySelector("h1");
+
+    /* darker header than background */
+    header.style.background =
+        color==="dark" ? "#000" : shade(map[color], -25);
+
+    title.style.color = color==="dark" ? "#fff" : "#000";
+}
+
+/* simple shade helper */
+function shade(hex, percent){
+    let f=parseInt(hex.slice(1),16),
+    t=percent<0?0:255,
+    p=percent<0?percent*-1:percent,
+    R=f>>16,
+    G=f>>8&0x00FF,
+    B=f&0x0000FF;
+
+    return "#"+(
+        0x1000000+
+        (Math.round((t-R)*p/100)+R)*0x10000+
+        (Math.round((t-G)*p/100)+G)*0x100+
+        (Math.round((t-B)*p/100)+B)
+    ).toString(16).slice(1);
+}
+
+/* accessibility text controls */
+function adjustWordSpacing(v){
+    let c=parseFloat(localStorage.getItem("ws")||0);
+    c+=v;
+    document.body.style.wordSpacing=c+"em";
+}
+
+function adjustFontSize(v){
+    let c=parseFloat(localStorage.getItem("fs")||16);
+    c+=v;
+    document.body.style.fontSize=c+"px";
+}
+
+window.onload=()=>{
+    setBackground("white");
+    unlock(1);
+};
+</script>
+
+</body>
+</html>
