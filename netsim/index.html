@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Simulator</title>
+
+<style>
+body {
+    font-family: Consolas, monospace;
+    margin: 0;
+    transition: all 0.3s ease;
+    word-spacing: normal;
+    font-size: 16px;
+    overflow: hidden;
+}
+
+.header {
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    color: #000;
+    transition: all 0.3s ease;
+    background:#333;
+}
+
+.header h1 {
+    color: #fff;
+}
+
+.accessibility-toggle {
+    position: absolute;
+    left: 20px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.accessibility-scale {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.accessibility-panel {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 250px;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: left 0.3s ease;
+    z-index: 1000;
+    background: #fff;
+}
+
+.accessibility-panel.open {
+    left: 0;
+}
+
+.color-spot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin: 5px;
+    cursor: pointer;
+    border: 1px solid #777;
+}
+
+.main {
+    display:flex;
+    height:calc(100vh - 100px);
+}
+
+.sidebar {
+    width:320px;
+    overflow-y:auto;
+    border-right:1px solid #aaa;
+    padding:20px;
+    background:rgba(255,255,255,0.7);
+}
+
+.canvas {
+    flex:1;
+    position:relative;
+    overflow:hidden;
+}
+
+svg {
+    position:absolute;
+    width:100%;
+    height:100%;
+}
+
+.device {
+    width:90px;
+    height:90px;
+    border-radius:16px;
+    position:absolute;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    cursor:grab;
+    border:3px solid white;
+    color:white;
+    font-weight:bold;
+    box-shadow:0 5px 15px rgba(0,0,0,0.3);
+    z-index:5;
+}
+
+.device .icon {
+    font-size:28px;
+}
+
+.device .label {
+    font-size:12px;
+    margin-top:6px;
+}
+
+.toolbar {
+    display:flex;
+    gap:10px;
+    padding:15px;
+    border-bottom:1px solid #aaa;
+    flex-wrap:wrap;
+}
+
+.tool-btn {
+    padding:10px 14px;
+    border-radius:6px;
+    border:1px solid #aaa;
+    background:#fff;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.device-info {
+    background:#fff;
+    border:1px solid #aaa;
+    padding:12px;
+    border-radius:10px;
+    margin-bottom:12px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.device-info h3{
+    font-size:14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.device-info input[type="text"]{
+    width:100%;
+    max-width:100%;
+    display:block;
+    box-sizing:border-box;
+    padding:6px;
+    margin-top:4px;
+    border-radius:6px;
+    border:1px solid #aaa;
+    font-size:13px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+
+.device-info input[type="color"] {
+    width:100%;
+    height:40px;
+    margin-top:8px;
+}
+
+.packet {
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    position:absolute;
+    z-index:100;
+}
+
+.instructions {
+    background:#fff;
+    border:1px solid #aaa;
+    padding:15px;
+    border-radius:10px;
+    margin-top:20px;
+}
+
+.instructions li {
+    margin-bottom:10px;
+}
+
+body.access-white .device-info,
+body.access-white .instructions,
+body.access-white .sidebar { background:#f5f5f5; }
+body.access-red .device-info,
+body.access-red .instructions,
+body.access-red .sidebar { background:#ffcccc; }
+body.access-orange .device-info,
+body.access-orange .instructions,
+body.access-orange .sidebar { background:#ffe5cc; }
+body.access-yellow .device-info,
+body.access-yellow .instructions,
+body.access-yellow .sidebar { background:#fff9c4; }
+body.access-green .device-info,
+body.access-green .instructions,
+body.access-green .sidebar { background:#e8f5e9; }
+body.access-blue .device-info,
+body.access-blue .instructions,
+body.access-blue .sidebar { background:#e3f2fd; }
+body.access-purple .device-info,
+body.access-purple .instructions,
+body.access-purple .sidebar { background:#e6e0f8; }
+body.access-pink .device-info,
+body.access-pink .instructions,
+body.access-pink .sidebar { background:#fce4ec; }
+body.access-dark .device-info,
+body.access-dark .instructions,
+body.access-dark .sidebar {
+    background:#222;
+    color:#fff;
+}
+</style>
+</head>
+<body>
+
+<div class="header" id="header">
+    <button class="accessibility-toggle" onclick="toggleAccessibility()">Accessibility</button>
+    <h1>Mx Brooke's Network Simulator</h1>
+</div>
+
+<div class="accessibility-panel" id="accessPanel">
+    <button onclick="toggleAccessibility()">✖</button>
+    <h3>Colours</h3>
+    <button class="color-spot" style="background:#f5f5f5" onclick="setBackground('white')"></button>
+    <button class="color-spot" style="background:#ffcccc" onclick="setBackground('red')"></button>
+    <button class="color-spot" style="background:#ffe5cc" onclick="setBackground('orange')"></button>
+    <button class="color-spot" style="background:#fff9c4" onclick="setBackground('yellow')"></button>
+    <button class="color-spot" style="background:#e8f5e9" onclick="setBackground('green')"></button>
+    <button class="color-spot" style="background:#e3f2fd" onclick="setBackground('blue')"></button>
+    <button class="color-spot" style="background:#e6e0f8" onclick="setBackground('purple')"></button>
+    <button class="color-spot" style="background:#fce4ec" onclick="setBackground('pink')"></button>
+    <button class="color-spot" style="background:#121212" onclick="setBackground('dark')"></button>
+
+    <h3>Word Spacing</h3>
+    <div class="accessibility-control">
+        <button class="accessibility-scale" onclick="adjustWordSpacing(0.1)">Increase</button>
+        <button class="accessibility-scale" onclick="adjustWordSpacing(-0.1)">Decrease</button>
+    </div>
+
+    <h3>Font Size</h3>
+    <div class="accessibility-control">
+        <button class="accessibility-scale" onclick="adjustFontSize(1)">Increase</button>
+        <button class="accessibility-scale" onclick="adjustFontSize(-1)">Decrease</button>
+    </div>
+</div>
+
+<div class="toolbar">
+        <button class="tool-btn" onclick="addDevice('router')">📡 Router</button>
+        <button class="tool-btn" onclick="addDevice('switch')">🔀 Switch</button>
+        <button class="tool-btn" onclick="addDevice('hub')">🧩 Hub</button>
+        <button class="tool-btn" onclick="addDevice('pc')">💻 PC</button>
+        <button class="tool-btn" onclick="addDevice('printer')">🖨 Printer</button>
+        <button class="tool-btn" onclick="addDevice('server')">🖥 Server</button>
+        <button class="tool-btn" onclick="toggleSimulation()" id="simBtn">▶ Start Simulation</button>
+</div>
+
+<div class="main">
+
+    <div class="sidebar">
+
+        <h2>Devices</h2>
+<p style="margin-top:10px;margin-bottom:20px;color:#94a3b8;line-height:1.5;">
+Rename devices, recolour them, or delete them directly from the sidebar.
+</p>
+
+        <div id="deviceList"></div>
+
+        <div class="status">
+            <h3>Simulation Status</h3>
+            <p id="simStatus">OFF</p>
+        </div>
+
+        <div class="instructions">
+            <h3>Controls</h3>
+            <ul>
+                <li>Left click + drag devices</li>
+                <li>Right click device A then device B to connect</li>
+                <li>Right click cable to delete it</li>
+                <li>Packets move continuously while simulation is ON</li>
+                <li>Packets travel client-to-client across networks</li>
+                <li>Each switch path uses different colours</li>
+                <li>You can customise device colours</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <div class="canvas" id="canvas">
+        <svg id="svg"></svg>
+    </div>
+
+</div>
+
+<script>
+
+const canvas = document.getElementById('canvas');
+const svg = document.getElementById('svg');
+const deviceList = document.getElementById('deviceList');
+const simBtn = document.getElementById('simBtn');
+const simStatus = document.getElementById('simStatus');
+
+function toggleAccessibility() {
+    document.getElementById('accessPanel').classList.toggle('open');
+}
+
+function darkenColor(hex, percent) {
+    hex = hex.replace('#','');
+    let r=parseInt(hex.substring(0,2),16);
+    let g=parseInt(hex.substring(2,4),16);
+    let b=parseInt(hex.substring(4,6),16);
+    r=Math.floor(r*(1-percent/100));
+    g=Math.floor(g*(1-percent/100));
+    b=Math.floor(b*(1-percent/100));
+    return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+
+function setBackground(color) {
+    localStorage.setItem('bgColor', color);
+
+    document.body.className='';
+    document.body.classList.add('access-'+color);
+
+    const map={
+        white:'#f5f5f5', red:'#ffcccc', orange:'#ffe5cc',
+        yellow:'#fff9c4', green:'#e8f5e9', blue:'#e3f2fd',
+        purple:'#e6e0f8', pink:'#fce4ec', dark:'#121212'
+    };
+
+    document.body.style.background = map[color];
+
+    const header=document.getElementById('header');
+    const panel=document.getElementById('accessPanel');
+
+    const darkHex=color==='dark' ? '#000' : darkenColor(map[color],40);
+    header.style.background=darkHex;
+
+    panel.style.background = map[color];
+
+    if(color==='dark'){
+        document.body.style.color='#fff';
+    } else {
+        document.body.style.color='#000';
+    }
+}
+
+function adjustWordSpacing(amount){
+    let current = parseFloat(localStorage.getItem('wordSpacing')||'0');
+    current += amount;
+    document.body.style.wordSpacing = current + 'em';
+    localStorage.setItem('wordSpacing', current);
+}
+
+function adjustFontSize(amount){
+    let current = parseFloat(localStorage.getItem('fontSize')||'16');
+    current += amount;
+    document.body.style.fontSize = current + 'px';
+    localStorage.setItem('fontSize', current);
+}
+
+window.onload=function(){
+    const saved=localStorage.getItem('bgColor')||'white';
+    setBackground(saved);
+
+    const ws = parseFloat(localStorage.getItem('wordSpacing')||'0');
+    const fs = parseFloat(localStorage.getItem('fontSize')||'16');
+    document.body.style.wordSpacing = ws+'em';
+    document.body.style.fontSize = fs+'px';
+};
+
+// ================= STATE =================
+
+let devices = [];
+let connections = [];
+let connectStart = null;
+let simulationRunning = false;
+let simulationInterval = null;
+let deviceId = 1;
+let networkMode = 'normal';
+let lastSelected = null;
+
+// ================= DEVICE HELPERS =================
+
+function randomIP(){
+    return `192.168.${Math.floor(Math.random()*5)+1}.${Math.floor(Math.random()*254)+1}`;
+}
+
+function randomMAC(){
+    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g,()=>
+        '0123456789ABCDEF'[Math.floor(Math.random()*16)]
+    );
+}
+
+function icon(type){
+    return {
+        router:'📡',
+        switch:'🔀',
+        hub:'🧩',
+        pc:'💻',
+        printer:'🖨',
+        server:'🖥'
+    }[type];
+}
+
+function defaultColour(type){
+    return {
+        router:'#ef4444',
+        switch:'#3b82f6',
+        hub:'#eab308',
+        pc:'#22c55e',
+        printer:'#a855f7',
+        server:'#111827'
+    }[type];
+}
+
+// ================= DEVICE CREATION =================
+
+function addDevice(type){
+
+    const div = document.createElement('div');
+    div.className = 'device';
+
+    const id = deviceId++;
+
+    const device = {
+        name:`${type.toUpperCase()}-${id}`,
+        id,
+        type,
+        ip:randomIP(),
+        mac:randomMAC(),
+        color:defaultColour(type),
+        element:div
+    };
+
+    div.style.background = device.color;
+
+    if(type === 'server'){
+        div.style.border = '3px solid #111827';
+    }
+
+    div.style.left = '150px';
+    div.style.top = '150px';
+
+    div.innerHTML = `
+        <div class="icon">${icon(type)}</div>
+        <div class="label">${device.name}</div>
+    `;
+
+    devices.push(device);
+    canvas.appendChild(div);
+
+    updateSidebar();
+    enableDragging(div);
+
+    div.addEventListener('contextmenu',(e)=>{
+        e.preventDefault();
+        connectDevice(device);
+    });
+}
+
+// ================= SIDEBAR =================
+
+function updateSidebar(){
+
+    deviceList.innerHTML='';
+
+    devices.forEach(device=>{
+
+        const box = document.createElement('div');
+        box.className='device-info';
+
+        box.innerHTML=`
+            <h3>${icon(device.type)} ${device.name}</h3>
+            <p><strong>IP:</strong> ${device.ip}</p>
+            <p><strong>MAC:</strong> ${device.mac}</p>
+            <label>Device Name</label>
+            <input class="renameInput" type="text" value="${device.name}">
+            <label>Device Colour</label>
+            <input type="color" value="${device.color}">
+        `;
+
+        const renameInput = box.querySelector('.renameInput');
+
+        renameInput.addEventListener('input',(e)=>{
+            device.name = e.target.value;
+            device.element.querySelector('.label').innerText = e.target.value;
+        });
+
+        const colorPicker = box.querySelector('input[type="color"]');
+
+        colorPicker.addEventListener('input',(e)=>{
+            device.color = e.target.value;
+            device.element.style.background = e.target.value;
+        });
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerText = '🗑 Delete Device';
+        deleteBtn.style.width='100%';
+        deleteBtn.style.marginTop='10px';
+
+        deleteBtn.addEventListener('click',()=>{
+            device.element.remove();
+            devices = devices.filter(d=>d.id!==device.id);
+            connections = connections.filter(c=>c.from.id!==device.id && c.to.id!==device.id);
+            drawConnections();
+            updateSidebar();
+        });
+
+        box.appendChild(deleteBtn);
+        deviceList.appendChild(box);
+    });
+}
+
+// ================= CONNECTIONS =================
+
+function connectDevice(device){
+
+    lastSelected = device;
+
+    if(!connectStart){
+        connectStart = device;
+        device.element.style.outline='5px solid cyan';
+    } else {
+        if(connectStart.id !== device.id){
+            connections.push({from:connectStart,to:device});
+        }
+
+        connectStart.element.style.outline='none';
+        connectStart = null;
+
+        drawConnections();
+    }
+}
+
+function drawConnections(){
+
+    svg.innerHTML='';
+
+    connections.forEach((conn,index)=>{
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+
+        const p1 = getCenter(conn.from.element);
+        const p2 = getCenter(conn.to.element);
+
+        line.setAttribute('x1',p1.x);
+        line.setAttribute('y1',p1.y);
+        line.setAttribute('x2',p2.x);
+        line.setAttribute('y2',p2.y);
+
+        line.setAttribute('stroke','#94a3b8');
+        line.setAttribute('stroke-width','4');
+
+        line.addEventListener('contextmenu',(e)=>{
+            e.preventDefault();
+            connections.splice(index,1);
+            drawConnections();
+        });
+
+        svg.appendChild(line);
+    });
+}
+
+function getCenter(el){
+    const rect = el.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
+
+    return {
+        x: rect.left - canvasRect.left + rect.width/2,
+        y: rect.top - canvasRect.top + rect.height/2
+    };
+}
+
+// ================= DRAG =================
+
+function enableDragging(el){
+
+    let dragging=false;
+    let offsetX=0;
+    let offsetY=0;
+
+    el.addEventListener('mousedown',(e)=>{
+
+        if(e.button===2) return;
+
+        dragging=true;
+        offsetX=e.offsetX;
+        offsetY=e.offsetY;
+
+    });
+
+    document.addEventListener('mousemove',(e)=>{
+
+        if(!dragging) return;
+
+        const rect = canvas.getBoundingClientRect();
+
+        el.style.left = e.clientX - rect.left - offsetX + 'px';
+        el.style.top = e.clientY - rect.top - offsetY + 'px';
+
+        drawConnections();
+
+    });
+
+    document.addEventListener('mouseup',()=>dragging=false);
+}
+
+// ================= SIMULATION =================
+
+function toggleSimulation(){
+
+    simulationRunning = !simulationRunning;
+
+    if(simulationRunning){
+        simBtn.innerText='⏹ Stop Simulation';
+        simStatus.innerText='ON';
+        simulationInterval = setInterval(generateTraffic,900);
+    } else {
+        simBtn.innerText='▶ Start Simulation';
+        simStatus.innerText='OFF';
+        clearInterval(simulationInterval);
+    }
+}
+
+function generateTraffic(){
+
+    const clients = devices.filter(d => d.type === 'pc' || d.type === 'printer');
+
+    if(clients.length < 2) return;
+
+    const source = clients[Math.floor(Math.random()*clients.length)];
+
+    let destination = clients[Math.floor(Math.random()*clients.length)];
+
+    while(destination.id === source.id){
+        destination = clients[Math.floor(Math.random()*clients.length)];
+    }
+
+    const path = findPath(source,destination);
+
+    if(path.length > 1){
+        animatePacket(path);
+    }
+}
+
+// ================= ROUTING =================
+
+function findPath(start,end){
+
+    if(networkMode === 'client-server'){
+
+        const servers = devices.filter(d => d.type === 'server');
+        if(!servers.length) return [];
+
+        const server = servers[Math.floor(Math.random()*servers.length)];
+
+        const path1 = bfs(start, server);
+        const path2 = bfs(server, end);
+
+        if(path1.length && path2.length){
+            return [...path1, ...path2.slice(1)];
+        }
+
+        return [];
+    }
+
+    return bfs(start,end);
+}
+
+function bfs(start,end){
+
+    const visited = new Set();
+    const queue = [[start]];
+
+    while(queue.length){
+
+        const path = queue.shift();
+        const node = path[path.length-1];
+
+        if(node.id === end.id) return path;
+
+        if(!visited.has(node.id)){
+            visited.add(node.id);
+
+            const neighbours = [];
+
+            connections.forEach(conn=>{
+                if(conn.from.id===node.id) neighbours.push(conn.to);
+                if(conn.to.id===node.id) neighbours.push(conn.from);
+            });
+
+            neighbours.forEach(n=>{
+                queue.push([...path,n]);
+            });
+        }
+    }
+
+    return [];
+}
+
+// ================= PACKETS =================
+
+function animatePacket(path){
+
+    let current = 0;
+
+    function move(){
+
+        if(current >= path.length-1) return;
+
+        const from = getCenter(path[current].element);
+        const to = getCenter(path[current+1].element);
+
+        const packet = document.createElement('div');
+        packet.className='packet';
+        packet.style.background = path[path.length-1].color;
+        packet.style.left = from.x+'px';
+        packet.style.top = from.y+'px';
+
+        canvas.appendChild(packet);
+
+        let progress = 0;
+
+        const interval = setInterval(()=>{
+
+            progress += 0.02;
+
+            packet.style.left = from.x + (to.x-from.x)*progress + 'px';
+            packet.style.top = from.y + (to.y-from.y)*progress + 'px';
+
+            if(progress>=1){
+                clearInterval(interval);
+                packet.remove();
+                current++;
+                move();
+            }
+
+        },16);
+    }
+
+    move();
+}
+
+// ================= EVENTS =================
+
+window.addEventListener('resize',drawConnections);
+
+document.addEventListener('contextmenu',(e)=>{
+    if(e.target === canvas || e.target === svg){
+        e.preventDefault();
+    }
+});
+
+</script>
+</body>
+</html>
