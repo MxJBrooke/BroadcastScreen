@@ -1,321 +1,799 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
 <title>Network Simulator</title>
 
 <style>
+
 body {
+
     font-family: Consolas, monospace;
+
     margin: 0;
+
     transition: all 0.3s ease;
+
     word-spacing: normal;
+
     font-size: 16px;
+
     overflow: hidden;
 }
 
 .header {
+
     height: 100px;
+
     display: flex;
+
     justify-content: center;
+
     align-items: center;
+
     position: relative;
+
     color: #000;
+
     transition: all 0.3s ease;
+
     background:#333;
 }
 
 .header h1 {
+
     color: #fff;
+
+    text-align:center;
 }
 
 .accessibility-toggle {
+
     position: absolute;
+
     left: 20px;
+
     padding: 8px 14px;
+
     border-radius: 6px;
+
     border: 1px solid #aaa;
+
     background: #fff;
+
     font-weight: bold;
+
     cursor: pointer;
 }
 
 .accessibility-scale {
+
     padding: 8px 14px;
+
     border-radius: 6px;
+
     border: 1px solid #aaa;
+
     background: #fff;
+
     font-weight: bold;
+
     cursor: pointer;
 }
 
 .accessibility-panel {
+
     position: fixed;
+
     top: 0;
+
     left: -260px;
+
     width: 250px;
+
     height: 100%;
+
     padding: 20px;
+
     box-sizing: border-box;
+
     transition: left 0.3s ease;
+
     z-index: 1000;
+
     background: #fff;
 }
 
 .accessibility-panel.open {
+
     left: 0;
 }
 
 .color-spot {
+
     width: 30px;
+
     height: 30px;
+
     border-radius: 50%;
+
     margin: 5px;
+
     cursor: pointer;
+
     border: 1px solid #777;
 }
 
 .main {
+
     display:flex;
-    height:calc(100vh - 100px);
+
+    height:calc(100vh - 160px);
 }
 
 .sidebar {
+
     width:320px;
+
     overflow-y:auto;
+
     border-right:1px solid #aaa;
+
     padding:20px;
+
     background:rgba(255,255,255,0.7);
+
+    box-sizing:border-box;
 }
 
 .canvas {
+
     flex:1;
+
     position:relative;
+
     overflow:hidden;
+
+    background:
+        linear-gradient(
+            rgba(255,255,255,0.03) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(255,255,255,0.03) 1px,
+            transparent 1px
+        );
+
+    background-size:40px 40px;
 }
 
 svg {
+
     position:absolute;
+
     width:100%;
+
     height:100%;
 }
 
 .device {
+
     width:90px;
+
     height:90px;
+
     border-radius:16px;
+
     position:absolute;
+
     display:flex;
+
     flex-direction:column;
+
     justify-content:center;
+
     align-items:center;
+
     cursor:grab;
+
     border:3px solid white;
+
     color:white;
+
     font-weight:bold;
+
     box-shadow:0 5px 15px rgba(0,0,0,0.3);
+
     z-index:5;
+
+    user-select:none;
+
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.2s ease;
+}
+
+.device:hover {
+
+    transform:scale(1.05);
+
+    box-shadow:
+        0 8px 25px rgba(0,0,0,0.35);
 }
 
 .device .icon {
+
     font-size:28px;
 }
 
 .device .label {
+
     font-size:12px;
+
     margin-top:6px;
+
+    text-align:center;
+
+    max-width:80px;
+
+    overflow:hidden;
+
+    text-overflow:ellipsis;
+
+    white-space:nowrap;
 }
 
 .toolbar {
+
     display:flex;
+
     gap:10px;
+
     padding:15px;
+
     border-bottom:1px solid #aaa;
+
     flex-wrap:wrap;
+
+    background:#f8fafc;
+
+    align-items:center;
+
+    min-height:60px;
+
+    box-sizing:border-box;
 }
 
 .tool-btn {
+
     padding:10px 14px;
+
     border-radius:6px;
+
     border:1px solid #aaa;
+
     background:#fff;
+
     cursor:pointer;
+
     font-weight:bold;
+
+    font-family:inherit;
+
+    transition:all 0.2s ease;
+}
+
+.tool-btn:hover {
+
+    transform:translateY(-1px);
+
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
 }
 
 .device-info {
+
     background:#fff;
+
     border:1px solid #aaa;
+
     padding:12px;
+
     border-radius:10px;
+
     margin-bottom:12px;
+
     display:flex;
+
     flex-direction:column;
+
     gap:6px;
 }
 
 .device-info h3{
+
     font-size:14px;
+
     display:flex;
+
     justify-content:space-between;
+
     align-items:center;
+
     gap:8px;
+
     overflow:hidden;
+
     text-overflow:ellipsis;
+
     white-space:nowrap;
 }
 
 .device-info input[type="text"]{
+
     width:100%;
+
     max-width:100%;
+
     display:block;
+
     box-sizing:border-box;
+
     padding:6px;
+
     margin-top:4px;
+
     border-radius:6px;
+
     border:1px solid #aaa;
+
     font-size:13px;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
 }
 
 .device-info input[type="color"] {
+
     width:100%;
+
     height:40px;
+
     margin-top:8px;
+
+    border:none;
+
+    background:none;
 }
 
 .packet {
+
     width:14px;
+
     height:14px;
+
     border-radius:50%;
+
     position:absolute;
+
     z-index:100;
+
+    box-shadow:
+        0 0 12px rgba(255,255,255,0.8);
+
+    pointer-events:none;
 }
 
 .instructions {
+
     background:#fff;
+
     border:1px solid #aaa;
+
     padding:15px;
+
     border-radius:10px;
+
     margin-top:20px;
 }
 
 .instructions li {
+
     margin-bottom:10px;
+
+    line-height:1.4;
+}
+
+.status {
+
+    background:#fff;
+
+    border:1px solid #aaa;
+
+    border-radius:10px;
+
+    padding:12px;
+
+    margin-top:20px;
+}
+
+.status p {
+
+    font-size:18px;
+
+    font-weight:bold;
 }
 
 body.access-white .device-info,
 body.access-white .instructions,
-body.access-white .sidebar { background:#f5f5f5; }
+body.access-white .sidebar,
+body.access-white .status {
+
+    background:#f5f5f5;
+}
+
 body.access-red .device-info,
 body.access-red .instructions,
-body.access-red .sidebar { background:#ffcccc; }
+body.access-red .sidebar,
+body.access-red .status {
+
+    background:#ffcccc;
+}
+
 body.access-orange .device-info,
 body.access-orange .instructions,
-body.access-orange .sidebar { background:#ffe5cc; }
+body.access-orange .sidebar,
+body.access-orange .status {
+
+    background:#ffe5cc;
+}
+
 body.access-yellow .device-info,
 body.access-yellow .instructions,
-body.access-yellow .sidebar { background:#fff9c4; }
+body.access-yellow .sidebar,
+body.access-yellow .status {
+
+    background:#fff9c4;
+}
+
 body.access-green .device-info,
 body.access-green .instructions,
-body.access-green .sidebar { background:#e8f5e9; }
+body.access-green .sidebar,
+body.access-green .status {
+
+    background:#e8f5e9;
+}
+
 body.access-blue .device-info,
 body.access-blue .instructions,
-body.access-blue .sidebar { background:#e3f2fd; }
+body.access-blue .sidebar,
+body.access-blue .status {
+
+    background:#e3f2fd;
+}
+
 body.access-purple .device-info,
 body.access-purple .instructions,
-body.access-purple .sidebar { background:#e6e0f8; }
+body.access-purple .sidebar,
+body.access-purple .status {
+
+    background:#e6e0f8;
+}
+
 body.access-pink .device-info,
 body.access-pink .instructions,
-body.access-pink .sidebar { background:#fce4ec; }
+body.access-pink .sidebar,
+body.access-pink .status {
+
+    background:#fce4ec;
+}
+
 body.access-dark .device-info,
 body.access-dark .instructions,
-body.access-dark .sidebar {
+body.access-dark .sidebar,
+body.access-dark .status {
+
     background:#222;
+
     color:#fff;
 }
+
+body.access-dark .toolbar {
+
+    background:#111;
+}
+
+body.access-dark .tool-btn {
+
+    background:#333;
+
+    color:#fff;
+
+    border-color:#555;
+}
+
 </style>
+
 </head>
+
 <body>
 
 <div class="header" id="header">
-    <button class="accessibility-toggle" onclick="toggleAccessibility()">Accessibility</button>
-    <h1>Mx Brooke's Network Simulator</h1>
+
+    <button class="accessibility-toggle"
+            onclick="toggleAccessibility()">
+
+        Accessibility
+
+    </button>
+
+    <h1>
+        Mx Brooke's Network Simulator
+    </h1>
+
 </div>
 
-<div class="accessibility-panel" id="accessPanel">
-    <button onclick="toggleAccessibility()">✖</button>
+<div class="accessibility-panel"
+     id="accessPanel">
+
+    <button onclick="toggleAccessibility()">
+
+        ✖
+
+    </button>
+
     <h3>Colours</h3>
-    <button class="color-spot" style="background:#f5f5f5" onclick="setBackground('white')"></button>
-    <button class="color-spot" style="background:#ffcccc" onclick="setBackground('red')"></button>
-    <button class="color-spot" style="background:#ffe5cc" onclick="setBackground('orange')"></button>
-    <button class="color-spot" style="background:#fff9c4" onclick="setBackground('yellow')"></button>
-    <button class="color-spot" style="background:#e8f5e9" onclick="setBackground('green')"></button>
-    <button class="color-spot" style="background:#e3f2fd" onclick="setBackground('blue')"></button>
-    <button class="color-spot" style="background:#e6e0f8" onclick="setBackground('purple')"></button>
-    <button class="color-spot" style="background:#fce4ec" onclick="setBackground('pink')"></button>
-    <button class="color-spot" style="background:#121212" onclick="setBackground('dark')"></button>
+
+    <button class="color-spot"
+            style="background:#f5f5f5"
+            onclick="setBackground('white')"></button>
+
+    <button class="color-spot"
+            style="background:#ffcccc"
+            onclick="setBackground('red')"></button>
+
+    <button class="color-spot"
+            style="background:#ffe5cc"
+            onclick="setBackground('orange')"></button>
+
+    <button class="color-spot"
+            style="background:#fff9c4"
+            onclick="setBackground('yellow')"></button>
+
+    <button class="color-spot"
+            style="background:#e8f5e9"
+            onclick="setBackground('green')"></button>
+
+    <button class="color-spot"
+            style="background:#e3f2fd"
+            onclick="setBackground('blue')"></button>
+
+    <button class="color-spot"
+            style="background:#e6e0f8"
+            onclick="setBackground('purple')"></button>
+
+    <button class="color-spot"
+            style="background:#fce4ec"
+            onclick="setBackground('pink')"></button>
+
+    <button class="color-spot"
+            style="background:#121212"
+            onclick="setBackground('dark')"></button>
 
     <h3>Word Spacing</h3>
+
     <div class="accessibility-control">
-        <button class="accessibility-scale" onclick="adjustWordSpacing(0.1)">Increase</button>
-        <button class="accessibility-scale" onclick="adjustWordSpacing(-0.1)">Decrease</button>
+
+        <button class="accessibility-scale"
+                onclick="adjustWordSpacing(0.1)">
+
+            Increase
+
+        </button>
+
+        <button class="accessibility-scale"
+                onclick="adjustWordSpacing(-0.1)">
+
+            Decrease
+
+        </button>
+
     </div>
 
     <h3>Font Size</h3>
+
     <div class="accessibility-control">
-        <button class="accessibility-scale" onclick="adjustFontSize(1)">Increase</button>
-        <button class="accessibility-scale" onclick="adjustFontSize(-1)">Decrease</button>
+
+        <button class="accessibility-scale"
+                onclick="adjustFontSize(1)">
+
+            Increase
+
+        </button>
+
+        <button class="accessibility-scale"
+                onclick="adjustFontSize(-1)">
+
+            Decrease
+
+        </button>
+
     </div>
+
 </div>
 
 <div class="toolbar">
-        <button class="tool-btn" onclick="addDevice('router')">📡 Router</button>
-        <button class="tool-btn" onclick="addDevice('switch')">🔀 Switch</button>
-        <button class="tool-btn" onclick="addDevice('hub')">🧩 Hub</button>
-        <button class="tool-btn" onclick="addDevice('pc')">💻 PC</button>
-        <button class="tool-btn" onclick="addDevice('printer')">🖨 Printer</button>
-        <button class="tool-btn" onclick="addDevice('server')">🖥 Server</button>
-        <button class="tool-btn" onclick="toggleSimulation()" id="simBtn">▶ Start Simulation</button>
+
+    <button class="tool-btn"
+            onclick="addDevice('router')">
+
+        📡 Router
+
+    </button>
+
+    <button class="tool-btn"
+            onclick="addDevice('switch')">
+
+        🔀 Switch
+
+    </button>
+
+    <button class="tool-btn"
+            onclick="addDevice('hub')">
+
+        🧩 Hub
+
+    </button>
+
+    <button class="tool-btn"
+            onclick="addDevice('pc')">
+
+        💻 PC
+
+    </button>
+
+    <button class="tool-btn"
+            onclick="addDevice('printer')">
+
+        🖨 Printer
+
+    </button>
+
+    <select class="tool-btn"
+            onchange="handleServerDropdown(this)">
+
+        <option value="">
+            🖥 Add Server
+        </option>
+
+        <option value="print-server">
+            🖨️ Print Server
+        </option>
+
+        <option value="file-server">
+            🗂 File Server
+        </option>
+
+        <option value="email-server">
+            📧 Email Server
+        </option>
+
+    </select>
+
+    <button class="tool-btn"
+            onclick="toggleSimulation()"
+            id="simBtn">
+
+        ▶ Start Simulation
+
+    </button>
+
 </div>
 
 <div class="main">
 
-    <div class="sidebar">
+<div class="sidebar">
 
-        <h2>Devices</h2>
-<p style="margin-top:10px;margin-bottom:20px;color:#94a3b8;line-height:1.5;">
-Rename devices, recolour them, or delete them directly from the sidebar.
+<h2>Devices</h2>
+
+<p style="
+margin-top:10px;
+margin-bottom:20px;
+color:#64748b;
+line-height:1.5;
+">
+
+Rename devices, recolour them,
+or delete them directly
+from the sidebar.
+
 </p>
 
-        <div id="deviceList"></div>
+<div id="deviceList"></div>
 
-        <div class="status">
-            <h3>Simulation Status</h3>
-            <p id="simStatus">OFF</p>
-        </div>
+<div class="status">
 
-        <div class="instructions">
-            <h3>Controls</h3>
-            <ul>
-                <li>Left click + drag devices</li>
-                <li>Right click device A then device B to connect</li>
-                <li>Right click cable to delete it</li>
-                <li>Packets move continuously while simulation is ON</li>
-                <li>Packets travel client-to-client across networks</li>
-                <li>Each switch path uses different colours</li>
-                <li>You can customise device colours</li>
-            </ul>
-        </div>
+    <h3>Simulation Status</h3>
 
-    </div>
+    <p id="simStatus">OFF</p>
 
-    <div class="canvas" id="canvas">
-        <svg id="svg"></svg>
-    </div>
+</div>
+
+<div class="instructions">
+
+    <h3>Controls</h3>
+
+    <ul>
+
+        <li>
+            Left click + drag devices
+        </li>
+
+        <li>
+            Right click two devices
+            to connect them
+        </li>
+
+        <li>
+            Triple tap devices on
+            touchscreens to connect
+        </li>
+
+        <li>
+            Double click devices
+            while paused to send
+            one transmission
+        </li>
+
+        <li>
+            Right click cables
+            to delete them
+        </li>
+
+        <li>
+            Hubs duplicate packets
+            to every connected node
+        </li>
+
+        <li>
+            Print jobs route through
+            print servers
+        </li>
+
+        <li>
+            Email servers simulate
+            email traffic
+        </li>
+
+        <li>
+            File servers simulate
+            file transfer traffic
+        </li>
+
+        <li>
+            Routers load balance
+            using randomised paths
+        </li>
+
+        <li>
+            Traffic occurs in bursts
+            of varying size
+        </li>
+
+    </ul>
+
+</div>
+
+</div>
+
+<div class="canvas" id="canvas">
+
+<svg id="svg"></svg>
+
+</div>
 
 </div>
 
@@ -327,40 +805,84 @@ const deviceList = document.getElementById('deviceList');
 const simBtn = document.getElementById('simBtn');
 const simStatus = document.getElementById('simStatus');
 
+// ================= STATE =================
+
+let devices = [];
+let connections = [];
+
+let connectStart = null;
+
+let simulationRunning = false;
+let simulationInterval = null;
+
+let deviceId = 1;
+
+let activeDrag = null;
+
+// ================= ACCESSIBILITY =================
+
 function toggleAccessibility() {
-    document.getElementById('accessPanel').classList.toggle('open');
+
+    document
+        .getElementById('accessPanel')
+        .classList
+        .toggle('open');
 }
 
 function darkenColor(hex, percent) {
+
     hex = hex.replace('#','');
+
     let r=parseInt(hex.substring(0,2),16);
     let g=parseInt(hex.substring(2,4),16);
     let b=parseInt(hex.substring(4,6),16);
+
     r=Math.floor(r*(1-percent/100));
     g=Math.floor(g*(1-percent/100));
     b=Math.floor(b*(1-percent/100));
-    return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+
+    return '#'+((1<<24)+(r<<16)+(g<<8)+b)
+        .toString(16)
+        .slice(1);
 }
 
 function setBackground(color) {
+
     localStorage.setItem('bgColor', color);
 
     document.body.className='';
-    document.body.classList.add('access-'+color);
+
+    document.body.classList.add(
+        'access-'+color
+    );
 
     const map={
-        white:'#f5f5f5', red:'#ffcccc', orange:'#ffe5cc',
-        yellow:'#fff9c4', green:'#e8f5e9', blue:'#e3f2fd',
-        purple:'#e6e0f8', pink:'#fce4ec', dark:'#121212'
+        white:'#f5f5f5',
+        red:'#ffcccc',
+        orange:'#ffe5cc',
+        yellow:'#fff9c4',
+        green:'#e8f5e9',
+        blue:'#e3f2fd',
+        purple:'#e6e0f8',
+        pink:'#fce4ec',
+        dark:'#121212'
     };
 
-    document.body.style.background = map[color];
+    document.body.style.background =
+        map[color];
 
-    const header=document.getElementById('header');
-    const panel=document.getElementById('accessPanel');
+    const header =
+        document.getElementById('header');
 
-    const darkHex=color==='dark' ? '#000' : darkenColor(map[color],40);
-    header.style.background=darkHex;
+    const panel =
+        document.getElementById('accessPanel');
+
+    const darkHex =
+        color==='dark'
+        ? '#000'
+        : darkenColor(map[color],40);
+
+    header.style.background = darkHex;
 
     panel.style.background = map[color];
 
@@ -372,115 +894,250 @@ function setBackground(color) {
 }
 
 function adjustWordSpacing(amount){
-    let current = parseFloat(localStorage.getItem('wordSpacing')||'0');
+
+    let current =
+        parseFloat(
+            localStorage.getItem('wordSpacing')||'0'
+        );
+
     current += amount;
-    document.body.style.wordSpacing = current + 'em';
-    localStorage.setItem('wordSpacing', current);
+
+    document.body.style.wordSpacing =
+        current + 'em';
+
+    localStorage.setItem(
+        'wordSpacing',
+        current
+    );
 }
 
 function adjustFontSize(amount){
-    let current = parseFloat(localStorage.getItem('fontSize')||'16');
+
+    let current =
+        parseFloat(
+            localStorage.getItem('fontSize')||'16'
+        );
+
     current += amount;
-    document.body.style.fontSize = current + 'px';
-    localStorage.setItem('fontSize', current);
+
+    document.body.style.fontSize =
+        current + 'px';
+
+    localStorage.setItem(
+        'fontSize',
+        current
+    );
 }
 
 window.onload=function(){
-    const saved=localStorage.getItem('bgColor')||'white';
+
+    const saved =
+        localStorage.getItem('bgColor')||'white';
+
     setBackground(saved);
 
-    const ws = parseFloat(localStorage.getItem('wordSpacing')||'0');
-    const fs = parseFloat(localStorage.getItem('fontSize')||'16');
-    document.body.style.wordSpacing = ws+'em';
-    document.body.style.fontSize = fs+'px';
+    const ws =
+        parseFloat(
+            localStorage.getItem('wordSpacing')||'0'
+        );
+
+    const fs =
+        parseFloat(
+            localStorage.getItem('fontSize')||'16'
+        );
+
+    document.body.style.wordSpacing =
+        ws+'em';
+
+    document.body.style.fontSize =
+        fs+'px';
 };
 
-// ================= STATE =================
-
-let devices = [];
-let connections = [];
-let connectStart = null;
-let simulationRunning = false;
-let simulationInterval = null;
-let deviceId = 1;
-let networkMode = 'normal';
-let lastSelected = null;
-
-// ================= DEVICE HELPERS =================
+// ================= HELPERS =================
 
 function randomIP(){
-    return `192.168.${Math.floor(Math.random()*5)+1}.${Math.floor(Math.random()*254)+1}`;
+
+    return `192.168.${
+        Math.floor(Math.random()*5)+1
+    }.${
+        Math.floor(Math.random()*254)+1
+    }`;
 }
 
 function randomMAC(){
+
     return 'XX:XX:XX:XX:XX:XX'.replace(/X/g,()=>
-        '0123456789ABCDEF'[Math.floor(Math.random()*16)]
+
+        '0123456789ABCDEF'[
+            Math.floor(Math.random()*16)
+        ]
     );
 }
 
 function icon(type){
+
     return {
+
         router:'📡',
+
         switch:'🔀',
+
         hub:'🧩',
+
         pc:'💻',
+
         printer:'🖨',
-        server:'🖥'
-    }[type];
+
+        'print-server':'🖥️',
+
+        'file-server':'🗂',
+
+        'email-server':'📧'
+
+    }[type] || '❓';
 }
 
 function defaultColour(type){
+
     return {
+
         router:'#ef4444',
+
         switch:'#3b82f6',
+
         hub:'#eab308',
+
         pc:'#22c55e',
+
         printer:'#a855f7',
-        server:'#111827'
-    }[type];
+
+        'print-server':'#f97316',
+
+        'file-server':'#0f766e',
+
+        'email-server':'#7c3aed'
+
+    }[type] || '#999999';
+}
+
+function getNeighbors(device){
+
+    const neighbours=[];
+
+    connections.forEach(conn=>{
+
+        if(conn.from.id===device.id){
+            neighbours.push(conn.to);
+        }
+
+        if(conn.to.id===device.id){
+            neighbours.push(conn.from);
+        }
+    });
+
+    return neighbours;
+}
+
+function handleServerDropdown(select){
+
+    if(!select.value) return;
+
+    addDevice(select.value);
+
+    select.value='';
 }
 
 // ================= DEVICE CREATION =================
 
 function addDevice(type){
 
-    const div = document.createElement('div');
-    div.className = 'device';
+    const div =
+        document.createElement('div');
+
+    div.className='device';
 
     const id = deviceId++;
 
     const device = {
+
         name:`${type.toUpperCase()}-${id}`,
+
         id,
+
         type,
+
         ip:randomIP(),
+
         mac:randomMAC(),
+
         color:defaultColour(type),
+
         element:div
     };
 
-    div.style.background = device.color;
+    div.style.background=device.color;
 
-    if(type === 'server'){
-        div.style.border = '3px solid #111827';
-    }
+    div.style.left='150px';
+    div.style.top='150px';
 
-    div.style.left = '150px';
-    div.style.top = '150px';
-
-    div.innerHTML = `
+    div.innerHTML=`
         <div class="icon">${icon(type)}</div>
         <div class="label">${device.name}</div>
     `;
 
     devices.push(device);
+
     canvas.appendChild(div);
 
     updateSidebar();
+
     enableDragging(div);
 
+    // ================= TOUCHSCREEN TRIPLE TAP =================
+
+    let tapCount = 0;
+
+    let tapTimer = null;
+
+    let lastTap = 0;
+
+    div.addEventListener('touchstart',()=>{
+
+        const now = Date.now();
+
+        if(now - lastTap < 400){
+            tapCount++;
+        } else {
+            tapCount = 1;
+        }
+
+        lastTap = now;
+
+        clearTimeout(tapTimer);
+
+        tapTimer = setTimeout(()=>{
+
+            tapCount = 0;
+
+        },500);
+
+        if(tapCount === 3){
+
+            tapCount = 0;
+
+            connectDevice(device);
+        }
+    });
+
+    div.addEventListener('dblclick',()=>{
+
+        sendManualTransmission(device);
+    });
+
     div.addEventListener('contextmenu',(e)=>{
+
         e.preventDefault();
+
         connectDevice(device);
     });
 }
@@ -493,47 +1150,85 @@ function updateSidebar(){
 
     devices.forEach(device=>{
 
-        const box = document.createElement('div');
+        const box =
+            document.createElement('div');
+
         box.className='device-info';
 
         box.innerHTML=`
             <h3>${icon(device.type)} ${device.name}</h3>
+
             <p><strong>IP:</strong> ${device.ip}</p>
+
             <p><strong>MAC:</strong> ${device.mac}</p>
+
             <label>Device Name</label>
-            <input class="renameInput" type="text" value="${device.name}">
+
+            <input class="renameInput"
+                   type="text"
+                   value="${device.name}">
+
             <label>Device Colour</label>
-            <input type="color" value="${device.color}">
+
+            <input type="color"
+                   value="${device.color}">
         `;
 
-        const renameInput = box.querySelector('.renameInput');
+        const renameInput =
+            box.querySelector('.renameInput');
 
         renameInput.addEventListener('input',(e)=>{
-            device.name = e.target.value;
-            device.element.querySelector('.label').innerText = e.target.value;
+
+            device.name=e.target.value;
+
+            device.element
+                .querySelector('.label')
+                .innerText=e.target.value;
         });
 
-        const colorPicker = box.querySelector('input[type="color"]');
+        const colorPicker =
+            box.querySelector('input[type="color"]');
 
         colorPicker.addEventListener('input',(e)=>{
-            device.color = e.target.value;
-            device.element.style.background = e.target.value;
+
+            device.color=e.target.value;
+
+            device.element.style.background =
+                e.target.value;
         });
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.innerText = '🗑 Delete Device';
+        const deleteBtn =
+            document.createElement('button');
+
+        deleteBtn.innerText='🗑 Delete Device';
+
         deleteBtn.style.width='100%';
+
         deleteBtn.style.marginTop='10px';
 
         deleteBtn.addEventListener('click',()=>{
+
             device.element.remove();
-            devices = devices.filter(d=>d.id!==device.id);
-            connections = connections.filter(c=>c.from.id!==device.id && c.to.id!==device.id);
+
+            devices =
+                devices.filter(d=>
+                    d.id!==device.id
+                );
+
+            connections =
+                connections.filter(c=>
+
+                    c.from.id!==device.id &&
+                    c.to.id!==device.id
+                );
+
             drawConnections();
+
             updateSidebar();
         });
 
         box.appendChild(deleteBtn);
+
         deviceList.appendChild(box);
     });
 }
@@ -542,18 +1237,43 @@ function updateSidebar(){
 
 function connectDevice(device){
 
-    lastSelected = device;
-
     if(!connectStart){
-        connectStart = device;
-        device.element.style.outline='5px solid cyan';
+
+        connectStart=device;
+
+        device.element.style.outline =
+            '5px solid cyan';
+
     } else {
-        if(connectStart.id !== device.id){
-            connections.push({from:connectStart,to:device});
+
+        if(connectStart.id!==device.id){
+
+            const exists =
+                connections.some(c=>
+
+                    (
+                        c.from.id===connectStart.id &&
+                        c.to.id===device.id
+                    ) ||
+
+                    (
+                        c.from.id===device.id &&
+                        c.to.id===connectStart.id
+                    )
+                );
+
+            if(!exists){
+
+                connections.push({
+                    from:connectStart,
+                    to:device
+                });
+            }
         }
 
         connectStart.element.style.outline='none';
-        connectStart = null;
+
+        connectStart=null;
 
         drawConnections();
     }
@@ -565,22 +1285,34 @@ function drawConnections(){
 
     connections.forEach((conn,index)=>{
 
-        const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+        const line =
+            document.createElementNS(
+                'http://www.w3.org/2000/svg',
+                'line'
+            );
 
-        const p1 = getCenter(conn.from.element);
-        const p2 = getCenter(conn.to.element);
+        const p1 =
+            getCenter(conn.from.element);
+
+        const p2 =
+            getCenter(conn.to.element);
 
         line.setAttribute('x1',p1.x);
         line.setAttribute('y1',p1.y);
+
         line.setAttribute('x2',p2.x);
         line.setAttribute('y2',p2.y);
 
         line.setAttribute('stroke','#94a3b8');
+
         line.setAttribute('stroke-width','4');
 
         line.addEventListener('contextmenu',(e)=>{
+
             e.preventDefault();
+
             connections.splice(index,1);
+
             drawConnections();
         });
 
@@ -589,84 +1321,288 @@ function drawConnections(){
 }
 
 function getCenter(el){
-    const rect = el.getBoundingClientRect();
-    const canvasRect = canvas.getBoundingClientRect();
+
+    const rect =
+        el.getBoundingClientRect();
+
+    const canvasRect =
+        canvas.getBoundingClientRect();
 
     return {
-        x: rect.left - canvasRect.left + rect.width/2,
-        y: rect.top - canvasRect.top + rect.height/2
+        x:
+            rect.left -
+            canvasRect.left +
+            rect.width/2,
+
+        y:
+            rect.top -
+            canvasRect.top +
+            rect.height/2
     };
 }
 
-// ================= DRAG =================
-
 function enableDragging(el){
-
-    let dragging=false;
-    let offsetX=0;
-    let offsetY=0;
 
     el.addEventListener('mousedown',(e)=>{
 
         if(e.button===2) return;
 
-        dragging=true;
-        offsetX=e.offsetX;
-        offsetY=e.offsetY;
-
+        activeDrag = {
+            el,
+            offsetX:e.offsetX,
+            offsetY:e.offsetY
+        };
     });
-
-    document.addEventListener('mousemove',(e)=>{
-
-        if(!dragging) return;
-
-        const rect = canvas.getBoundingClientRect();
-
-        el.style.left = e.clientX - rect.left - offsetX + 'px';
-        el.style.top = e.clientY - rect.top - offsetY + 'px';
-
-        drawConnections();
-
-    });
-
-    document.addEventListener('mouseup',()=>dragging=false);
 }
+
+document.addEventListener('mousemove',(e)=>{
+
+    if(!activeDrag) return;
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+    activeDrag.el.style.left =
+        e.clientX -
+        rect.left -
+        activeDrag.offsetX + 'px';
+
+    activeDrag.el.style.top =
+        e.clientY -
+        rect.top -
+        activeDrag.offsetY + 'px';
+
+    drawConnections();
+});
+
+document.addEventListener('mouseup',()=>{
+
+    activeDrag=null;
+});
 
 // ================= SIMULATION =================
 
 function toggleSimulation(){
 
-    simulationRunning = !simulationRunning;
+    simulationRunning =
+        !simulationRunning;
 
     if(simulationRunning){
-        simBtn.innerText='⏹ Stop Simulation';
+
+        simBtn.innerText =
+            '⏹ Stop Simulation';
+
         simStatus.innerText='ON';
-        simulationInterval = setInterval(generateTraffic,900);
+
+        simulationInterval =
+            setInterval(generateTraffic,700);
+
     } else {
-        simBtn.innerText='▶ Start Simulation';
+
+        simBtn.innerText =
+            '▶ Start Simulation';
+
         simStatus.innerText='OFF';
+
         clearInterval(simulationInterval);
     }
 }
 
 function generateTraffic(){
 
-    const clients = devices.filter(d => d.type === 'pc' || d.type === 'printer');
+    const pcs =
+        devices.filter(d=>d.type==='pc');
 
-    if(clients.length < 2) return;
+    const printers =
+        devices.filter(d=>d.type==='printer');
 
-    const source = clients[Math.floor(Math.random()*clients.length)];
+    const printServers =
+        devices.filter(d=>
+            d.type==='print-server'
+        );
 
-    let destination = clients[Math.floor(Math.random()*clients.length)];
+    const emailServers =
+        devices.filter(d=>
+            d.type==='email-server'
+        );
 
-    while(destination.id === source.id){
-        destination = clients[Math.floor(Math.random()*clients.length)];
+    const fileServers =
+        devices.filter(d=>
+            d.type==='file-server'
+        );
+
+    if(!pcs.length) return;
+
+    const burst =
+        Math.random() < 0.35
+        ? 1
+        : Math.floor(Math.random()*6)+2;
+
+    for(let i=0;i<burst;i++){
+
+        setTimeout(()=>{
+
+            // PRINT JOBS
+
+            if(
+                printers.length &&
+                printServers.length &&
+                Math.random() < 0.30
+            ){
+
+                const pc =
+                    pcs[
+                        Math.floor(Math.random()*pcs.length)
+                    ];
+
+                const printer =
+                    printers[
+                        Math.floor(Math.random()*printers.length)
+                    ];
+
+                const path =
+                    findPath(pc,printer);
+
+                if(path.length > 1){
+
+                    animatePacket(
+                        path,
+                        printer.color
+                    );
+                }
+
+                return;
+            }
+
+            // EMAIL
+
+            if(
+                emailServers.length &&
+                Math.random() < 0.20
+            ){
+
+                const pc =
+                    pcs[
+                        Math.floor(Math.random()*pcs.length)
+                    ];
+
+                const server =
+                    emailServers[
+                        Math.floor(Math.random()*emailServers.length)
+                    ];
+
+                const path =
+                    findRandomizedPath(pc,server);
+
+                if(path.length > 1){
+
+                    animatePacket(
+                        path,
+                        server.color
+                    );
+                }
+
+                return;
+            }
+
+            // FILE TRANSFER
+
+            if(
+                fileServers.length &&
+                Math.random() < 0.20
+            ){
+
+                const pc =
+                    pcs[
+                        Math.floor(Math.random()*pcs.length)
+                    ];
+
+                const server =
+                    fileServers[
+                        Math.floor(Math.random()*fileServers.length)
+                    ];
+
+                const path =
+                    findRandomizedPath(pc,server);
+
+                if(path.length > 1){
+
+                    animatePacket(
+                        path,
+                        server.color
+                    );
+                }
+
+                return;
+            }
+
+            // NORMAL PC TRAFFIC
+
+            if(pcs.length < 2) return;
+
+            const source =
+                pcs[
+                    Math.floor(Math.random()*pcs.length)
+                ];
+
+            let destination =
+                pcs[
+                    Math.floor(Math.random()*pcs.length)
+                ];
+
+            while(destination.id===source.id){
+
+                destination =
+                    pcs[
+                        Math.floor(Math.random()*pcs.length)
+                    ];
+            }
+
+            const path =
+                findRandomizedPath(source,destination);
+
+            if(path.length > 1){
+
+                animatePacket(
+                    path,
+                    source.color
+                );
+            }
+
+        },i*120);
     }
+}
 
-    const path = findPath(source,destination);
+function sendManualTransmission(source){
 
-    if(path.length > 1){
-        animatePacket(path);
+    if(simulationRunning) return;
+
+    if(source.type==='pc'){
+
+        const pcs =
+            devices.filter(d=>
+                d.type==='pc' &&
+                d.id!==source.id
+            );
+
+        if(pcs.length){
+
+            const target =
+                pcs[
+                    Math.floor(Math.random()*pcs.length)
+                ];
+
+            const path =
+                findRandomizedPath(source,target);
+
+            if(path.length>1){
+
+                animatePacket(
+                    path,
+                    source.color
+                );
+            }
+        }
     }
 }
 
@@ -674,91 +1610,223 @@ function generateTraffic(){
 
 function findPath(start,end){
 
-    if(networkMode === 'client-server'){
+    // PC -> PRINTER MUST GO VIA PRINT SERVER
 
-        const servers = devices.filter(d => d.type === 'server');
+    if(
+        start.type==='pc' &&
+        end.type==='printer'
+    ){
+
+        const servers =
+            devices.filter(d=>
+                d.type==='print-server'
+            );
+
         if(!servers.length) return [];
 
-        const server = servers[Math.floor(Math.random()*servers.length)];
+        const server =
+            servers[
+                Math.floor(Math.random()*servers.length)
+            ];
 
-        const path1 = bfs(start, server);
-        const path2 = bfs(server, end);
+        const pathToServer =
+            findRandomizedPath(
+                start,
+                server
+            );
 
-        if(path1.length && path2.length){
-            return [...path1, ...path2.slice(1)];
+        const pathToPrinter =
+            findRandomizedPath(
+                server,
+                end
+            );
+
+        if(
+            !pathToServer.length ||
+            !pathToPrinter.length
+        ){
+            return [];
         }
 
-        return [];
+        return [
+
+            ...pathToServer,
+
+            ...pathToPrinter.slice(1)
+        ];
     }
 
-    return bfs(start,end);
+    return findRandomizedPath(start,end);
 }
 
-function bfs(start,end){
+function findRandomizedPath(start,end){
 
-    const visited = new Set();
-    const queue = [[start]];
+    const allPaths =
+        findAllPaths(start,end,12);
 
-    while(queue.length){
+    if(!allPaths.length) return [];
 
-        const path = queue.shift();
-        const node = path[path.length-1];
+    allPaths.sort((a,b)=>
+        a.length-b.length
+    );
 
-        if(node.id === end.id) return path;
+    const weighted=[];
 
-        if(!visited.has(node.id)){
-            visited.add(node.id);
+    allPaths.forEach((path,index)=>{
 
-            const neighbours = [];
+        const weight =
+            Math.max(1,6-index);
 
-            connections.forEach(conn=>{
-                if(conn.from.id===node.id) neighbours.push(conn.to);
-                if(conn.to.id===node.id) neighbours.push(conn.from);
-            });
+        for(let i=0;i<weight;i++){
 
-            neighbours.forEach(n=>{
-                queue.push([...path,n]);
-            });
+            weighted.push(path);
         }
+    });
+
+    return weighted[
+        Math.floor(Math.random()*weighted.length)
+    ];
+}
+
+function findAllPaths(start,end,maxDepth=12){
+
+    const paths=[];
+
+    function dfs(
+        current,
+        target,
+        visited,
+        path
+    ){
+
+        if(path.length > maxDepth) return;
+
+        if(current.id===target.id){
+
+            paths.push([...path]);
+
+            return;
+        }
+
+        visited.add(current.id);
+
+        const neighbours =
+            getNeighbors(current);
+
+        neighbours.sort(()=>
+            Math.random()-0.5
+        );
+
+        neighbours.forEach(next=>{
+
+            if(!visited.has(next.id)){
+
+                dfs(
+                    next,
+                    target,
+                    new Set(visited),
+                    [...path,next]
+                );
+            }
+        });
     }
 
-    return [];
+    dfs(start,end,new Set(),[start]);
+
+    return paths;
 }
 
 // ================= PACKETS =================
 
-function animatePacket(path){
+function animatePacket(path,color){
 
-    let current = 0;
+    let current=0;
 
     function move(){
 
-        if(current >= path.length-1) return;
+        if(current>=path.length-1) return;
 
-        const from = getCenter(path[current].element);
-        const to = getCenter(path[current+1].element);
+        const fromDevice =
+            path[current];
 
-        const packet = document.createElement('div');
+        const toDevice =
+            path[current+1];
+
+        const from =
+            getCenter(fromDevice.element);
+
+        const to =
+            getCenter(toDevice.element);
+
+        const packet =
+            document.createElement('div');
+
         packet.className='packet';
-        packet.style.background = path[path.length-1].color;
-        packet.style.left = from.x+'px';
-        packet.style.top = from.y+'px';
+
+        packet.style.background=color;
+
+        const size =
+            Math.random()*10 + 8;
+
+        packet.style.width=size+'px';
+
+        packet.style.height=size+'px';
+
+        packet.style.left=from.x+'px';
+
+        packet.style.top=from.y+'px';
 
         canvas.appendChild(packet);
 
-        let progress = 0;
+        let progress=0;
 
-        const interval = setInterval(()=>{
+        const speed =
+            0.01 + Math.random()*0.03;
 
-            progress += 0.02;
+        const interval=setInterval(()=>{
 
-            packet.style.left = from.x + (to.x-from.x)*progress + 'px';
-            packet.style.top = from.y + (to.y-from.y)*progress + 'px';
+            progress += speed;
+
+            packet.style.left =
+
+                from.x +
+                (to.x-from.x)*progress + 'px';
+
+            packet.style.top =
+
+                from.y +
+                (to.y-from.y)*progress + 'px';
 
             if(progress>=1){
+
                 clearInterval(interval);
+
                 packet.remove();
+
+                // HUB FLOODING
+
+                if(toDevice.type==='hub'){
+
+                    const neighbours =
+                        getNeighbors(toDevice);
+
+                    neighbours.forEach(neighbour=>{
+
+                        if(
+                            neighbour.id !==
+                            fromDevice.id
+                        ){
+
+                            animatePacket(
+                                [toDevice,neighbour],
+                                color
+                            );
+                        }
+                    });
+                }
+
                 current++;
+
                 move();
             }
 
@@ -768,12 +1836,17 @@ function animatePacket(path){
     move();
 }
 
-// ================= EVENTS =================
-
-window.addEventListener('resize',drawConnections);
+window.addEventListener(
+    'resize',
+    drawConnections
+);
 
 document.addEventListener('contextmenu',(e)=>{
-    if(e.target === canvas || e.target === svg){
+
+    if(
+        e.target===canvas ||
+        e.target===svg
+    ){
         e.preventDefault();
     }
 });
@@ -781,3 +1854,4 @@ document.addEventListener('contextmenu',(e)=>{
 </script>
 </body>
 </html>
+```
