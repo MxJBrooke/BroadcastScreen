@@ -1016,7 +1016,12 @@ function makeBlock(){
 
     el.className="target-block";
 
-    el.textContent=value;
+    /* DISPLAY AS HEXADECIMAL */
+
+    el.textContent=
+        value
+            .toString(16)
+            .toUpperCase();
 
     board.appendChild(el);
 
@@ -1045,7 +1050,6 @@ function makeBlock(){
             currentBlock.points
         );
 }
-
 /* INPUT */
 
 function getCurrentInput(){
