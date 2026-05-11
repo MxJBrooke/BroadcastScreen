@@ -1446,7 +1446,6 @@ function generateTraffic(){
 
             if(
                 printers.length &&
-                printServers.length &&
                 Math.random() < 0.30
             ){
 
@@ -1460,8 +1459,23 @@ function generateTraffic(){
                         Math.floor(Math.random()*printers.length)
                     ];
 
-                const path =
-                    findPath(pc,printer);
+                let path = [];
+
+                // USE PRINT SERVER IF AVAILABLE
+
+                if(printServers.length){
+
+                    path =
+                        findPath(pc,printer);
+                }
+
+                // DIRECT PRINTING IF NO PRINT SERVER EXISTS
+
+                else {
+
+                    path =
+                        findRandomizedPath(pc,printer);
+                }
 
                 if(path.length > 1){
 
