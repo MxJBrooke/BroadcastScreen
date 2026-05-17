@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Binary Hero VS</title>
+<style>
+/* =========================
+   RESET AND BODY
+========================= */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{margin:0;font-family:Consolas,monospace;background:#111;color:white;overflow:hidden;}
+/* =========================
+   LAYOUT
+========================= */
+.container{display:flex;width:100vw;height:100vh;}
+.side{position:relative;width:50%;overflow:hidden;transition:background 0.25s ease, background-image 0.5s ease;}
+.left{background:#d63f3f;}
+.right{background:#356cff;}
+.left.win,.right.win{background:gold !important;}
+.divider{position:fixed;left:50%;top:0;width:8px;height:100%;background:white;transform:translateX(-50%);z-index:100;}
+
+/* Sudden Death Background (Skull Overlay via SVG) */
+.side.sudden-death-bg {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.15"><path fill="black" d="M50,10 C30,10 20,25 20,45 C20,55 25,65 30,70 L30,85 C30,88 35,90 40,90 L45,90 L45,80 L55,80 L55,90 L60,90 C65,90 70,88 70,85 L70,70 C75,65 80,55 80,45 C80,25 70,10 50,10 Z M38,45 C34,45 31,41 31,37 C31,33 34,30 38,30 C42,30 45,33 45,37 C45,41 42,45 38,45 Z M62,45 C58,45 55,41 55,37 C55,33 58,30 62,30 C66,30 69,33 69,37 C69,41 66,45 62,45 Z"/></svg>');
+    background-size: 50% auto;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+/* =========================
+   TITLES AND SCORES
+========================= */
+.title{position:absolute;top:15px;width:100%;text-align:center;font-size:42px;font-weight:bold;z-index:20;}
+.score{position:absolute;top:80px;width:100%;text-align:center;font-size:34px;font-weight:bold;z-index:20;}
+.keys-label{position:absolute;top:130px;width:100%;text-align:center;font-size:24px;font-weight:bold;z-index:20;}
+/* =========================
+   ROUND TRACK
+========================= */
+.round-track{position:fixed;top:20px;left:50%;transform:translateX(-50%);display:flex;gap:10px;z-index:500;}
+.round-dot{width:22px;height:22px;border-radius:50%;border:3px solid black;background:#777;}
+.round-dot.p1{background:#ff4444;}
+.round-dot.p2{background:#4480ff;}
+.round-dot.tie{background:#b84dff;}
+/* =========================
+   BLOCKS
+========================= */
+.target-block{position:absolute;width:180px;height:110px;border-radius:24px;background:white;color:black;border:5px solid black;display:flex;justify-content:center;align-items:center;font-size:64px;font-weight:bold;z-index:50;}
+#p1Block,#p2Block{left:50%;transform:translateX(-50%);}
+.hit-line{position:absolute;bottom:220px;width:100%;height:6px;background:white;}
+/* =========================
+   CONTROLS
+========================= */
+.controls{position:absolute;bottom:40px;width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:20px;}
+.key{height:110px;border-radius:20px;border:4px solid white;display:flex;flex-direction:column;justify-content:center;align-items:center;background:rgba(255,255,255,0.12);font-size:34px;font-weight:bold;transition:0.08s;user-select:none;}
+.key span{font-size:20px;margin-top:5px;}
+.key.active{background:white;color:black;transform:scale(0.92);}
+/* =========================
+   POPUPS
+========================= */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.82);display:flex;justify-content:center;align-items:center;z-index:800;}
+.overlay-box{width:720px;background:white;color:black;border-radius:30px;padding:40px;text-align:center;animation:pop 0.3s ease;}
+.overlay-box h1{margin-top:0;font-size:60px;}
+.overlay-box p{font-size:28px;line-height:1.6;}
+.overlay-box button{margin-top:20px;padding:18px 34px;border:none;border-radius:16px;background:black;color:white;font-size:24px;font-weight:bold;cursor:pointer;}
+.popup{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:white;color:black;padding:30px 60px;border-radius:24px;font-size:46px;font-weight:bold;z-index:900;border:5px solid black;animation:pop 0.3s ease;}
+
+/* Sudden Death Notification Customization */
+.popup.sudden-death-popup {
+    background: red;
+    color: white;
+    border: 5px solid white;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+}
+
+@keyframes pop{0%{transform:translate(-50%,-50%) scale(0.6);opacity:0;}100%{transform:translate(-50%,-50%) scale(1);opacity:1;}}
+
+/* =========================
+   BREAK PIECES
+========================= */
+.bit-piece{position:absolute;width:60px;height:60px;border-radius:16px;border:4px solid black;background:white;color:black;display:flex;justify-content:center;align-items:center;font-size:28px;font-weight:bold;z-index:120;}
+</style>
+</head>
+<body>
+<div class="divider"></div>
+<div class="round-track" id="roundTrack"></div>
+
+<!-- START OVERLAY -->
+<div class="overlay" id="startOverlay">
+    <div class="overlay-box">
+        <h1>BINARY HERO VS</h1>
+        <p>PLAYER 1<br>A = 8 &nbsp; S = 4 &nbsp; D = 2 &nbsp; F = 1</p>
+        <p>PLAYER 2<br>H = 8 &nbsp; J = 4 &nbsp; K = 2 &nbsp; L = 1</p>
+        <p>Hold ALL your keys together at the same time to begin.</p>
+    </div>
+</div>
+
+<!-- GAME BOARD -->
+<div class="container">
+    <div class="side left" id="p1Board">
+        <div class="title">PLAYER 1</div>
+        <div class="score"><span id="p1Score">0</span></div>
+        <div class="keys-label">A S D F</div>
+        <div class="target-block" id="p1Block">0</div>
+        <div class="hit-line"></div>
+        <div class="controls" id="p1Controls"></div>
+    </div>
+    <div class="side right" id="p2Board">
+        <div class="title">PLAYER 2</div>
+        <div class="score"><span id="p2Score">0</span></div>
+        <div class="keys-label">H J K L</div>
+        <div class="target-block" id="p2Block">0</div>
+        <div class="hit-line"></div>
+        <div class="controls" id="p2Controls"></div>
+    </div>
+</div>
+
+<script>
+/* =====================================
+   BINARY HERO VS - FULL GAME SCRIPT
+   ===================================== */
+
+/* =========================
+   CONSTANTS
+========================= */
+const bitValues = [8, 4, 2, 1];
+const p1Keys = ["a", "s", "d", "f"];
+const p2Keys = ["h", "j", "k", "l"];
+const maxRounds = 10;
+const hitLineY = window.innerHeight - 340;
+
+/* =========================
+   GAME STATE VARIABLES
+========================= */
+let gameRunning = false;
+let rounds = 0;
+let suddenDeath = false;
+let currentValue = 0;
+let blockSpeed = 3;
+
+/* =========================
+   PLAYER STATES
+========================= */
+const p1 = {
+    score: 0,
+    state: { 8: false, 4: false, 2: false, 1: false },
+    block: { y: 120, paused: false, finished: false, correct: false }
+};
+
+const p2 = {
+    score: 0,
+    state: { 8: false, 4: false, 2: false, 1: false },
+    block: { y: 120, paused: false, finished: false, correct: false }
+};
+
+/* =========================
+   ROUND DOT TRACK
+========================= */
+function createRoundDots() {
+    const track = document.getElementById("roundTrack");
+    track.innerHTML = "";
+    track.style.display = "flex"; 
+    for (let i = 0; i < maxRounds; i++) {
+        const dot = document.createElement("div");
+        dot.className = "round-dot";
+        dot.id = "dot-" + i;
+        track.appendChild(dot);
+    }
+}
+
+/* =========================
+   BUILD PLAYER CONTROLS
+========================= */
+function buildControls() {
+    const p1Controls = document.getElementById("p1Controls");
+    const p2Controls = document.getElementById("p2Controls");
+
+    bitValues.forEach((bit, index) => {
+        const key1 = document.createElement("div");
+        key1.className = "key";
+        key1.id = "p1-" + bit;
+        key1.innerHTML = `${p1Keys[index].toUpperCase()}<span>${bit}</span>`;
+        p1Controls.appendChild(key1);
+
+        const key2 = document.createElement("div");
+        key2.className = "key";
+        key2.id = "p2-" + bit;
+        key2.innerHTML = `${p2Keys[index].toUpperCase()}<span>${bit}</span>`;
+        p2Controls.appendChild(key2);
+    });
+}
+
+/* =========================
+   CALCULATE PLAYER VALUE
+========================= */
+function getValue(state) {
+    let total = 0;
+    for (let bit in state) {
+        if (state[bit]) total += Number(bit);
+    }
+    return total;
+}
+
+/* =========================
+   NEXT ROUND SETUP
+========================= */
+function nextRound() {
+    // Generates a random denary value from 1 to 15 (fits perfectly in 4 bits)
+    currentValue = Math.floor(Math.random() * 15) + 1; 
+
+    ["p1", "p2"].forEach(p => {
+        const block = document.getElementById(p + "Block");
+        // FIX: Display as standard base-10 denary string instead of .toString(16)
+        block.textContent = currentValue.toString(); 
+        block.style.display = "flex";
+    });
+
+    // reset blocks
+    p1.block = { y: 120, paused: false, finished: false, correct: false };
+    p2.block = { y: 120, paused: false, finished: false, correct: false };
+
+    blockSpeed += 0.35; // Speed dynamically increases every round (including sudden death loop)
+}
+
+/* =========================
+   UPDATE BLOCKS
+========================= */
+function updateBlocks() {
+    requestAnimationFrame(updateBlocks);
+    if (!gameRunning) return;
+
+    const players = [
+        { data: p1, el: document.getElementById("p1Block"), id: "p1" },
+        { data: p2, el: document.getElementById("p2Block"), id: "p2" }
+    ];
+
+    let firstCorrect = null;
+    let tie = false;
+
+    players.forEach(p => {
+        if (!p.data.block.paused) {
+            p.data.block.y += blockSpeed;
+            if (p.data.block.y >= hitLineY) {
+                p.data.block.y = hitLineY;
+                p.data.block.paused = true;
+            }
+        }
+        p.el.style.top = p.data.block.y + "px";
+    });
+
+    // Check value only when the block reaches or passes the hit line boundary
+    players.forEach(p => {
+        if (!p.data.block.finished && p.data.block.y >= hitLineY) {
+            if (getValue(p.data.state) === currentValue) {
+                p.data.block.finished = true; 
+                if (!firstCorrect) firstCorrect = p.id;
+                else if (firstCorrect && firstCorrect !== p.id) tie = true;
+            }
+        }
+    });
+
+    if (firstCorrect || tie) {
+        if (tie) finishRound("tie");
+        else finishRound(firstCorrect);
+
+        // hide losing block
+        if (!tie) {
+            players.forEach(p => {
+                if (p.id !== firstCorrect) {
+                    p.el.style.display = "none";
+                }
+            });
+        }
+    }
+}
+
+/* =========================
+   FINISH ROUND
+========================= */
+function finishRound(type) {
+    gameRunning = false;
+
+    if (type === "tie") {
+        if (!suddenDeath) setRoundDot("tie");
+        flashWinner("p1");
+        flashWinner("p2");
+    } else if (type === "p1") {
+        p1.score++;
+        if (!suddenDeath) setRoundDot("p1");
+        flashWinner("p1");
+    } else if (type === "p2") {
+        p2.score++;
+        if (!suddenDeath) setRoundDot("p2");
+        flashWinner("p2");
+    }
+
+    updateScores();
+    rounds++;
+
+    setTimeout(() => {
+        // Sudden death evaluation: First player to score a leading point wins
+        if (suddenDeath) {
+            if (p1.score !== p2.score) {
+                return endGame();
+            }
+            gameRunning = true;
+            nextRound(); // Speed increases seamlessly here inside nextRound()
+            return;
+        }
+
+        // Regular game evaluation at round 10 limit
+        if (rounds >= maxRounds) {
+            if (p1.score !== p2.score) {
+                return endGame();
+            } else {
+                // TIE DETECTED AT ROUND 10 -> INITIATE SUDDEN DEATH
+                suddenDeath = true;
+                
+                // 1. Blend in Skull backgrounds
+                document.getElementById("p1Board").classList.add("sudden-death-bg");
+                document.getElementById("p2Board").classList.add("sudden-death-bg");
+                
+                // 2. Clear regular dot panel
+                document.getElementById("roundTrack").style.display = "none";
+                
+                // 3. Fire Custom Sudden Death Banner Pop up
+                const sdPopup = showPopup("💀 SUDDEN DEATH! NEXT POINT WINS! 💀");
+                sdPopup.classList.add("sudden-death-popup");
+                
+                setTimeout(() => {
+                    sdPopup.remove();
+                    gameRunning = true;
+                    nextRound();
+                }, 2000);
+                return;
+            }
+        }
+
+        // Standard setup step
+        gameRunning = true;
+        nextRound();
+    }, 1000); 
+}
+
+/* =========================
+   FLASH WINNER EFFECT
+========================= */
+function flashWinner(player) {
+    const board = document.getElementById(player + "Board");
+    board.classList.add("win");
+    setTimeout(() => board.classList.remove("win"), 700);
+}
+
+/* =========================
+   ROUND DOTS
+========================= */
+function setRoundDot(type) {
+    const dot = document.getElementById("dot-" + rounds);
+    if(dot) dot.className = `round-dot ${type}`;
+}
+
+/* =========================
+   UPDATE SCORES DISPLAY
+========================= */
+function updateScores() {
+    document.getElementById("p1Score").textContent = p1.score;
+    document.getElementById("p2Score").textContent = p2.score;
+}
+
+/* =========================
+   POPUP DISPLAY
+========================= */
+function showPopup(text) {
+    const div = document.createElement("div");
+    div.className = "popup";
+    div.textContent = text;
+    document.body.appendChild(div);
+    return div;
+}
+
+/* =========================
+   END GAME DISPLAY
+========================= */
+function endGame() {
+    let text = "DRAW";
+    if (p1.score > p2.score) text = "PLAYER 1 WINS";
+    if (p2.score > p1.score) text = "PLAYER 2 WINS";
+
+    const overlay = document.createElement("div");
+    overlay.className = "overlay";
+    overlay.innerHTML = `
+        <div class="overlay-box">
+            <h1>${text}</h1>
+            <p>FINAL SCORE</p>
+            <p style="font-size:56px;font-weight:bold;">${p1.score}-${p2.score}</p>
+            <button id="restartButton">PLAY AGAIN</button>
+        </div>`;
+    document.body.appendChild(overlay);
+
+    document.getElementById("restartButton").onclick = () => {
+        overlay.remove();
+        restartGame();
+    };
+}
+
+/* =========================
+   RESTART GAME
+========================= */
+function restartGame() {
+    rounds = 0;
+    suddenDeath = false;
+    blockSpeed = 3;
+    p1.score = 0;
+    p2.score = 0;
+    
+    // Wipe layouts clean
+    document.getElementById("p1Board").classList.remove("sudden-death-bg");
+    document.getElementById("p2Board").classList.remove("sudden-death-bg");
+    
+    updateScores();
+    createRoundDots();
+    gameRunning = true;
+    nextRound();
+}
+
+/* =========================
+   START GAME CHECK
+========================= */
+function allPressed(state) {
+    return Object.values(state).every(v => v === true);
+}
+
+function checkStart() {
+    if (gameRunning) return;
+    if (allPressed(p1.state) && allPressed(p2.state)) {
+        const startOverlay = document.getElementById("startOverlay");
+        if(startOverlay) startOverlay.remove();
+        gameRunning = true;
+        nextRound();
+    }
+}
+
+/* =========================
+   KEYBOARD HANDLERS
+========================= */
+document.addEventListener("keydown", e => {
+    if (e.repeat) return;
+    const key = e.key.toLowerCase();
+    bitValues.forEach((bit, index) => {
+        if (key === p1Keys[index]) { p1.state[bit] = true; document.getElementById("p1-" + bit).classList.add("active"); }
+        if (key === p2Keys[index]) { p2.state[bit] = true; document.getElementById("p2-" + bit).classList.add("active"); }
+    });
+    checkStart();
+});
+
+document.addEventListener("keyup", e => {
+    const key = e.key.toLowerCase();
+    bitValues.forEach((bit, index) => {
+        if (key === p1Keys[index]) { p1.state[bit] = false; document.getElementById("p1-" + bit).classList.remove("active"); }
+        if (key === p2Keys[index]) { p2.state[bit] = false; document.getElementById("p2-" + bit).classList.remove("active"); }
+    });
+});
+
+/* =========================
+   STARTUP INITIALIZATION
+========================= */
+buildControls();
+updateScores();
+createRoundDots();
+updateBlocks();
+
+</script>
+</body>
+</html>
