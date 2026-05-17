@@ -14,11 +14,20 @@ body{margin:0;font-family:Consolas,monospace;background:#111;color:white;overflo
    LAYOUT
 ========================= */
 .container{display:flex;width:100vw;height:100vh;}
-.side{position:relative;width:50%;overflow:hidden;transition:background 0.25s ease;}
+.side{position:relative;width:50%;overflow:hidden;transition:background 0.25s ease, background-image 0.5s ease;}
 .left{background:#d63f3f;}
 .right{background:#356cff;}
-.left.win,.right.win{background:gold;}
+.left.win,.right.win{background:gold !important;}
 .divider{position:fixed;left:50%;top:0;width:8px;height:100%;background:white;transform:translateX(-50%);z-index:100;}
+
+/* Sudden Death Background (Skull Overlay via SVG) */
+.side.sudden-death-bg {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.15"><path fill="black" d="M50,10 C30,10 20,25 20,45 C20,55 25,65 30,70 L30,85 C30,88 35,90 40,90 L45,90 L45,80 L55,80 L55,90 L60,90 C65,90 70,88 70,85 L70,70 C75,65 80,55 80,45 C80,25 70,10 50,10 Z M38,45 C34,45 31,41 31,37 C31,33 34,30 38,30 C42,30 45,33 45,37 C45,41 42,45 38,45 Z M62,45 C58,45 55,41 55,37 C55,33 58,30 62,30 C66,30 69,33 69,37 C69,41 66,45 62,45 Z"/></svg>');
+    background-size: 50% auto;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
 /* =========================
    TITLES AND SCORES
 ========================= */
@@ -55,6 +64,15 @@ body{margin:0;font-family:Consolas,monospace;background:#111;color:white;overflo
 .overlay-box p{font-size:28px;line-height:1.6;}
 .overlay-box button{margin-top:20px;padding:18px 34px;border:none;border-radius:16px;background:black;color:white;font-size:24px;font-weight:bold;cursor:pointer;}
 .popup{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:white;color:black;padding:30px 60px;border-radius:24px;font-size:46px;font-weight:bold;z-index:900;border:5px solid black;animation:pop 0.3s ease;}
+
+/* Sudden Death Notification Customization */
+.popup.sudden-death-popup {
+    background: red;
+    color: white;
+    border: 5px solid white;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+}
+
 @keyframes pop{0%{transform:translate(-50%,-50%) scale(0.6);opacity:0;}100%{transform:translate(-50%,-50%) scale(1);opacity:1;}}
 
 /* =========================
@@ -100,7 +118,6 @@ body{margin:0;font-family:Consolas,monospace;background:#111;color:white;overflo
 <script>
 /* =====================================
    BINARY HERO VS - FULL GAME SCRIPT
-   VERBOSE VERSION WITH FIXED SUDDEN DEATH
    ===================================== */
 
 /* =========================
@@ -142,6 +159,7 @@ const p2 = {
 function createRoundDots() {
     const track = document.getElementById("roundTrack");
     track.innerHTML = "";
+    track.style.display = "flex"; 
     for (let i = 0; i < maxRounds; i++) {
         const dot = document.createElement("div");
         dot.className = "round-dot";
@@ -221,6 +239,7 @@ function updateBlocks() {
     players.forEach(p => {
         if (!p.data.block.paused) {
             p.data.block.y += blockSpeed;
+            // Block stops falling at the hitline
             if (p.data.block.y >= hitLineY) {
                 p.data.block.y = hitLineY;
                 p.data.block.paused = true;
@@ -229,11 +248,11 @@ function updateBlocks() {
         p.el.style.top = p.data.block.y + "px";
     });
 
-    // --- FIXED: Always check for correct keys, even in sudden death ---
+    // --- HIT RESTRICTION LOGIC: Only check value when the block is AT the hit line ---
     players.forEach(p => {
-        if (p.data.block.paused && !p.data.block.finished) {
+        if (!p.data.block.finished && p.data.block.y >= hitLineY) {
             if (getValue(p.data.state) === currentValue) {
-                p.data.block.finished = true; // mark as finished
+                p.data.block.finished = true; 
                 if (!firstCorrect) firstCorrect = p.id;
                 else if (firstCorrect && firstCorrect !== p.id) tie = true;
             }
@@ -262,16 +281,16 @@ function finishRound(type) {
     gameRunning = false;
 
     if (type === "tie") {
-        setRoundDot("tie");
+        if (!suddenDeath) setRoundDot("tie");
         flashWinner("p1");
         flashWinner("p2");
     } else if (type === "p1") {
         p1.score++;
-        setRoundDot("p1");
+        if (!suddenDeath) setRoundDot("p1");
         flashWinner("p1");
     } else if (type === "p2") {
         p2.score++;
-        setRoundDot("p2");
+        if (!suddenDeath) setRoundDot("p2");
         flashWinner("p2");
     }
 
@@ -279,16 +298,48 @@ function finishRound(type) {
     rounds++;
 
     setTimeout(() => {
-        // Check for winner
-        if (p1.score !== p2.score && rounds >= maxRounds) {
-            // Someone is ahead after normal rounds
-            return endGame();
+        // Sudden death evaluation: First to secure a point lead wins instantly
+        if (suddenDeath) {
+            if (p1.score !== p2.score) {
+                return endGame();
+            }
+            gameRunning = true;
+            nextRound();
+            return;
         }
 
-        // Continue game normally (even past maxRounds if tied)
+        // Regular game evaluation at round 10 limit
+        if (rounds >= maxRounds) {
+            if (p1.score !== p2.score) {
+                return endGame();
+            } else {
+                // TIE DETECTED AT ROUND 10 -> INITIATE SUDDEN DEATH
+                suddenDeath = true;
+                
+                // 1. Blend in Skull backgrounds
+                document.getElementById("p1Board").classList.add("sudden-death-bg");
+                document.getElementById("p2Board").classList.add("sudden-death-bg");
+                
+                // 2. Clear regular dot panel
+                document.getElementById("roundTrack").style.display = "none";
+                
+                // 3. Fire Custom Sudden Death Banner Pop up
+                const sdPopup = showPopup("💀 SUDDEN DEATH! NEXT POINT WINS! 💀");
+                sdPopup.classList.add("sudden-death-popup");
+                
+                setTimeout(() => {
+                    sdPopup.remove();
+                    gameRunning = true;
+                    nextRound();
+                }, 2000);
+                return;
+            }
+        }
+
+        // Standard step
         gameRunning = true;
         nextRound();
-    }, 500);
+    }, 1000); 
 }
 
 /* =========================
@@ -305,36 +356,7 @@ function flashWinner(player) {
 ========================= */
 function setRoundDot(type) {
     const dot = document.getElementById("dot-" + rounds);
-    dot.className = `round-dot ${type}`;
-}
-
-/* =========================
-   BREAK BLOCK ANIMATION
-========================= */
-function breakBlock(player) {
-    const board = document.getElementById(player + "Board");
-    const block = document.getElementById(player + "Block");
-    block.style.display = "none";
-
-    bitValues.forEach((bit, index) => {
-        if (currentValue & bit) {
-            const piece = document.createElement("div");
-            piece.className = "bit-piece";
-            piece.textContent = bit;
-            piece.style.left = (90 + index * 70) + "px";
-            piece.style.top = hitLineY + "px";
-            board.appendChild(piece);
-
-            let y = hitLineY;
-            function animate() {
-                y += 8;
-                piece.style.top = y + "px";
-                if (y > window.innerHeight) { piece.remove(); return; }
-                requestAnimationFrame(animate);
-            }
-            animate();
-        }
-    });
+    if(dot) dot.className = `round-dot ${type}`;
 }
 
 /* =========================
@@ -390,6 +412,11 @@ function restartGame() {
     blockSpeed = 3;
     p1.score = 0;
     p2.score = 0;
+    
+    // Wipe layout states clean
+    document.getElementById("p1Board").classList.remove("sudden-death-bg");
+    document.getElementById("p2Board").classList.remove("sudden-death-bg");
+    
     updateScores();
     createRoundDots();
     gameRunning = true;
@@ -406,7 +433,8 @@ function allPressed(state) {
 function checkStart() {
     if (gameRunning) return;
     if (allPressed(p1.state) && allPressed(p2.state)) {
-        document.getElementById("startOverlay").remove();
+        const startOverlay = document.getElementById("startOverlay");
+        if(startOverlay) startOverlay.remove();
         gameRunning = true;
         nextRound();
     }
@@ -441,9 +469,6 @@ updateScores();
 createRoundDots();
 updateBlocks();
 
-/* =========================
-   END OF SCRIPT
-========================= */
 </script>
 </body>
 </html>
