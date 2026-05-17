@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OCR GCSE Python Project Vault</title>
+
+<style>
+
+/* ================= BASE ================= */
+
+body {
+    margin: 0;
+    font-family: Consolas, monospace;
+    background: #f4f4f4;
+    color: #111;
+}
+
+/* ================= HEADER ================= */
+
+.header {
+    height: 80px;
+    background: #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 2px solid #bbb;
+}
+
+/* HELP BUTTON (Matched to original styling) */
+.help-btn {
+    position: absolute;
+    right: 20px;
+    padding: 10px 20px;
+    background: #111;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.help-btn:hover {
+    background: #333;
+}
+
+/* ================= MAIN ================= */
+
+.main {
+    max-width: 1400px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* ================= PROJECT ================= */
+
+.project {
+    background: white;
+    border-radius: 18px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    border: 1px solid #ccc;
+}
+
+/* PROJECT COMPLETION STATES */
+.project.completed-gold {
+    border: 2px solid #2e7d32;
+}
+
+.project.completed-gold .project-header {
+    background: #2e7d32;
+    color: white;
+}
+
+.project.completed-platinum {
+    border: 2px solid #00acc1;
+}
+
+.project.completed-platinum .project-header {
+    background: #00acc1;
+    color: white;
+}
+
+/* ================= HEADER ================= */
+
+.project-header {
+    padding: 24px;
+    cursor: pointer;
+    font-size: 26px;
+    font-weight: bold;
+    background: #ececec;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: 0.25s;
+}
+
+.project-header:hover {
+    background: #e2e2e2;
+}
+
+/* ================= CHEVRON ================= */
+
+.chevron {
+    transition: 0.3s;
+}
+
+.project.open .chevron {
+    transform: rotate(90deg);
+}
+
+/* ================= CONTENT ================= */
+
+.project-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+
+/* ================= GRID ================= */
+
+.challenge-stack {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 18px;
+    padding: 22px;
+}
+
+/* ================= CARD ================= */
+
+.card {
+    position: relative;
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    border: 1px solid #ccc;
+    transition: 0.25s ease;
+    cursor: pointer;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+}
+
+.card.active {
+    transform: scale(1.03);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.15);
+}
+
+/* ================= COMPLETED ================= */
+
+.card.completed {
+    opacity: 0.75;
+}
+
+.card.completed::after {
+    content: "✓ COMPLETE";
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #2e7d32;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* ================= DIFFICULTY ================= */
+
+.bronze { border-left: 8px solid #cd7f32; }
+.silver { border-left: 8px solid #c0c0c0; }
+.gold { border-left: 8px solid #d4af37; }
+.platinum { border-left: 8px solid #00acc1; }
+
+/* ================= TEXT ================= */
+
+.qtitle {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    padding-right: 120px;
+}
+
+.qtext {
+    line-height: 1.55;
+    font-size: 14px;
+}
+
+.qtext ul {
+    margin-top: 10px;
+}
+
+/* ================= BUTTON ================= */
+
+.complete-btn {
+    margin-top: 16px;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 10px;
+    background: #111;
+    color: white;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.complete-btn:hover {
+    background: #333;
+}
+
+.complete-btn.completed {
+    background: #2e7d32;
+}
+
+/* ================= HELP FLYOUT (Consitent with site CSS) ================= */
+
+.flyout-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.3s;
+}
+
+.flyout-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.help-flyout {
+    position: fixed;
+    top: 0;
+    right: -550px;
+    width: 100%;
+    max-width: 500px;
+    height: 100vh;
+    background: #f4f4f4;
+    z-index: 1001;
+    box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+    border-left: 2px solid #bbb;
+    transition: right 0.4s ease;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.help-flyout.active {
+    right: 0;
+}
+
+.flyout-header {
+    background: #ddd;
+    color: #111;
+    padding: 24px;
+    font-size: 26px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #bbb;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #111;
+    font-size: 32px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.close-btn:hover {
+    color: #ff5252;
+}
+
+.flyout-content {
+    padding: 20px;
+}
+
+.construct-box {
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    border: 1px solid #ccc;
+    margin-bottom: 20px;
+}
+
+.construct-box h3 {
+    margin-top: 0;
+    border-bottom: 2px solid #ececec;
+    padding-bottom: 12px;
+    font-size: 20px;
+}
+
+.construct-box p {
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+/* Python IDLE Code Styling */
+.construct-box pre {
+    background: #ffffff;
+    color: #000000;
+    padding: 14px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    overflow-x: auto;
+    line-height: 1.4;
+}
+
+.py-keyword { color: #ff7700; font-weight: bold; }
+.py-builtin { color: #900090; }
+.py-string  { color: #00aa00; }
+.py-comment { color: #dd0000; }
+
+</style>
+</head>
+
+<body>
+
+<!-- ========================================================= -->
+<!-- HEADER & HELP BUTTON -->
+<!-- ========================================================= -->
+
+<div class="header">
+    OCR GCSE Python Project Vault
+    <button class="help-btn" id="openHelpBtn">Help</button>
+</div>
+
+<!-- ========================================================= -->
+<!-- HELP FLYOUT MENU -->
+<!-- ========================================================= -->
+
+<div class="flyout-overlay" id="flyoutOverlay"></div>
+
+<div class="help-flyout" id="helpFlyout">
+    <div class="flyout-header">
+        Programming Constructs
+        <button class="close-btn" id="closeHelpBtn">&times;</button>
+    </div>
+    
+    <div class="flyout-content">
+        <p>In the OCR GCSE specification, you need to use the <strong>3 main programming constructs</strong> to control the flow of your code.</p>
+
+        <!-- SEQUENCE -->
+        <div class="construct-box">
+            <h3>1. Sequence</h3>
+            <p>Code is executed line-by-line, from top to bottom. Every instruction runs in the exact order it is written.</p>
+<pre><code><span class="py-comment"># Example: Executing one step after another</span>
+<span class="py-builtin">print</span>(<span class="py-string">"Welcome!"</span>)
+name = <span class="py-builtin">input</span>(<span class="py-string">"Enter your name: "</span>)
+<span class="py-builtin">print</span>(<span class="py-string">"Hello"</span>, name)</code></pre>
+        </div>
+
+        <!-- SELECTION -->
+        <div class="construct-box">
+            <h3>2. Selection</h3>
+            <p>Making decisions in code. The program takes different paths based on whether a condition is <code>True</code> or <code>False</code>.</p>
+<pre><code><span class="py-comment"># Example: Checking a condition</span>
+age = <span class="py-builtin">int</span>(<span class="py-builtin">input</span>(<span class="py-string">"Enter your age: "</span>))
+
+<span class="py-keyword">if</span> age >= 18:
+    <span class="py-builtin">print</span>(<span class="py-string">"You are an adult."</span>)
+<span class="py-keyword">elif</span> age == 17:
+    <span class="py-builtin">print</span>(<span class="py-string">"Almost an adult!"</span>)
+<span class="py-keyword">else</span>:
+    <span class="py-builtin">print</span>(<span class="py-string">"You are a child."</span>)</code></pre>
+        </div>
+
+        <!-- ITERATION -->
+        <div class="construct-box">
+            <h3>3. Iteration</h3>
+            <p>Repeating blocks of code (looping). There are two types: <strong>Count-controlled</strong> (FOR loops) and <strong>Condition-controlled</strong> (WHILE loops).</p>
+<pre><code><span class="py-comment"># Count-controlled (FOR loop)</span>
+<span class="py-comment"># Repeats a set number of times</span>
+<span class="py-keyword">for</span> i <span class="py-keyword">in</span> <span class="py-builtin">range</span>(3):
+    <span class="py-builtin">print</span>(<span class="py-string">"Loop number"</span>, i)
+
+<span class="py-comment"># Condition-controlled (WHILE loop)</span>
+<span class="py-comment"># Repeats until a condition is met</span>
+keep_going = <span class="py-keyword">True</span>
+<span class="py-keyword">while</span> keep_going == <span class="py-keyword">True</span>:
+    ans = <span class="py-builtin">input</span>(<span class="py-string">"Stop? (y/n): "</span>)
+    <span class="py-keyword">if</span> ans == <span class="py-string">"y"</span>:
+        keep_going = <span class="py-keyword">False</span></code></pre>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+
+<!-- ========================================================= -->
+<!-- 1. VARIABLES -->
+<!-- ========================================================= -->
+
+<div class="project">
+    <div class="project-header">
+        Variables & Input
+        <span class="chevron">▶</span>
+    </div>
+    <div class="project-content">
+        <div class="challenge-stack">
+            <div class="card bronze" data-id="var-bronze">
+                <div class="qtitle">Bronze — Personal Greeting</div>
+                <div class="qtext">
+                    Create a program that asks for a user's name and age.
+                    Requirements:
+                    <ul>
+                        <li>Store inputs in variables</li>
+                        <li>Display a personalised greeting</li>
+                        <li>Use sensible variable names</li>
+                        <li>Add a comment to explain your code</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+
+            <div class="card silver" data-id="var-silver">
+                <div class="qtitle">Silver — Area Calculator</div>
+                <div class="qtext">
+                    Create a rectangle area calculator.
+                    Requirements:
+                    <ul>
+                        <li>Ask for width and height</li>
+                        <li>Calculate area correctly</li>
+                        <li>Use appropriate arithmetic operators</li>
+                        <li>Output the area with a suitable message</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+
+            <div class="card gold" data-id="var-gold">
+                <div class="qtitle">Gold — Shopping Receipt</div>
+                <div class="qtext">
+                    Create a shopping receipt generator.
+                    Requirements:
+                    <ul>
+                        <li>Input prices until the user enters -1</li>
+                        <li>Calculate total cost</li>
+                        <li>Display the final cost to 2 decimal places</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+
+            <div class="card platinum" data-id="var-plat">
+                <div class="qtitle">Platinum — Receipt VAT Calculator</div>
+                <div class="qtext">
+                    Extend the receipt system.
+                    Requirements:
+                    <ul>
+                        <li>Use a function to calculate a price after 20% VAT is applied</li>
+                        <li>The function should return a float</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- 2. SELECTION -->
+<!-- ========================================================= -->
+
+<div class="project">
+    <div class="project-header">
+        Selection
+        <span class="chevron">▶</span>
+    </div>
+    <div class="project-content">
+        <div class="challenge-stack">
+            <div class="card bronze" data-id="sel-bronze">
+                <div class="qtitle">Bronze — Pass or Fail</div>
+                <div class="qtext">
+                    Create a pass/fail checker.
+                    Requirements:
+                    <ul>
+                        <li>Input a percentage mark (e.g. 60)</li>
+                        <li>Use if/else</li>
+                        <li>Display "Pass" if the grade is above 60%</li>
+                        <li>Otherwise display "Fail"</li>
+                        <li>Add a comment to explain the boolean logic</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+
+            <div class="card silver" data-id="sel-silver">
+                <div class="qtitle">Silver — Grading System</div>
+                <div class="qtext">
+                    Add greater control.
+                    Requirements:
+                    <ul>
+                        <li>Add a "Merit" output for above 80%</li>
+                        <li>Add a "Distinction" output for above 90%</li>
+                        <li>Use elif correctly</li>
+                        <li>Handle invalid inputs (e.g. 110%)</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+
+            <div class="card gold" data-id="sel-gold">
+                <div class="qtitle">Gold — Login System</div>
+                <div class="qtext">
+                    Design a secure login system.
+                    Requirements:
+                    <ul>
+                        <li>Take an input password</li>
+                        <li>Check this against a constant string called PASSWORD</li>
+                        <li>Output "Access Granted" if the passwords match</li>
+                        <li>Otherwise output "Access Denied"</li>
+                        <li>The user should be allowed 3 attempts to enter the correct password</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+
+            <div class="card platinum" data-id="sel-plat">
+                <div class="qtitle">Platinum — login system</div>
+                <div class="qtext">
+                    Extend the login system.
+                    Requirements:
+                    <ul>
+                        <li>Take a username and password as an input</li>
+                        <li>Store existing username and passwords as records in a 2D array</li>
+                        <li>Check if the inputs are a correct username and password pair</li>
+                        <li>Output messages the same as the silver challenge</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- 3. ITERATION -->
+<!-- ========================================================= -->
+
+<div class="project">
+    <div class="project-header">
+        Iteration
+        <span class="chevron">▶</span>
+    </div>
+    <div class="project-content">
+        <div class="challenge-stack">
+            <div class="card bronze" data-id="iter-bronze">
+                <div class="qtitle">Bronze — Count to 10</div>
+                <div class="qtext">
+                    Print numbers from 1 – 10.
+                    Requirements:
+                    <ul>
+                        <li>Use a suitable loop</li>
+                        <li>Add a comment to explain your code</li>
+                        <li>Use sensible variable names</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+
+            <div class="card silver" data-id="iter-silver">
+                <div class="qtitle">Silver — Even Number Generator</div>
+                <div class="qtext">
+                    Generate even numbers.
+                    Requirements:
+                    <ul>
+                        <li>Use modulus operator</li>
+                        <li>Output ONLY the even numbers from 1 – 50</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+
+            <div class="card gold" data-id="iter-gold">
+                <div class="qtitle">Gold — FizzBuzz</div>
+                <div class="qtext">
+                    Create a scalable FizzBuzz system.
+                    Requirements:
+                    <ul>
+                        <li>Modify your previous code so that:</li>
+                        <li>Every number from 1 - 50 is output</li>
+                        <li>If the number is divisible by 3 "Fizz" is output</li>
+                        <li>If the number is divisible by 5 "Buzz" is output</li>
+                        <li>If the number is divisible by both 3 and 5 "FizzBuzz" is output</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+
+            <div class="card platinum" data-id="iter-plat">
+                <div class="qtitle">Platinum — FizzBuzz function</div>
+                <div class="qtext">
+                    Modify your FizzBuzz code.
+                    Requirements:
+                    <ul>
+                        <li>Use a function called FizzBuzz to generate the output message</li>
+                        <li>The function should take 1 variable for the number</li>
+                        <li>The function should return a string containing either "Fizz", "Buzz" or "FizzBuzz"</li>
+                        <li>Integrate this function into your origional code for the numbers 1 - 50</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- 4. STRING HANDLING -->
+<!-- ========================================================= -->
+
+<div class="project">
+    <div class="project-header">
+        String Handling
+        <span class="chevron">▶</span>
+    </div>
+    <div class="project-content">
+        <div class="challenge-stack">
+            <div class="card bronze" data-id="str-bronze">
+                <div class="qtitle">Bronze — Password Checker</div>
+                <div class="qtext">
+                    Check that the users new password follows the rules.
+                    Requirements:
+                    <ul>
+                        <li>Check minimum length (at least 8 characters)</li>
+                        <li>If the password isn't the correct length prompt the user for a new password until they reach the minimum required</li>
+                        <li>Provide a suitable message when prompting the user to try again</li>
+                        <li>Provide a suitable message when the user enters a satisfactory password</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+
+            <div class="card silver" data-id="str-silver">
+                <div class="qtitle">Silver — Password Checker</div>
+                <div class="qtext">
+                    Extend your existing code.
+                    Requirements:
+                    <ul>
+                        <li>It is now required that the users password must contain a special character (e.g. ?!)</li>
+                        <li>Provide a suitable message when prompting the user to try again</li>
+                        <li>Your message should explain if the password was rejected for length, the lack of a special character or both</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+
+            <div class="card gold" data-id="str-gold">
+                <div class="qtitle">Gold — Password Checker</div>
+                <div class="qtext">
+                    Extend your existing code.
+                    Requirements:
+                    <ul>
+                        <li>Create a 2D array of passwords</li>
+                        <li>When a user successfully creates a password add this to the array</li>
+                        <li>If a password appears more than 5 times it is now commonly used and they may not choose this password</li>
+                        <li>Provide a suitable message when prompting the user to try again</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+
+            <div class="card platinum" data-id="str-plat">
+                <div class="qtitle">Platinum — Caesar Cipher</div>
+                <div class="qtext">
+                    Create a Caesar cipher.
+                    Requirements:
+                    <ul>
+                        <li>Encrypt text</li>
+                        <li>Decrypt text</li>
+                        <li>Handle spaces</li>
+                        <li>Use loops and strings together</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================= -->
+<!-- 5. LISTS -->
+<!-- ========================================================= -->
+
+<div class="project">
+    <div class="project-header">
+        Lists
+        <span class="chevron">▶</span>
+    </div>
+    <div class="project-content">
+        <div class="challenge-stack">
+            <div class="card bronze" data-id="list-bronze">
+                <div class="qtitle">Bronze — Favourite Foods</div>
+                <div class="qtext">
+                    Store favourite foods in a list.
+                    Requirements:
+                    <ul>
+                        <li>Add at least 5 items</li>
+                        <li>Output each item in the list in order using a loop</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+
+            <div class="card silver" data-id="list-silver">
+                <div class="qtitle">Silver — Number Statistics</div>
+                <div class="qtext">
+                    Analyse a list of numbers.
+                    Requirements:
+                    <ul>
+                        <li>use the list <b> numbers = [5,3,10,6,13,7,4,1]</b></li>
+                        <li>Find maximum value</li>
+                        <li>Find minimum value</li>
+                        <li>Calculate average</li>
+                        <li>Use iteration correctly</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+
+            <div class="card gold" data-id="list-gold">
+                <div class="qtitle">Gold — To-Do List App</div>
+                <div class="qtext">
+                    Create a to-do list manager.
+                    Requirements:
+                    <ul>
+                        <li>Add tasks</li>
+                        <li>Remove tasks</li>
+                        <li>Display all tasks</li>
+                        <li>Use a menu to select between add task, remove task or view tasks</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+
+            <div class="card platinum" data-id="list-plat">
+                <div class="qtitle">Platinum — To-Do List App</div>
+                <div class="qtext">
+                    Upgrade the To-Do list.
+                    Requirements:
+                    <ul>
+                        <li>Create a proceedure for each feature (adding tasks, removing tasks, viewing tasks)</li>
+                    </ul>
+                </div>
+                <button class="complete-btn">Mark Complete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h1><center>Exam Questions</center></h1>
+
+</div>
+
+<script>
+
+/* =========================
+   FLYOUT MENU LOGIC
+========================= */
+
+const openHelpBtn = document.getElementById('openHelpBtn');
+const closeHelpBtn = document.getElementById('closeHelpBtn');
+const helpFlyout = document.getElementById('helpFlyout');
+const flyoutOverlay = document.getElementById('flyoutOverlay');
+
+function toggleFlyout() {
+    helpFlyout.classList.toggle('active');
+    flyoutOverlay.classList.toggle('active');
+}
+
+openHelpBtn.addEventListener('click', toggleFlyout);
+closeHelpBtn.addEventListener('click', toggleFlyout);
+flyoutOverlay.addEventListener('click', toggleFlyout);
+
+/* =========================
+   OPEN / CLOSE PROJECTS
+========================= */
+
+document.querySelectorAll(".project-header").forEach(header => {
+    header.addEventListener("click", () => {
+        const project = header.parentElement;
+        const content = project.querySelector(".project-content");
+        
+        project.classList.toggle("open");
+        
+        if(project.classList.contains("open")){
+            content.style.maxHeight = content.scrollHeight + "px";
+        } else {
+            content.style.maxHeight = null;
+        }
+    });
+});
+
+/* =========================
+   ACTIVE CARD SYSTEM
+========================= */
+
+document.querySelectorAll(".project").forEach(project => {
+    let activeCard = null;
+
+    project.querySelectorAll(".card").forEach(card => {
+        card.addEventListener("click", (e) => {
+            if(e.target.classList.contains("complete-btn")) return;
+            
+            if(activeCard === card){
+                card.classList.remove("active");
+                activeCard = null;
+                return;
+            }
+            
+            if(activeCard){
+                activeCard.classList.remove("active");
+            }
+            
+            card.classList.add("active");
+            activeCard = card;
+        });
+    });
+});
+
+/* =========================
+   COMPLETION SYSTEM
+========================= */
+
+const STORAGE_KEY = "pythonVaultCompletion";
+let completed = {};
+
+try {
+    completed = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+} catch {
+    completed = {};
+}
+
+/* =========================
+   UPDATE PROJECT STATUS (Gold vs Platinum logic)
+========================= */
+
+function updateProjectCompletion(project) {
+    const goldCard = project.querySelector(".card.gold");
+    const platCard = project.querySelector(".card.platinum");
+
+    const goldId = goldCard ? goldCard.dataset.id : null;
+    const platId = platCard ? platCard.dataset.id : null;
+
+    const isGoldComplete = goldId && completed[goldId];
+    const isPlatComplete = platId && completed[platId];
+
+    // Reset classes first
+    project.classList.remove("completed-gold", "completed-platinum");
+
+    if (isPlatComplete) {
+        project.classList.add("completed-platinum");
+    } else if (isGoldComplete) {
+        project.classList.add("completed-gold");
+    }
+}
+
+/* =========================
+   APPLY SAVED PROGRESS
+========================= */
+
+document.querySelectorAll(".project").forEach(project => {
+    const cards = project.querySelectorAll(".card");
+
+    cards.forEach(card => {
+        const id = card.dataset.id;
+        const button = card.querySelector(".complete-btn");
+
+        if(completed[id]){
+            card.classList.add("completed");
+            button.classList.add("completed");
+            button.textContent = "Completed";
+        }
+
+        button.addEventListener("click", () => {
+            completed[id] = !completed[id];
+
+            if(completed[id]){
+                card.classList.add("completed");
+                button.classList.add("completed");
+                button.textContent = "Completed";
+            } else {
+                card.classList.remove("completed");
+                button.classList.remove("completed");
+                button.textContent = "Mark Complete";
+            }
+
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify(completed)
+            );
+
+            updateProjectCompletion(project);
+        });
+    });
+
+    // Run on initial load
+    updateProjectCompletion(project);
+});
+
+</script>
+
+</body>
+</html>
