@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Network Simulator</title>
+<style>
+body {
+    font-family: Consolas, monospace;
+    margin: 0;
+    transition: all 0.3s ease;
+    word-spacing: normal;
+    font-size: 16px;
+    overflow: hidden;
+}
+.header {
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    color: #000;
+    transition: all 0.3s ease;
+    background:#333;
+}
+.header h1 {
+    color: #fff;
+    text-align:center;
+}
+.accessibility-toggle {
+    position: absolute;
+    left: 20px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+.accessibility-scale {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+.accessibility-panel {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 250px;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: left 0.3s ease;
+    z-index: 1000;
+    background: #fff;
+}
+.accessibility-panel.open {
+    left: 0;
+}
+.color-spot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin: 5px;
+    cursor: pointer;
+    border: 1px solid #777;
+}
+.main {
+    display:flex;
+    height:calc(100vh - 160px);
+}
+.sidebar {
+    width:320px;
+    overflow-y:auto;
+    border-right:1px solid #aaa;
+    padding:20px;
+    background:rgba(255,255,255,0.7);
+    box-sizing:border-box;
+}
+.canvas {
+    flex:1;
+    position:relative;
+    overflow:hidden;
+    background:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size:40px 40px;
+}
+svg {
+    position:absolute;
+    width:100%;
+    height:100%;
+}
+.device {
+    width:90px;
+    height:90px;
+    border-radius:16px;
+    position:absolute;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    cursor:grab;
+    border:3px solid white;
+    color:white;
+    font-weight:bold;
+    box-shadow:0 5px 15px rgba(0,0,0,0.3);
+    z-index:5;
+    user-select:none;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+.device:hover {
+    transform:scale(1.05);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+}
+.device .icon {
+    font-size:28px;
+}
+.device .label {
+    font-size:12px;
+    margin-top:6px;
+    text-align:center;
+    max-width:80px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.toolbar {
+    display:flex;
+    gap:10px;
+    padding:15px;
+    border-bottom:1px solid #aaa;
+    flex-wrap:wrap;
+    background:#f8fafc;
+    align-items:center;
+    min-height:60px;
+    box-sizing:border-box;
+}
+.tool-btn {
+    padding:10px 14px;
+    border-radius:6px;
+    border:1px solid #aaa;
+    background:#fff;
+    cursor:pointer;
+    font-weight:bold;
+    font-family:inherit;
+    transition:all 0.2s ease;
+}
+.tool-btn:hover {
+    transform:translateY(-1px);
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    padding: 8px 12px;
+    border: 1px solid #aaa;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 14px;
+}
+.device-info {
+    background:#fff;
+    border:1px solid #aaa;
+    padding:12px;
+    border-radius:10px;
+    margin-bottom:12px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+.device-info h3{
+    font-size:14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+}
+.device-info input[type="text"]{
+    width:100%;
+    max-width:100%;
+    display:block;
+    box-sizing:border-box;
+    padding:6px;
+    margin-top:4px;
+    border-radius:6px;
+    border:1px solid #aaa;
+    font-size:13px;
+}
+.device-info input[type="color"] {
+    width:100%;
+    height:40px;
+    margin-top:8px;
+    border:none;
+    background:none;
+}
+.packet {
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    position:absolute;
+    z-index:100;
+    box-shadow:0 0 12px rgba(255,255,255,0.8);
+    pointer-events:none;
+}
+.dns-card {
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    position: absolute;
+    z-index: 101;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    pointer-events: none;
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+}
+.instructions {
+    background:#fff;
+    border:1px solid #aaa;
+    padding:15px;
+    border-radius:10px;
+    margin-top:20px;
+}
+.instructions li {
+    margin-bottom:10px;
+    line-height:1.4;
+}
+.status {
+    background:#fff;
+    border:1px solid #aaa;
+    border-radius:10px;
+    padding:12px;
+    margin-top:20px;
+}
+.status p {
+    font-size:18px;
+    font-weight:bold;
+}
+body.access-white .device-info, body.access-white .instructions, body.access-white .sidebar, body.access-white .status { background:#f5f5f5; }
+body.access-dark .device-info, body.access-dark .instructions, body.access-dark .sidebar, body.access-dark .status { background:#222; color:#fff; }
+body.access-dark .toolbar { background:#111; }
+body.access-dark .tool-btn { background:#333; color:#fff; border-color:#555; }
+</style>
+</head>
+<body>
+
+<div class="header" id="header">
+    <button class="accessibility-toggle" onclick="toggleAccessibility()">Accessibility</button>
+    <h1>Mx Brooke's Network Simulator</h1>
+</div>
+
+<div class="accessibility-panel" id="accessPanel">
+    <button onclick="toggleAccessibility()">✖</button>
+    <h3>Colours</h3>
+    <button class="color-spot" style="background:#f5f5f5" onclick="setBackground('white')"></button>
+    <button class="color-spot" style="background:#121212" onclick="setBackground('dark')"></button>
+    <h3>Word Spacing</h3>
+    <button class="accessibility-scale" onclick="adjustWordSpacing(0.1)">Increase</button>
+    <button class="accessibility-scale" onclick="adjustWordSpacing(-0.1)">Decrease</button>
+    <h3>Font Size</h3>
+    <button class="accessibility-scale" onclick="adjustFontSize(1)">Increase</button>
+    <button class="accessibility-scale" onclick="adjustFontSize(-1)">Decrease</button>
+</div>
+
+<div class="toolbar">
+    <button class="tool-btn" onclick="addDevice('router')">📡 Router</button>
+    <button class="tool-btn" onclick="addDevice('switch')">🔀 Switch</button>
+    <button class="tool-btn" onclick="addDevice('hub')">🧩 Hub</button>
+    <button class="tool-btn" onclick="addDevice('pc')">💻 PC</button>
+    <select class="tool-btn" onchange="handleServerDropdown(this)">
+        <option value="">🖥 Add Server</option>
+        <option value="dns-server">🌐 DNS Server</option>
+        <option value="web-server">🌐 Web Server</option>
+    </select>
+    
+    <div class="slider-container">
+        <label for="speedSlider">Animation Speed:</label>
+        <input type="range" id="speedSlider" min="1" max="10" value="5">
+    </div>
+
+    <button class="tool-btn" onclick="toggleSimulation()" id="simBtn">▶ Start Simulation</button>
+</div>
+
+<div class="main">
+    <div class="sidebar">
+        <h2>Devices</h2>
+        <p style="margin-top:10px; margin-bottom:20px; color:#64748b; line-height:1.5;">
+            Rename devices, recolour them, or delete them directly from the sidebar.
+        </p>
+        <div id="deviceList"></div>
+        <div class="status">
+            <h3>Simulation Status</h3>
+            <p id="simStatus">OFF</p>
+        </div>
+        <div class="instructions">
+            <h3>Controls</h3>
+            <ul>
+                <li>Left click + drag devices</li>
+                <li>Right click two devices to connect them</li>
+                <li>Triple tap devices on touchscreens to connect</li>
+                <li><strong>Double Click a DNS Server or PC</strong> to explicitly force a web request chain sequence from a free client!</li>
+                <li>Right click cables to delete them</li>
+                <li>Devices handle exactly one active sequence at a time to prevent overlapping simulation loops.</li>
+            </ul>
+        </div>
+    </div>
+    <div class="canvas" id="canvas">
+        <svg id="svg"></svg>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const svg = document.getElementById('svg');
+const deviceList = document.getElementById('deviceList');
+const simBtn = document.getElementById('simBtn');
+const simStatus = document.getElementById('simStatus');
+const speedSlider = document.getElementById('speedSlider');
+
+let devices = [];
+let connections = [];
+let connectStart = null;
+let simulationRunning = false;
+let simulationInterval = null;
+let deviceId = 1;
+let activeDrag = null;
+
+// ================= ACCESSIBILITY =================
+function toggleAccessibility() {
+    document.getElementById('accessPanel').classList.toggle('open');
+}
+function darkenColor(hex, percent) {
+    hex = hex.replace('#','');
+    let r=parseInt(hex.substring(0,2),16);
+    let g=parseInt(hex.substring(2,4),16);
+    let b=parseInt(hex.substring(4,6),16);
+    r=Math.floor(r*(1-percent/100));
+    g=Math.floor(g*(1-percent/100));
+    b=Math.floor(b*(1-percent/100));
+    return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+function setBackground(color) {
+    localStorage.setItem('bgColor', color);
+    document.body.className='';
+    document.body.classList.add('access-'+color);
+    const map={ white:'#f5f5f5', dark:'#121212' };
+    document.body.style.background = map[color] || '#fff';
+    const header = document.getElementById('header');
+    const panel = document.getElementById('accessPanel');
+    const darkHex = color==='dark' ? '#000' : darkenColor(map[color]||'#fff',40);
+    header.style.background = darkHex;
+    panel.style.background = map[color] || '#fff';
+    document.body.style.color = (color==='dark') ? '#fff' : '#000';
+}
+function adjustWordSpacing(amount){
+    let current = parseFloat(localStorage.getItem('wordSpacing')||'0') + amount;
+    document.body.style.wordSpacing = current + 'em';
+    localStorage.setItem('wordSpacing', current);
+}
+function adjustFontSize(amount){
+    let current = parseFloat(localStorage.getItem('fontSize')||'16') + amount;
+    document.body.style.fontSize = current + 'px';
+    localStorage.setItem('fontSize', current);
+}
+window.onload=function(){
+    const saved = localStorage.getItem('bgColor')||'white';
+    setBackground(saved);
+    document.body.style.wordSpacing = (localStorage.getItem('wordSpacing')||'0')+'em';
+    document.body.style.fontSize = (localStorage.getItem('fontSize')||'16')+'px';
+};
+
+// ================= HELPERS =================
+function randomIP(){
+    return `192.168.${Math.floor(Math.random()*5)+1}.${Math.floor(Math.random()*254)+1}`;
+}
+function randomMAC(){
+    return 'XX:XX:XX:XX:XX:XX'.replace(/X/g,()=>'0123456789ABCDEF'[Math.floor(Math.random()*16)]);
+}
+function icon(type){
+    return { router:'📡', switch:'🔀', hub:'🧩', pc:'💻', 'dns-server':'🌐', 'web-server':'🌐' }[type] || '❓';
+}
+function defaultColour(type){
+    return { router:'#ef4444', switch:'#3b82f6', hub:'#eab308', pc:'#22c55e', 'dns-server':'#0284c7', 'web-server':'#ec4899' }[type] || '#999999';
+}
+function getNeighbors(device){
+    const neighbours=[];
+    connections.forEach(conn=>{
+        if(conn.from.id===device.id) neighbours.push(conn.to);
+        if(conn.to.id===device.id) neighbours.push(conn.from);
+    });
+    return neighbours;
+}
+function handleServerDropdown(select){
+    if(!select.value) return;
+    addDevice(select.value);
+    select.value='';
+}
+
+// ================= DEVICE CREATION =================
+function addDevice(type){
+    const div = document.createElement('div');
+    div.className='device';
+    const id = deviceId++;
+    const device = {
+        name:`${type.toUpperCase()}-${id}`,
+        id, type, ip:randomIP(), mac:randomMAC(),
+        color:defaultColour(type), element:div,
+        busy: false
+    };
+
+    div.style.background=device.color;
+    div.style.left='150px';
+    div.style.top='150px';
+    div.innerHTML=`
+        <div class="icon">${icon(type)}</div>
+        <div class="label">${device.name}</div>
+    `;
+
+    devices.push(device);
+    canvas.appendChild(div);
+    updateSidebar();
+    enableDragging(div);
+
+    div.addEventListener('dblclick',()=>{
+        if(device.type === 'dns-server' || device.type === 'pc') {
+            sendManualTransmission(device);
+        }
+    });
+
+    div.addEventListener('contextmenu',(e)=>{
+        e.preventDefault();
+        connectDevice(device);
+    });
+}
+
+// ================= SIDEBAR =================
+function updateSidebar(){
+    deviceList.innerHTML='';
+    devices.forEach(device=>{
+        const box = document.createElement('div');
+        box.className='device-info';
+        box.innerHTML=`
+            <h3>${icon(device.type)} ${device.name}</h3>
+            <p><strong>IP:</strong> ${device.ip}</p>
+            <p><strong>MAC:</strong> ${device.mac}</p>
+            <label>Device Name</label>
+            <input class="renameInput" type="text" value="${device.name}">
+            <label>Device Colour</label>
+            <input type="color" value="${device.color}">
+        `;
+
+        const renameInput = box.querySelector('.renameInput');
+        renameInput.addEventListener('input',(e)=>{
+            device.name=e.target.value;
+            device.element.querySelector('.label').innerText=e.target.value;
+        });
+
+        const colorPicker = box.querySelector('input[type="color"]');
+        colorPicker.addEventListener('input',(e)=>{
+            device.color=e.target.value;
+            device.element.style.background = e.target.value;
+        });
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerText='🗑 Delete Device';
+        deleteBtn.style.width='100%'; deleteBtn.style.marginTop='10px';
+        deleteBtn.addEventListener('click',()=>{
+            device.element.remove();
+            devices = devices.filter(d=>d.id!==device.id);
+            connections = connections.filter(c=>c.from.id!==device.id && c.to.id!==device.id);
+            drawConnections();
+            updateSidebar();
+        });
+        box.appendChild(deleteBtn);
+        deviceList.appendChild(box);
+    });
+}
+
+// ================= CONNECTIONS =================
+function connectDevice(device){
+    if(!connectStart){
+        connectStart=device;
+        device.element.style.outline = '5px solid cyan';
+    } else {
+        if(connectStart.id!==device.id){
+            const exists = connections.some(c=>
+                (c.from.id===connectStart.id && c.to.id===device.id) ||
+                (c.from.id===device.id && c.to.id===connectStart.id)
+            );
+            if(!exists){
+                connections.push({ from:connectStart, to:device });
+            }
+        }
+        connectStart.element.style.outline='none';
+        connectStart=null;
+        drawConnections();
+    }
+}
+
+function drawConnections(){
+    svg.innerHTML='';
+    connections.forEach((conn,index)=>{
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        const p1 = getCenter(conn.from.element);
+        const p2 = getCenter(conn.to.element);
+        line.setAttribute('x1',p1.x); line.setAttribute('y1',p1.y);
+        line.setAttribute('x2',p2.x); line.setAttribute('y2',p2.y);
+        line.setAttribute('stroke','#94a3b8'); line.setAttribute('stroke-width','4');
+        line.addEventListener('contextmenu',(e)=>{
+            e.preventDefault();
+            connections.splice(index,1);
+            drawConnections();
+        });
+        svg.appendChild(line);
+    });
+}
+
+function getCenter(el){
+    const rect = el.getBoundingClientRect();
+    const canvasRect = canvas.getBoundingClientRect();
+    return {
+        x: rect.left - canvasRect.left + rect.width/2,
+        y: rect.top - canvasRect.top + rect.height/2
+    };
+}
+
+function enableDragging(el){
+    el.addEventListener('mousedown',(e)=>{
+        if(e.button===2) return;
+        activeDrag = { el, offsetX:e.offsetX, offsetY:e.offsetY };
+    });
+}
+
+document.addEventListener('mousemove',(e)=>{
+    if(!activeDrag) return;
+    const rect = canvas.getBoundingClientRect();
+    activeDrag.el.style.left = e.clientX - rect.left - activeDrag.offsetX + 'px';
+    activeDrag.el.style.top = e.clientY - rect.top - activeDrag.offsetY + 'px';
+    drawConnections();
+});
+document.addEventListener('mouseup',()=>{ activeDrag=null; });
+
+// ================= SIMULATION ENGINE =================
+function toggleSimulation(){
+    simulationRunning = !simulationRunning;
+    if(simulationRunning){
+        simBtn.innerText = '⏹ Stop Simulation';
+        simStatus.innerText='ON';
+        simulationInterval = setInterval(generateTraffic, 2000);
+    } else {
+        simBtn.innerText = '▶ Start Simulation';
+        simStatus.innerText='OFF';
+        clearInterval(simulationInterval);
+    }
+}
+
+// UNIQUE HANDSHAKE LIFECYCLE: Concurrency Busy Locks, Recursive Lookups & Explicit IP Handshakes
+function triggerDNSTransmissionChain(dnsServerNode) {
+    if (dnsServerNode.busy) return;
+
+    const availablePCs = devices.filter(d => d.type === 'pc' && !d.busy);
+    const availableWebs = devices.filter(d => d.type === 'web-server' && !d.busy);
+    const dnsServers = devices.filter(d => d.type === 'dns-server');
+
+    if (!availablePCs.length || !availableWebs.length) return;
+
+    const clientPc = availablePCs[Math.floor(Math.random() * availablePCs.length)];
+    const targetWeb = availableWebs[Math.floor(Math.random() * availableWebs.length)];
+
+    const pathToDNS1 = findPath(clientPc, dnsServerNode);
+    if (pathToDNS1.length <= 1) return;
+
+    // Determine if this primary DNS server needs to query an alternative recursive server zone
+    const alternativeDNSServers = dnsServers.filter(d => d.id !== dnsServerNode.id && !d.busy);
+    const mustQuerySecondary = alternativeDNSServers.length > 0 && Math.random() < 0.50;
+    let secondaryDNS = null;
+
+    if (mustQuerySecondary) {
+        secondaryDNS = alternativeDNSServers[Math.floor(Math.random() * alternativeDNSServers.length)];
+    }
+
+    // Apply strict busy locks to prevent concurrent traffic loops crossing any of these nodes
+    clientPc.busy = true;
+    dnsServerNode.busy = true;
+    targetWeb.busy = true;
+    if (secondaryDNS) secondaryDNS.busy = true;
+
+    // Step 1: Send URL card from client to primary DNS Server
+    animatePacket(pathToDNS1, '#0284c7', { text: `URL: www.${targetWeb.name.toLowerCase()}.com` }, () => {
+        
+        if (mustQuerySecondary && secondaryDNS) {
+            const pathToDNS2 = findPath(dnsServerNode, secondaryDNS);
+            const pathFromDNS2 = findPath(secondaryDNS, dnsServerNode);
+
+            if (pathToDNS2.length > 1 && pathFromDNS2.length > 1) {
+                // Step 1b: Primary DNS forwards query card to secondary recursive DNS
+                animatePacket(pathToDNS2, '#0284c7', { text: `Req: www.${targetWeb.name.toLowerCase()}.com` }, () => {
+                    // Step 1c: Secondary DNS answers with an IP confirmation token card back to Primary DNS
+                    animatePacket(pathFromDNS2, '#a855f7', { text: `IP: ${targetWeb.ip}` }, () => {
+                        deliverIPToClient();
+                    });
+                });
+            } else {
+                deliverIPToClient();
+            }
+        } else {
+            deliverIPToClient();
+        }
+    });
+
+    function deliverIPToClient() {
+        const pathFromDNS1 = findPath(dnsServerNode, clientPc);
+        if (pathFromDNS1.length <= 1) {
+            clientPc.busy = false; dnsServerNode.busy = false; targetWeb.busy = false;
+            if (secondaryDNS) secondaryDNS.busy = false;
+            return;
+        }
+
+        // Step 2: Primary DNS Server returns the resolved IP card to the client
+        animatePacket(pathFromDNS1, '#a855f7', { text: `IP: ${targetWeb.ip}` }, () => {
+            
+            // Release DNS server infrastructure early as their transaction scope is complete
+            dnsServerNode.busy = false;
+            if (secondaryDNS) secondaryDNS.busy = false;
+
+            const pathToWeb = findPath(clientPc, targetWeb);
+            if (pathToWeb.length <= 1) { clientPc.busy = false; targetWeb.busy = false; return; }
+
+            // Step 3: Client pushes physical IP address card across network topology directly to Web Server
+            animatePacket(pathToWeb, '#a855f7', { text: `IP: ${targetWeb.ip}` }, () => {
+                
+                const pathFromWeb = findPath(targetWeb, clientPc);
+                if (pathFromWeb.length <= 1) { clientPc.busy = false; targetWeb.busy = false; return; }
+
+                // Step 4: Web Server receives box and serves payload response back via standard circular packets
+                animatePacket(pathFromWeb, '#ec4899', null, () => {
+                    // Release origin clients and destination server endpoints upon final payload drop
+                    clientPc.busy = false;
+                    targetWeb.busy = false;
+                }); 
+            });
+        });
+    }
+}
+
+function generateTraffic(){
+    const dnsServers = devices.filter(d=>d.type==='dns-server' && !d.busy);
+    if (dnsServers.length) {
+        triggerDNSTransmissionChain(dnsServers[Math.floor(Math.random() * dnsServers.length)]);
+    }
+}
+
+function sendManualTransmission(source){
+    if(simulationRunning) return;
+    if(source.busy) {
+        alert("This hardware device node is currently processing an active request loop!");
+        return;
+    }
+    
+    const dnsServers = devices.filter(d => d.type === 'dns-server' && !d.busy);
+    if(dnsServers.length) {
+        triggerDNSTransmissionChain(dnsServers[Math.floor(Math.random() * dnsServers.length)]);
+    } else {
+        alert("Ensure you have connected non-busy client PCs, DNS servers, and Web servers.");
+    }
+}
+
+// ================= NESTED PATHFINDING & ROUTING ENGINE =================
+function findPath(start, end){
+    return findRandomizedPath(start, end);
+}
+
+function findRandomizedPath(start, end){
+    const allPaths = findAllPaths(start, end, 12);
+    if(!allPaths.length) return [];
+    allPaths.sort((a,b)=>a.length-b.length);
+    const weighted=[];
+    allPaths.forEach((path, index)=>{
+        const weight = Math.max(1, 6-index);
+        for(let i=0;i<weight;i++){ weighted.push(path); }
+    });
+    return weighted[Math.floor(Math.random()*weighted.length)];
+}
+
+function findAllPaths(start, end, maxDepth=12){
+    const paths=[];
+    function dfs(current, target, visited, path){
+        if(path.length > maxDepth) return;
+        if(current.id===target.id){ paths.push([...path]); return; }
+        visited.add(current.id);
+        const neighbours = getNeighbors(current);
+        neighbours.sort(()=>Math.random()-0.5);
+        neighbours.forEach(next=>{
+            if(!visited.has(next.id)){
+                dfs(next, target, new Set(visited), [...path, next]);
+            }
+        });
+    }
+    dfs(start, end, new Set(), [start]);
+    return paths;
+}
+
+// ================= PACKET ENGINE WITH VARIABLE VELOCITY SCALE =================
+function animatePacket(path, color, cardData = null, onComplete = null){
+    let current=0;
+    function move(){
+        if(current >= path.length-1) {
+            if (onComplete) onComplete();
+            return;
+        }
+
+        const fromDevice = path[current];
+        const toDevice = path[current+1];
+        const from = getCenter(fromDevice.element);
+        const to = getCenter(toDevice.element);
+
+        let packet;
+        if(cardData) {
+            packet = document.createElement('div');
+            packet.className = 'dns-card';
+            packet.style.background = color;
+            packet.innerText = cardData.text;
+        } else {
+            packet = document.createElement('div');
+            packet.className = 'packet';
+            packet.style.background = color;
+            const size = Math.random()*10 + 8;
+            packet.style.width = size+'px'; packet.style.height = size+'px';
+        }
+
+        packet.style.left=from.x+'px'; packet.style.top=from.y+'px';
+        canvas.appendChild(packet);
+
+        let progress=0;
+        
+        const interval=setInterval(()=>{
+            const velocityModifier = parseFloat(speedSlider.value);
+            const speed = (velocityModifier * 0.005) + 0.005;
+
+            progress += speed;
+            packet.style.left = from.x + (to.x-from.x)*progress + 'px';
+            packet.style.top = from.y + (to.y-from.y)*progress + 'px';
+
+            if(progress>=1){
+                clearInterval(interval);
+                packet.remove();
+
+                if(toDevice.type==='hub'){
+                    const neighbours = getNeighbors(toDevice);
+                    neighbours.forEach(n=>{
+                        if(n.id !== fromDevice.id){ animatePacket([toDevice,n], color, cardData); }
+                    });
+                }
+                current++;
+                move();
+            }
+        },16);
+    }
+    move();
+}
+
+window.addEventListener('resize', drawConnections);
+document.addEventListener('contextmenu',(e)=>{ if(e.target===canvas || e.target===svg){ e.preventDefault(); } });
+</script>
+</body>
+</html>
