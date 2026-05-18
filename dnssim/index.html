@@ -118,6 +118,7 @@ svg {
 }
 .device .icon {
     font-size:28px;
+    pointer-events: none;
 }
 .device .label {
     font-size:12px;
@@ -127,6 +128,18 @@ svg {
     overflow:hidden;
     text-overflow:ellipsis;
     white-space:nowrap;
+    cursor: text;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+.device .label:focus {
+    outline: 2px solid #fff;
+    background: rgba(0, 0, 0, 0.4);
+    max-width: 120px;
+    overflow: visible;
+    white-space: normal;
+    z-index: 10;
 }
 .toolbar {
     display:flex;
@@ -224,6 +237,68 @@ svg {
     white-space: nowrap;
     transform: translate(-50%, -50%);
 }
+
+/* MINI BROWSER WINDOW PACKET STYLING */
+.browser-packet {
+    width: 140px;
+    height: 75px;
+    background: #ffffff;
+    border: 2px solid #334155;
+    border-radius: 6px;
+    position: absolute;
+    z-index: 102;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+.browser-header {
+    height: 16px;
+    background: #cbd5e1;
+    border-bottom: 1px solid #94a3b8;
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    gap: 3px;
+}
+.browser-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #ef4444;
+}
+.browser-dot:nth-child(2) { background: #eab308; }
+.browser-dot:nth-child(3) { background: #22c55e; }
+.browser-address {
+    flex: 1;
+    background: #fff;
+    height: 10px;
+    border-radius: 2px;
+    margin-left: 4px;
+    font-size: 6px;
+    line-height: 10px;
+    padding-left: 3px;
+    color: #64748b;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.browser-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #f8fafc;
+    color: #0f172a;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    padding: 4px;
+    word-break: break-all;
+}
+
 .instructions {
     background:#fff;
     border:1px solid #aaa;
@@ -256,7 +331,7 @@ body.access-dark .tool-btn { background:#333; color:#fff; border-color:#555; }
 
 <div class="header" id="header">
     <button class="accessibility-toggle" onclick="toggleAccessibility()">Accessibility</button>
-    <h1>Mx Brooke's Network Simulator</h1>
+    <h1>Mx Brooke's Domain Name System Simulator</h1>
 </div>
 
 <div class="accessibility-panel" id="accessPanel">
@@ -295,7 +370,7 @@ body.access-dark .tool-btn { background:#333; color:#fff; border-color:#555; }
     <div class="sidebar">
         <h2>Devices</h2>
         <p style="margin-top:10px; margin-bottom:20px; color:#64748b; line-height:1.5;">
-            Rename devices, recolour them, or delete them directly from the sidebar.
+            Rename devices, recolour them, or delete them directly from the sidebar or canvas.
         </p>
         <div id="deviceList"></div>
         <div class="status">
@@ -306,6 +381,7 @@ body.access-dark .tool-btn { background:#333; color:#fff; border-color:#555; }
             <h3>Controls</h3>
             <ul>
                 <li>Left click + drag devices</li>
+                <li><strong>Tap/Click device name text</strong> directly on the icon to type and change its name</li>
                 <li>Right click two devices to connect them</li>
                 <li>Triple tap devices on touchscreens to connect</li>
                 <li><strong>Double Click a DNS Server or PC</strong> to explicitly force a web request chain sequence from a free client!</li>
@@ -406,6 +482,17 @@ function handleServerDropdown(select){
     select.value='';
 }
 
+// Helper to determine the domain format based on name formatting context
+function getFormattedDomain(deviceName) {
+    const lower = deviceName.toLowerCase();
+    // If the user already wrote out a fully-formed domain structural address, preserve it
+    if (lower.startsWith('www.') || lower.includes('.')) {
+        return lower;
+    }
+    // Fallback default structure for default unedited nodes
+    return `www.${lower}.com`;
+}
+
 // ================= DEVICE CREATION =================
 function addDevice(type){
     const div = document.createElement('div');
@@ -423,7 +510,7 @@ function addDevice(type){
     div.style.top='150px';
     div.innerHTML=`
         <div class="icon">${icon(type)}</div>
-        <div class="label">${device.name}</div>
+        <div class="label" contenteditable="true" dashed="true">${device.name}</div>
     `;
 
     devices.push(device);
@@ -431,7 +518,18 @@ function addDevice(type){
     updateSidebar();
     enableDragging(div);
 
-    div.addEventListener('dblclick',()=>{
+    const labelEl = div.querySelector('.label');
+    labelEl.addEventListener('input', (e) => {
+        device.name = e.target.innerText.trim();
+        const sidebarInput = document.querySelector(`.sidebar-input-${device.id}`);
+        if(sidebarInput) sidebarInput.value = device.name;
+    });
+    
+    labelEl.addEventListener('mousedown', (e) => { e.stopPropagation(); });
+    labelEl.addEventListener('touchstart', (e) => { e.stopPropagation(); });
+
+    div.addEventListener('dblclick',(e)=>{
+        if(e.target.classList.contains('label')) return; 
         if(device.type === 'dns-server' || device.type === 'pc') {
             sendManualTransmission(device);
         }
@@ -450,11 +548,11 @@ function updateSidebar(){
         const box = document.createElement('div');
         box.className='device-info';
         box.innerHTML=`
-            <h3>${icon(device.type)} ${device.name}</h3>
+            <h3>${icon(device.type)} <span class="sidebar-title-${device.id}">${device.name}</span></h3>
             <p><strong>IP:</strong> ${device.ip}</p>
             <p><strong>MAC:</strong> ${device.mac}</p>
             <label>Device Name</label>
-            <input class="renameInput" type="text" value="${device.name}">
+            <input class="renameInput sidebar-input-${device.id}" type="text" value="${device.name}">
             <label>Device Colour</label>
             <input type="color" value="${device.color}">
         `;
@@ -536,7 +634,7 @@ function getCenter(el){
 
 function enableDragging(el){
     el.addEventListener('mousedown',(e)=>{
-        if(e.button===2) return;
+        if(e.button===2 || e.target.classList.contains('label')) return;
         activeDrag = { el, offsetX:e.offsetX, offsetY:e.offsetY };
     });
 }
@@ -564,7 +662,6 @@ function toggleSimulation(){
     }
 }
 
-// UNIQUE HANDSHAKE LIFECYCLE: Concurrency Busy Locks, Recursive Lookups & Explicit IP Handshakes
 function triggerDNSTransmissionChain(dnsServerNode) {
     if (dnsServerNode.busy) return;
 
@@ -580,7 +677,6 @@ function triggerDNSTransmissionChain(dnsServerNode) {
     const pathToDNS1 = findPath(clientPc, dnsServerNode);
     if (pathToDNS1.length <= 1) return;
 
-    // Determine if this primary DNS server needs to query an alternative recursive server zone
     const alternativeDNSServers = dnsServers.filter(d => d.id !== dnsServerNode.id && !d.busy);
     const mustQuerySecondary = alternativeDNSServers.length > 0 && Math.random() < 0.50;
     let secondaryDNS = null;
@@ -589,23 +685,22 @@ function triggerDNSTransmissionChain(dnsServerNode) {
         secondaryDNS = alternativeDNSServers[Math.floor(Math.random() * alternativeDNSServers.length)];
     }
 
-    // Apply strict busy locks to prevent concurrent traffic loops crossing any of these nodes
     clientPc.busy = true;
     dnsServerNode.busy = true;
     targetWeb.busy = true;
     if (secondaryDNS) secondaryDNS.busy = true;
 
-    // Step 1: Send URL card from client to primary DNS Server
-    animatePacket(pathToDNS1, '#0284c7', { text: `URL: www.${targetWeb.name.toLowerCase()}.com` }, () => {
+    // FIXED: Formats web target address correctly using helper engine method checks
+    const computedDomain = getFormattedDomain(targetWeb.name);
+
+    animatePacket(pathToDNS1, '#0284c7', { text: `URL: ${computedDomain}` }, () => {
         
         if (mustQuerySecondary && secondaryDNS) {
             const pathToDNS2 = findPath(dnsServerNode, secondaryDNS);
             const pathFromDNS2 = findPath(secondaryDNS, dnsServerNode);
 
             if (pathToDNS2.length > 1 && pathFromDNS2.length > 1) {
-                // Step 1b: Primary DNS forwards query card to secondary recursive DNS
-                animatePacket(pathToDNS2, '#0284c7', { text: `Req: www.${targetWeb.name.toLowerCase()}.com` }, () => {
-                    // Step 1c: Secondary DNS answers with an IP confirmation token card back to Primary DNS
+                animatePacket(pathToDNS2, '#0284c7', { text: `Req: ${computedDomain}` }, () => {
                     animatePacket(pathFromDNS2, '#a855f7', { text: `IP: ${targetWeb.ip}` }, () => {
                         deliverIPToClient();
                     });
@@ -626,25 +721,21 @@ function triggerDNSTransmissionChain(dnsServerNode) {
             return;
         }
 
-        // Step 2: Primary DNS Server returns the resolved IP card to the client
         animatePacket(pathFromDNS1, '#a855f7', { text: `IP: ${targetWeb.ip}` }, () => {
             
-            // Release DNS server infrastructure early as their transaction scope is complete
             dnsServerNode.busy = false;
             if (secondaryDNS) secondaryDNS.busy = false;
 
             const pathToWeb = findPath(clientPc, targetWeb);
             if (pathToWeb.length <= 1) { clientPc.busy = false; targetWeb.busy = false; return; }
 
-            // Step 3: Client pushes physical IP address card across network topology directly to Web Server
             animatePacket(pathToWeb, '#a855f7', { text: `IP: ${targetWeb.ip}` }, () => {
                 
                 const pathFromWeb = findPath(targetWeb, clientPc);
                 if (pathFromWeb.length <= 1) { clientPc.busy = false; targetWeb.busy = false; return; }
 
-                // Step 4: Web Server receives box and serves payload response back via standard circular packets
-                animatePacket(pathFromWeb, '#ec4899', null, () => {
-                    // Release origin clients and destination server endpoints upon final payload drop
+                // FIXED: Displays corrected single structural address variable formatting
+                animatePacket(pathFromWeb, '#ec4899', { isBrowser: true, url: computedDomain, siteName: targetWeb.name }, () => {
                     clientPc.busy = false;
                     targetWeb.busy = false;
                 }); 
@@ -725,7 +816,21 @@ function animatePacket(path, color, cardData = null, onComplete = null){
         const to = getCenter(toDevice.element);
 
         let packet;
-        if(cardData) {
+        if(cardData && cardData.isBrowser) {
+            packet = document.createElement('div');
+            packet.className = 'browser-packet';
+            packet.innerHTML = `
+                <div class="browser-header">
+                    <div class="browser-dot"></div>
+                    <div class="browser-dot"></div>
+                    <div class="browser-dot"></div>
+                    <div class="browser-address">${cardData.url}</div>
+                </div>
+                <div class="browser-body">
+                    ${cardData.siteName}
+                </div>
+            `;
+        } else if(cardData) {
             packet = document.createElement('div');
             packet.className = 'dns-card';
             packet.style.background = color;
