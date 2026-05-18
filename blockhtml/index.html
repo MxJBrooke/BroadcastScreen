@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML Dynamic Layout Builder Template</title>
+<style>
+body {
+    font-family: Consolas, monospace;
+    margin: 0;
+    transition: all 0.3s ease;
+    word-spacing: normal;
+    font-size: 16px;
+    padding-bottom: 280px; /* Prevent preview overlay covering content */
+}
+
+.header {
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    color: #000;
+    transition: all 0.3s ease;
+}
+
+.header h1 {
+    color: #fff;
+}
+
+.accessibility-toggle {
+    position: absolute;
+    left: 20px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.accessibility-scale {
+    left: 20px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* FIXED PANEL */
+.accessibility-panel {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 250px;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: left 0.3s ease;
+    z-index: 1000;
+    background: #fff;
+}
+
+.accessibility-panel.open {
+    left: 0;
+}
+
+.color-spot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin: 5px;
+    cursor: pointer;
+    border: 1px solid #777;
+}
+
+.main-wrapper {
+    max-width: 95%;
+    margin: 40px auto;
+}
+
+/* BUILDER SPECIFIC LAYOUT */
+.builder-container {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 25px;
+}
+
+/* Constrain workspace wrapper track to prevent grid blowout */
+.workspace-wrapper {
+    min-width: 0; 
+}
+
+.toolbox {
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    transition: opacity 0.2s ease;
+}
+
+.toolbox.disabled-state {
+    opacity: 0.3;
+    pointer-events: none;
+    user-select: none;
+}
+
+.toolbox h2, .workspace-wrapper h2 {
+    margin-top: 0;
+    border-bottom: 2px solid #000;
+    padding-bottom: 8px;
+}
+
+/* DRAGGABLE TOOLBOX BLOCKS */
+.tool-block {
+    padding: 12px;
+    margin: 10px 0;
+    background: #e0e0e0;
+    border: 1px solid #000;
+    border-radius: 6px;
+    cursor: grab;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+}
+
+.tag-badge {
+    background: #000;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+/* WORKSPACE ZONE */
+.workspace {
+    min-height: 500px;
+    border: 2px dashed #999;
+    border-radius: 10px;
+    padding: 20px;
+    background: rgba(255,255,255,0.3);
+    box-sizing: border-box;
+}
+
+.workspace.drag-over {
+    border-color: #000;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.workspace-placeholder {
+    color: #666;
+    text-align: center;
+    padding-top: 200px;
+    font-style: italic;
+}
+
+/* EDITABLE HTML CARDS */
+.card {
+    background: #fff;
+    padding: 15px;
+    margin: 12px 0;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    cursor: move;
+    position: relative;
+    transition: opacity 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow-wrap: break-word; /* Forces container to wrap child text safely */
+}
+
+.card.dragging {
+    opacity: 0.4;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 4px;
+    user-select: none;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* INLINE FORMATTING TOOLBARS */
+.toolbar-inline {
+    display: flex;
+    gap: 4px;
+    margin-right: auto;
+    margin-left: 15px;
+    flex-wrap: wrap;
+}
+
+.btn-format {
+    background: #f0f0f0;
+    border: 1px solid #999;
+    padding: 2px 6px;
+    font-family: Consolas, monospace;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 3px;
+    color: #000;
+}
+.btn-format:hover {
+    background: #e0e0e0;
+}
+.btn-format.active {
+    background: #222;
+    color: #fff;
+    border-color: #222;
+}
+
+/* INLINE CODE STYLE */
+.code-line {
+    font-family: Consolas, monospace;
+    font-size: 16px;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    word-break: break-all; /* Dynamically splits long image source strings over multiple lines */
+}
+
+.html-tag {
+    color: #0033cc;
+    font-weight: bold;
+}
+
+.css-attr-inline {
+    color: #7b1fa2;
+    font-weight: normal;
+    font-size: 14px;
+}
+
+body.access-dark .html-tag { color: #4fc3f7; }
+body.access-dark .css-attr-inline { color: #ea80fc; }
+
+.editable-field {
+    display: inline-block;
+    min-width: 20px;
+    max-width: 100%;
+    background: rgba(0,0,0,0.05);
+    border-bottom: 1px dashed #444;
+    padding: 0 4px;
+    color: #d32f2f;
+    border-radius: 2px;
+    outline: none;
+    transition: all 0.15s ease;
+    word-break: break-all;
+    box-sizing: border-box;
+}
+
+body.access-dark .editable-field {
+    background: rgba(255,255,255,0.1);
+    color: #ff8a80;
+    border-bottom-color: #fff;
+}
+
+.editable-field[data-attr="true"] {
+    color: #7b1fa2;
+}
+
+body.access-dark .editable-field[data-attr="true"] {
+    color: #ea80fc;
+}
+
+/* COLUMN LAYOUT DRAG TARGET ENGINES */
+.columns-container {
+    display: flex;
+    gap: 15px;
+    margin: 10px 0;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.column-zone {
+    flex: 1;
+    min-width: 0; /* Crucial: Allows flex-children to shrink smaller than text lengths */
+    min-height: 140px;
+    border: 1px dotted #888;
+    border-radius: 6px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.02);
+    box-sizing: border-box;
+}
+
+.column-zone.drag-over {
+    border-color: #000;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.column-header-inline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    border-bottom: 1px dashed #ccc;
+    padding-bottom: 4px;
+}
+
+.column-label {
+    font-family: Consolas, monospace;
+    font-size: 11px;
+    color: #888;
+    user-select: none;
+}
+
+.btn-col-del {
+    background: none;
+    border: none;
+    color: #ff4d4d;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 12px;
+    padding: 0 4px;
+}
+.btn-col-del:hover { color: #cc0000; }
+
+body.access-dark .column-zone {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: #666;
+}
+body.access-dark .column-zone.drag-over {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* LIST COMPONENT STYLING */
+.list-items-box {
+    margin: 4px 0;
+    padding-left: 24px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.list-item-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+    max-width: 100%;
+}
+
+.btn-add-item {
+    margin: 6px 0 0 0;
+    padding: 4px 10px;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    background: #e0e0e0;
+    border: 1px solid #000;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-delete {
+    background: #ffcccc;
+    border: 1px solid #000;
+    border-radius: 4px;
+    cursor: pointer;
+    padding: 2px 6px;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+}
+
+.btn-delete:hover { background: #ff9999; }
+
+/* ACTION BUTTONS */
+.action-bar {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.action-bar button {
+    display: inline-block;
+    padding: 10px 16px;
+    background: #e0e0e0;
+    color: #000;
+    font-family: Consolas, monospace;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 6px;
+    border: 1px solid #000;
+    cursor: pointer;
+    user-select: none;
+}
+.action-bar button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* LOCKED HTML CONTAINER CODE VIEW */
+.locked-html-container {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid #333;
+    box-sizing: border-box;
+    min-height: 500px;
+}
+
+.locked-html-container textarea {
+    width: 100%;
+    min-height: 400px;
+    background: #252526;
+    color: #9cdcfe;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 15px;
+    padding: 15px;
+    border: 1px solid #3c3c3c;
+    border-radius: 6px;
+    box-sizing: border-box;
+    resize: vertical;
+    outline: none;
+}
+
+/* FIXED LIVE PREVIEW OVERLAY & RESPONSIVE EXPANSION */
+.preview-overlay {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 360px;
+    height: 260px;
+    background: #fff;
+    border: 2px solid #000;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.preview-overlay.expanded {
+    width: 650px;
+    height: 480px;
+}
+
+.preview-header {
+    background: #222;
+    color: #fff;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    user-select: none;
+}
+
+.btn-expand-view {
+    background: #444;
+    border: 1px solid #555;
+    color: #fff;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    font-family: Consolas, monospace;
+}
+.btn-expand-view:hover {
+    background: #555;
+}
+
+.preview-body {
+    flex: 1;
+    background: #fff;
+    border: none;
+    width: 100%;
+    height: 100%;
+}
+
+/* ACCESSIBILITY CLASS INHERITANCE */
+body.access-white .card { background: #f5f5f5; }
+body.access-red .card { background: #ffcccc; }
+body.access-orange .card { background: #ffe5cc; }
+body.access-yellow .card { background: #fff9c4; }
+body.access-green .card { background: #e8f5e9; }
+body.access-blue .card { background: #e3f2fd; }
+body.access-purple .card { background: #e6e0f8; }
+body.access-pink .card { background: #fce4ec; }
+body.access-dark .card { background: #222; color:#fff; border-color: #444; }
+</style>
+</head>
+<body>
+
+<div class="header" id="header">
+    <button class="accessibility-toggle" onclick="toggleAccessibility()">Accessibility</button>
+    <h1>Block-by-Block HTML</h1>
+</div>
+
+<div class="accessibility-panel" id="accessPanel">
+    <button onclick="toggleAccessibility()">✖</button>
+    <h3>Colours</h3>
+    <button class="color-spot" style="background:#f5f5f5" onclick="setBackground('white')"></button>
+    <button class="color-spot" style="background:#ffcccc" onclick="setBackground('red')"></button>
+    <button class="color-spot" style="background:#ffe5cc" onclick="setBackground('orange')"></button>
+    <button class="color-spot" style="background:#fff9c4" onclick="setBackground('yellow')"></button>
+    <button class="color-spot" style="background:#e8f5e9" onclick="setBackground('green')"></button>
+    <button class="color-spot" style="background:#e3f2fd" onclick="setBackground('blue')"></button>
+    <button class="color-spot" style="background:#e6e0f8" onclick="setBackground('purple')"></button>
+    <button class="color-spot" style="background:#fce4ec" onclick="setBackground('pink')"></button>
+    <button class="color-spot" style="background:#121212" onclick="setBackground('dark')"></button>
+
+    <h3>Word Spacing</h3>
+    <div class="accessibility-control">
+        <button class="accessibility-scale" onclick="adjustWordSpacing(0.1)">Increase</button>
+        <button class="accessibility-scale" onclick="adjustWordSpacing(-0.1)">Decrease</button>
+    </div>
+
+    <h3>Font Size</h3>
+    <div class="accessibility-control">
+        <button class="accessibility-scale" onclick="adjustFontSize(1)">Increase</button>
+        <button class="accessibility-scale" onclick="adjustFontSize(-1)">Decrease</button>
+    </div>
+</div>
+
+<div class="main-wrapper">
+    <div class="action-bar">
+        <button onclick="exportHTML()">📥 Export .html</button>
+        <button onclick="document.getElementById('importFileInput').click()">📤 Import .html</button>
+        <input type="file" id="importFileInput" style="display: none;" accept=".html" onchange="handleHTMLImport(event)">
+        
+        <span style="border-left: 2px solid #ccc; height: 30px; margin: 0 5px;"></span>
+        
+        <button id="btnUndo" onclick="triggerUndo()" style="background:#fff;" disabled>↩️ Undo</button>
+        <button id="btnRedo" onclick="triggerRedo()" style="background:#fff;" disabled>↪️ Redo</button>
+        <button id="btnViewToggle" onclick="toggleEditorMode()" style="background: #eef2f7;">View Raw Code</button>
+        
+        <button onclick="clearWorkspace()" style="background: #fce4ec; margin-left: auto;">Clear All</button>
+    </div>
+
+    <div class="builder-container">
+        <div class="toolbox" id="toolboxPanel">
+            <h2>Layouts</h2>
+            <div class="tool-block" draggable="true" data-type="columns">Columns Wrapper <span class="tag-badge">&lt;div&gt;</span></div>
+            
+            <h2>Elements</h2>
+            <div class="tool-block" draggable="true" data-type="h1">Heading <span class="tag-badge">&lt;h1&gt;</span></div>
+            <div class="tool-block" draggable="true" data-type="h2">Subtitle <span class="tag-badge">&lt;h2&gt;</span></div>
+            <div class="tool-block" draggable="true" data-type="p">Paragraph <span class="tag-badge">&lt;p&gt;</span></div>
+            <div class="tool-block" draggable="true" data-type="ul">List Box <span class="tag-badge">&lt;ul&gt;</span></div>
+            <div class="tool-block" draggable="true" data-type="a">Hyperlink <span class="tag-badge">&lt;a&gt;</span></div>
+            <div class="tool-block" draggable="true" data-type="img">Image <span class="tag-badge">&lt;img&gt;</span></div>
+        </div>
+
+        <div class="workspace-wrapper">
+            <h2 id="workspaceTitle">Editor Canvas</h2>
+            
+            <div class="workspace" id="workspace">
+                <div class="workspace-placeholder" id="placeholder">Drag code blocks here to build your webpage...</div>
+            </div>
+
+            <div class="locked-html-container" id="lockedHtmlWrapper" style="display: none;">
+                <p style="margin-top:0; font-weight:bold; color:#4fc3f7;">&lt;!-- Code Locked: Switch back to Block View to modify contents --&gt;</p>
+                <textarea id="lockedHtmlTextArea" readonly></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="preview-overlay" id="previewOverlay">
+    <div class="preview-header">
+        <span>📄 Live Page View</span>
+        <button class="btn-expand-view" id="btnExpandPreview" onclick="toggleExpandPreview()">Expand ⤢</button>
+    </div>
+    <iframe class="preview-body" id="previewFrame"></iframe>
+</div>
+
+<script>
+/* --- ACCESSIBILITY CONFIGURATION --- */
+function toggleAccessibility() {
+    document.getElementById('accessPanel').classList.toggle('open');
+}
+
+function darkenColor(hex, percent) {
+    hex = hex.replace('#','');
+    let r=parseInt(hex.substring(0,2),16), g=parseInt(hex.substring(2,4),16), b=parseInt(hex.substring(4,6),16);
+    r=Math.floor(r*(1-percent/100)); g=Math.floor(g*(1-percent/100)); b=Math.floor(b*(1-percent/100));
+    return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+
+function setBackground(color) {
+    localStorage.setItem('bgColor', color);
+    document.body.className='';
+    document.body.classList.add('access-'+color);
+
+    const map={
+        white:'#f5f5f5', red:'#ffcccc', orange:'#ffe5cc', yellow:'#fff9c4',
+        green:'#e8f5e9', blue:'#e3f2fd', purple:'#e6e0f8', pink:'#fce4ec', dark:'#121212'
+    };
+
+    document.body.style.background = map[color];
+    const header=document.getElementById('header');
+    const panel=document.getElementById('accessPanel');
+    const darkHex=color==='dark' ? '#000' : darkenColor(map[color],40);
+    
+    header.style.background=darkHex;
+    panel.style.background = map[color];
+
+    panel.querySelectorAll('button:not(.color-spot)').forEach(el=>{
+        el.style.background = '#fff';
+        el.style.color = '#000';
+        el.style.border = '1px solid #aaa';
+    });
+
+    if(color==='dark'){
+        document.body.style.color='#fff';
+        header.style.color='#fff';
+    } else {
+        document.body.style.color='#000';
+        header.style.color='#000';
+    }
+}
+
+function adjustWordSpacing(amount){
+    let current = parseFloat(localStorage.getItem('wordSpacing')||'0');
+    current += amount;
+    document.body.style.wordSpacing = current + 'em';
+    localStorage.setItem('wordSpacing', current);
+}
+
+function adjustFontSize(amount){
+    let current = parseFloat(localStorage.getItem('fontSize')||'16');
+    current += amount;
+    document.body.style.fontSize = current + 'px';
+    localStorage.setItem('fontSize', current);
+}
+
+
+/* --- UNDO / REDO TRANSACTION HISTORY ENGINE --- */
+let undoStack = [];
+let redoStack = [];
+const MAX_HISTORY_LIMIT = 50;
+let blockHistoryCommits = false; // Flag to prevent capturing states during undo/redo operations
+
+function captureHistorySnapshot() {
+    if (blockHistoryCommits) return;
+    const currentWorkspaceMarkup = document.getElementById('workspace').innerHTML;
+    
+    // Avoid double-committing identical sequential layouts
+    if (undoStack.length > 0 && undoStack[undoStack.length - 1] === currentWorkspaceMarkup) return;
+    
+    undoStack.push(currentWorkspaceMarkup);
+    if (undoStack.length > MAX_HISTORY_LIMIT) undoStack.shift();
+    
+    // Any brand new explicit user mutation clears forward alternative futures
+    redoStack = [];
+    updateHistoryButtonsUI();
+}
+
+function triggerUndo() {
+    if (undoStack.length === 0) return;
+    
+    blockHistoryCommits = true;
+    const currentWorkspaceMarkup = document.getElementById('workspace').innerHTML;
+    redoStack.push(currentWorkspaceMarkup);
+    
+    const restoredState = undoStack.pop();
+    document.getElementById('workspace').innerHTML = restoredState;
+    
+    rebindAllWorkspaceEventHandlers();
+    blockHistoryCommits = false;
+    
+    updatePreview();
+    updateHistoryButtonsUI();
+}
+
+function triggerRedo() {
+    if (redoStack.length === 0) return;
+    
+    blockHistoryCommits = true;
+    const currentWorkspaceMarkup = document.getElementById('workspace').innerHTML;
+    undoStack.push(currentWorkspaceMarkup);
+    
+    const restoredState = redoStack.pop();
+    document.getElementById('workspace').innerHTML = restoredState;
+    
+    rebindAllWorkspaceEventHandlers();
+    blockHistoryCommits = false;
+    
+    updatePreview();
+    updateHistoryButtonsUI();
+}
+
+function updateHistoryButtonsUI() {
+    document.getElementById('btnUndo').disabled = (undoStack.length === 0);
+    document.getElementById('btnRedo').disabled = (redoStack.length === 0);
+}
+
+function rebindAllWorkspaceEventHandlers() {
+    const workspace = document.getElementById('workspace');
+    workspace.querySelectorAll('.card').forEach(card => {
+        bindCardEvents(card);
+    });
+}
+
+
+/* --- DRAG & DROP ENGINE --- */
+window.onload = function() {
+    const saved=localStorage.getItem('bgColor')||'white';
+    setBackground(saved);
+    document.body.style.wordSpacing = (localStorage.getItem('wordSpacing')||'0')+'em';
+    document.body.style.fontSize = (localStorage.getItem('fontSize')||'16')+'px';
+    
+    loadWorkspaceState();
+    setupToolboxDrag();
+    setupWorkspaceDrop();
+    updatePreview();
+};
+
+function setupToolboxDrag() {
+    document.querySelectorAll('.tool-block').forEach(block => {
+        block.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/action', 'create');
+            e.dataTransfer.setData('text/type', block.dataset.type);
+        });
+    });
+}
+
+function setupWorkspaceDrop() {
+    const workspace = document.getElementById('workspace');
+
+    workspace.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        
+        const activeZone = e.target.closest('.column-zone') || e.target.closest('#workspace');
+        if (!activeZone) return;
+
+        document.querySelectorAll('.column-zone, #workspace').forEach(el => el.classList.remove('drag-over'));
+        activeZone.classList.add('drag-over');
+        
+        const draggingCard = document.querySelector('.card.dragging');
+        if (draggingCard) {
+            if (draggingCard.contains(activeZone)) return;
+
+            const afterElement = getDragAfterElement(activeZone, e.clientY);
+            if (afterElement == null) {
+                activeZone.appendChild(draggingCard);
+            } else {
+                activeZone.insertBefore(draggingCard, afterElement);
+            }
+        }
+    });
+
+    workspace.addEventListener('dragleave', (e) => {
+        if(e.target.classList.contains('column-zone') || e.target.id === 'workspace') {
+            e.target.classList.remove('drag-over');
+        }
+    });
+
+    workspace.addEventListener('drop', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.column-zone, #workspace').forEach(el => el.classList.remove('drag-over'));
+        
+        const activeZone = e.target.closest('.column-zone') || e.target.closest('#workspace');
+        if (!activeZone) return;
+
+        const action = e.dataTransfer.getData('text/action');
+        const type = e.dataTransfer.getData('text/type');
+        
+        if (action === 'create' && type) {
+            if (type === 'columns' && activeZone.classList.contains('column-zone')) {
+                alert("Nested sub-columns are restricted to keep layout rules easy to learn!");
+                return;
+            }
+
+            captureHistorySnapshot(); // Lock state before generating block node
+            
+            const newBlock = createCodeBlockElement(type);
+            const afterElement = getDragAfterElement(activeZone, e.clientY);
+            if (afterElement == null) {
+                activeZone.appendChild(newBlock);
+            } else {
+                activeZone.insertBefore(newBlock, afterElement);
+            }
+            updatePreview();
+        }
+    });
+}
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll(':scope > .card:not(.dragging)')];
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+/* --- FACTORY GENERATION LOGIC WITH INLINE FORMATTING CONTROLS --- */
+function createCodeBlockElement(type) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.setAttribute('draggable', 'true');
+    card.dataset.type = type;
+    
+    card.dataset.bold = "false";
+    card.dataset.italic = "false";
+    card.dataset.align = "left";
+
+    bindCardEvents(card);
+
+    let headerLabel = type.toUpperCase() + ' Element Block';
+    let blockInnerMarkup = '';
+    let hasFormattingToolbar = ['h1', 'h2', 'p', 'a', 'ul'].includes(type);
+
+    switch(type) {
+        case 'columns':
+            headerLabel = 'Layout: Dynamic Columns Container <div>';
+            blockInnerMarkup = `
+                <div class="code-line"><span class="html-tag">&lt;div style="display: flex; gap: 20px;"&gt;</span></div>
+                <div class="columns-container">
+                    <div class="column-zone">
+                        <div class="column-header-inline">
+                            <span class="column-label">&lt;!-- Column Drop Zone --&gt;</span>
+                            <button class="btn-col-del" onclick="captureHistorySnapshot(); this.closest('.column-zone').remove(); updatePreview();">✖</button>
+                        </div>
+                    </div>
+                    <div class="column-zone">
+                        <div class="column-header-inline">
+                            <span class="column-label">&lt;!-- Column Drop Zone --&gt;</span>
+                            <button class="btn-col-del" onclick="captureHistorySnapshot(); this.closest('.column-zone').remove(); updatePreview();">✖</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="code-line"><span class="html-tag">&lt;/div&gt;</span></div>
+                <button class="btn-add-item" onclick="addColumnZone(this)">+ Add Column Block (&lt;div&gt;)</button>`;
+            break;
+        case 'h1':
+            blockInnerMarkup = `
+                <div class="code-line"><span class="html-tag">&lt;h1<span class="css-attr-inline"></span>&gt;</span><span contenteditable="true" class="editable-field val-text">Heading Title</span><span class="html-tag">&lt;/h1&gt;</span></div>`;
+            break;
+        case 'h2':
+            blockInnerMarkup = `
+                <div class="code-line"><span class="html-tag">&lt;h2<span class="css-attr-inline"></span>&gt;</span><span contenteditable="true" class="editable-field val-text">Section Subtitle</span><span class="html-tag">&lt;/h2&gt;</span></div>`;
+            break;
+        case 'p':
+            blockInnerMarkup = `
+                <div class="code-line"><span class="html-tag">&lt;p<span class="css-attr-inline"></span>&gt;</span><span contenteditable="true" class="editable-field val-text">Write text here...</span><span class="html-tag">&lt;/p&gt;</span></div>`;
+            break;
+        case 'a':
+            blockInnerMarkup = `
+                <div class="code-line"><span class="html-tag">&lt;a<span class="css-attr-inline"></span> href="</span><span contenteditable="true" class="editable-field val-url" data-attr="true">https://example.com</span><span class="html-tag">"&gt;</span><span contenteditable="true" class="editable-field val-text">Link Text</span><span class="html-tag">&lt;/a&gt;</span></div>`;
+            break;
+        case 'img':
+            blockInnerMarkup = `
+                <div class="code-line"><span class="html-tag">&lt;img src="</span><span contenteditable="true" class="editable-field val-src" data-attr="true">https://upload.wikimedia.org/wikipedia/commons/3/38/Arduino_Uno_-_R3.jpg</span><span class="html-tag">" alt="</span><span contenteditable="true" class="editable-field val-alt" data-attr="true">Hardware description</span><span class="html-tag">"&gt;</span></div>`;
+            break;
+        case 'ul':
+            blockInnerMarkup = `
+                <div class="code-line"><span class="html-tag">&lt;ul<span class="css-attr-inline"></span>&gt;</span></div>
+                <div class="list-items-box">
+                    <div class="list-item-row">
+                        <span class="html-tag">&lt;li&gt;</span><span contenteditable="true" class="editable-field val-li">Sample item</span><span class="html-tag">&lt;/li&gt;</span>
+                        <button class="btn-delete" onclick="captureHistorySnapshot(); this.parentNode.remove(); updatePreview();">✖</button>
+                    </div>
+                </div>
+                <div class="code-line"><span class="html-tag">&lt;/ul&gt;</span></div>
+                <button class="btn-add-item" onclick="addListItemRow(this)">+ Add Item Block (&lt;li&gt;)</button>`;
+            break;
+    }
+
+    let toolbarHTML = '';
+    if (hasFormattingToolbar) {
+        toolbarHTML = `
+            <div class="toolbar-inline">
+                <button class="btn-format" data-action="bold" title="Toggle Bold" onclick="handleStyleToggle(this, 'bold')">B</button>
+                <button class="btn-format" data-action="italic" title="Toggle Italic" onclick="handleStyleToggle(this, 'italic')">I</button>
+                <button class="btn-format" data-action="left" title="Align Left" onclick="handleStyleToggle(this, 'align', 'left')">⇐ Left</button>
+                <button class="btn-format" data-action="center" title="Align Center" onclick="handleStyleToggle(this, 'align', 'center')">⇔ Center</button>
+                <button class="btn-format" data-action="right" title="Align Right" onclick="handleStyleToggle(this, 'align', 'right')">⇒ Right</button>
+            </div>
+        `;
+    }
+
+    card.innerHTML = `
+        <div class="card-header">
+            <span>${headerLabel}</span>
+            ${toolbarHTML}
+            <button class="btn-delete" onclick="captureHistorySnapshot(); this.closest('.card').remove(); updatePreview();">✖ Delete</button>
+        </div>
+        <div class="block-editor-root">${blockInnerMarkup}</div>
+    `;
+
+    return card;
+}
+
+function bindCardEvents(card) {
+    card.addEventListener('dragstart', (e) => {
+        e.stopPropagation();
+        card.classList.add('dragging');
+    });
+    card.addEventListener('dragend', () => {
+        captureHistorySnapshot(); // Snapshot positions on drag execution completions
+        card.classList.remove('dragging');
+        updatePreview();
+    });
+    
+    // Throttle textual inputs to prevent clogging stack arrays with single characters
+    let keystrokeInputTimer;
+    card.addEventListener('input', () => {
+        clearTimeout(keystrokeInputTimer);
+        keystrokeInputTimer = setTimeout(() => {
+            captureHistorySnapshot();
+        }, 700);
+        updatePreview();
+    });
+}
+
+function addListItemRow(buttonElement) {
+    captureHistorySnapshot();
+    const parentBlock = buttonElement.closest('.card');
+    const itemsContainer = parentBlock.querySelector('.list-items-box');
+    
+    const row = document.createElement('div');
+    row.className = 'list-item-row';
+    row.innerHTML = `
+        <span class="html-tag">&lt;li&gt;</span><span contenteditable="true" class="editable-field val-li">New Item</span><span class="html-tag">&lt;/li&gt;</span>
+        <button class="btn-delete" onclick="captureHistorySnapshot(); this.parentNode.remove(); updatePreview();">✖</button>
+    `;
+    itemsContainer.appendChild(row);
+    
+    applyVisualStylesToCard(parentBlock);
+    updatePreview();
+}
+
+/* --- DYNAMIC STYLING AND TOOLBAR CONTROLLERS --- */
+function handleStyleToggle(button, styleType, value = '') {
+    captureHistorySnapshot();
+    const card = button.closest('.card');
+    
+    if (styleType === 'bold' || styleType === 'italic') {
+        const isTrue = card.dataset[styleType] === 'true';
+        card.dataset[styleType] = !isTrue;
+        button.classList.toggle('active', !isTrue);
+    } else if (styleType === 'align') {
+        card.dataset.align = value;
+        const toolbar = button.closest('.toolbar-inline');
+        toolbar.querySelectorAll('[data-action="left"], [data-action="center"], [data-action="right"]').forEach(b => {
+            b.classList.remove('active');
+        });
+        button.classList.add('active');
+    }
+    
+    applyVisualStylesToCard(card);
+    updatePreview();
+}
+
+function applyVisualStylesToCard(card) {
+    const styleStrings = [];
+    const cssDisplayOutputElement = card.querySelector('.css-attr-inline');
+    const inputTextFields = card.querySelectorAll('.editable-field:not([data-attr="true"]), .list-items-box');
+
+    if (card.dataset.align && card.dataset.align !== 'left') {
+        styleStrings.push(`text-align: ${card.dataset.align};`);
+    }
+    if (card.dataset.bold === 'true') {
+        styleStrings.push('font-weight: bold;');
+    }
+    if (card.dataset.italic === 'true') {
+        styleStrings.push('font-style: italic;');
+    }
+
+    inputTextFields.forEach(field => {
+        field.style.textAlign = card.dataset.align || 'left';
+        field.style.fontWeight = card.dataset.bold === 'true' ? 'bold' : 'normal';
+        field.style.fontStyle = card.dataset.italic === 'true' ? 'italic' : 'normal';
+    });
+
+    if (cssDisplayOutputElement) {
+        if (styleStrings.length > 0) {
+            cssDisplayOutputElement.innerText = ` style="${styleStrings.join(' ')}"`;
+        } else {
+            cssDisplayOutputElement.innerText = '';
+        }
+    }
+}
+
+/* --- DYNAMIC COLUMN INTERACTIVE MODIFIERS --- */
+function addColumnZone(buttonElement) {
+    captureHistorySnapshot();
+    const parentBlock = buttonElement.closest('.card');
+    const container = parentBlock.querySelector('.columns-container');
+    
+    const zone = document.createElement('div');
+    zone.className = 'column-zone';
+    zone.innerHTML = `
+        <div class="column-header-inline">
+            <span class="column-label">&lt;!-- Column Drop Zone --&gt;</span>
+            <button class="btn-col-del" onclick="captureHistorySnapshot(); this.closest('.column-zone').remove(); updatePreview();">✖</button>
+        </div>
+    `;
+    container.appendChild(zone);
+    updatePreview();
+}
+
+function clearWorkspace() {
+    if (confirm("Are you sure you want to clear your layout canvas workspace entirely?")) {
+        captureHistorySnapshot(); // Lock state completely before sweeping tree fields!
+        const workspace = document.getElementById('workspace');
+        workspace.querySelectorAll('.card').forEach(card => card.remove());
+        updatePreview();
+    }
+}
+
+
+/* --- INTERACTIVE DISPLAY CONTROLS --- */
+let activeViewMode = 'block';
+
+function toggleEditorMode() {
+    const canvasWorkspace = document.getElementById('workspace');
+    const textCodeWrapper = document.getElementById('lockedHtmlWrapper');
+    const codeTextArea = document.getElementById('lockedHtmlTextArea');
+    const leftToolbox = document.getElementById('toolboxPanel');
+    const modeToggleButton = document.getElementById('btnViewToggle');
+    const workspaceLabel = document.getElementById('workspaceTitle');
+
+    if (activeViewMode === 'block') {
+        const currentGeneratedCode = buildHTMLString();
+        codeTextArea.value = currentGeneratedCode ? currentGeneratedCode : "";
+        
+        canvasWorkspace.style.display = 'none';
+        textCodeWrapper.style.display = 'block';
+        leftToolbox.classList.add('disabled-state');
+        workspaceLabel.innerText = "Locked Source Output View";
+        modeToggleButton.innerText = "Switch to Block View";
+        activeViewMode = 'html';
+    } else {
+        canvasWorkspace.style.display = 'block';
+        textCodeWrapper.style.display = 'none';
+        leftToolbox.classList.remove('disabled-state');
+        workspaceLabel.innerText = "Editor Canvas";
+        modeToggleButton.innerText = "View Raw Code";
+        activeViewMode = 'block';
+    }
+}
+
+function toggleExpandPreview() {
+    const previewContainer = document.getElementById('previewOverlay');
+    const expandButton = document.getElementById('btnExpandPreview');
+    
+    previewContainer.classList.toggle('expanded');
+    if (previewContainer.classList.contains('expanded')) {
+        expandButton.innerText = "Collapse ✖";
+    } else {
+        expandButton.innerText = "Expand ⤢";
+    }
+}
+
+
+/* --- REVERSE-COMPILER RECURSIVE HTML PARSER (IMPORT SYSTEM) --- */
+function handleHTMLImport(event) {
+    const targetFile = event.target.files[0];
+    if (!targetFile) return;
+
+    const fileStreamReader = new FileReader();
+    fileStreamReader.onload = function(e) {
+        const structuralRawTextString = e.target.result;
+        
+        // Dynamic isolated browser frame parsing engine
+        const asyncDOMParser = new DOMParser();
+        const artificialHTMLDOMDocument = asyncDOMParser.parseFromString(structuralRawTextString, 'text/html');
+        const activeSourceBodyNode = artificialHTMLDOMDocument.body;
+
+        if (!activeSourceBodyNode || activeSourceBodyNode.children.length === 0) {
+            alert("No structural content bodies detected inside the selected webpage!");
+            return;
+        }
+
+        if (confirm("Importing will clear your current workspace. Do you want to proceed?")) {
+            captureHistorySnapshot(); // Save current canvas position before processing data load sweeps
+            
+            const workspaceCanvasRoot = document.getElementById('workspace');
+            workspaceCanvasRoot.querySelectorAll('.card').forEach(card => card.remove());
+
+            // Process tree nodes sequentially down the pipeline
+            Array.from(activeSourceBodyNode.children).forEach(extractedHTMLElementNode => {
+                parseTargetHTMLElementToWorkspaceCard(extractedHTMLElementNode, workspaceCanvasRoot);
+            });
+
+            updatePreview();
+            alert("Webpage imported and reverse-compiled successfully!");
+        }
+    };
+    fileStreamReader.readAsText(targetFile);
+    event.target.value = ''; // Reset input selection stream pointers immediately
+}
+
+function parseTargetHTMLElementToWorkspaceCard(elementNode, outputWorkspaceZone) {
+    const tagMarker = elementNode.tagName.toLowerCase();
+    
+    // Ignore stray framework structure block types
+    if (tagMarker === 'script' || tagMarker === 'style') return;
+
+    let targetGeneratedType = tagMarker;
+    
+    // Identify specialized wrapper layouts versus standard tags
+    if (tagMarker === 'div' && elementNode.style.display === 'flex') {
+        targetGeneratedType = 'columns';
+    } else if (!['h1', 'h2', 'p', 'a', 'img', 'ul'].includes(tagMarker)) {
+        // Fallback catch-all for structural divs or unrecognized code strings
+        if (elementNode.children.length > 0) {
+            Array.from(elementNode.children).forEach(child => parseTargetHTMLElementToWorkspaceCard(child, outputWorkspaceZone));
+        }
+        return;
+    }
+
+    // Fire factory module string initialization
+    const brandNewCardBlockNode = createCodeBlockElement(targetGeneratedType);
+    outputWorkspaceZone.appendChild(brandNewCardBlockNode);
+
+    // Map extracted inline styles right back to local workspace data variables
+    applyExtractedInlineStylesToCardAttributes(elementNode, brandNewCardBlockNode);
+
+    // Context field extraction
+    if (targetGeneratedType === 'h1' || targetGeneratedType === 'h2' || targetGeneratedType === 'p') {
+        brandNewCardBlockNode.querySelector('.val-text').innerText = elementNode.innerText;
+    } else if (targetGeneratedType === 'a') {
+        brandNewCardBlockNode.querySelector('.val-text').innerText = elementNode.innerText;
+        brandNewCardBlockNode.querySelector('.val-url').innerText = elementNode.getAttribute('href') || '';
+    } else if (targetGeneratedType === 'img') {
+        brandNewCardBlockNode.querySelector('.val-src').innerText = elementNode.getAttribute('src') || '';
+        brandNewCardBlockNode.querySelector('.val-alt').innerText = elementNode.getAttribute('alt') || '';
+    } else if (targetGeneratedType === 'ul') {
+        const itemBoxContainer = brandNewCardBlockNode.querySelector('.list-items-box');
+        itemBoxContainer.innerHTML = ''; // Empty out standard boilerplate item templates
+        
+        Array.from(elementNode.querySelectorAll('li')).forEach(extractedLiNode => {
+            const row = document.createElement('div');
+            row.className = 'list-item-row';
+            row.innerHTML = `
+                <span class="html-tag">&lt;li&gt;</span><span contenteditable="true" class="editable-field val-li">${extractedLiNode.innerText}</span><span class="html-tag">&lt;/li&gt;</span>
+                <button class="btn-delete" onclick="captureHistorySnapshot(); this.parentNode.remove(); updatePreview();">✖</button>
+            `;
+            itemBoxContainer.appendChild(row);
+        });
+    } else if (targetGeneratedType === 'columns') {
+        const targetOutputColumnDropZones = brandNewCardBlockNode.querySelectorAll('.column-zone');
+        const extractedRawSubColumns = Array.from(elementNode.children);
+
+        // Map layout arrays evenly across target zones
+        extractedRawSubColumns.forEach((subColumnElement, index) => {
+            if (index < targetOutputColumnDropZones.length) {
+                Array.from(subColumnElement.children).forEach(nestedChildElement => {
+                    parseTargetHTMLElementToWorkspaceCard(nestedChildElement, targetOutputColumnDropZones[index]);
+                });
+            }
+        });
+    }
+
+    // Refresh display style updates onto local workspace node views
+    applyVisualStylesToCard(brandNewCardBlockNode);
+}
+
+function applyExtractedInlineStylesToCardAttributes(sourceHtmlNode, targetingWorkspaceCard) {
+    const rawStyleText = sourceHtmlNode.getAttribute('style') || '';
+    
+    // Map text aligns
+    if (rawStyleText.includes('text-align: center') || sourceHtmlNode.style.textAlign === 'center') {
+        targetingWorkspaceCard.dataset.align = 'center';
+        setInlineFormattingButtonActiveState(targetingWorkspaceCard, 'center');
+    } else if (rawStyleText.includes('text-align: right') || sourceHtmlNode.style.textAlign === 'right') {
+        targetingWorkspaceCard.dataset.align = 'right';
+        setInlineFormattingButtonActiveState(targetingWorkspaceCard, 'right');
+    }
+
+    // Map bold flags
+    if (rawStyleText.includes('font-weight: bold') || sourceHtmlNode.style.fontWeight === 'bold') {
+        targetingWorkspaceCard.dataset.bold = 'true';
+        setInlineFormattingButtonActiveState(targetingWorkspaceCard, 'bold');
+    }
+
+    // Map italic flags
+    if (rawStyleText.includes('font-style: italic') || sourceHtmlNode.style.fontStyle === 'italic') {
+        targetingWorkspaceCard.dataset.italic = 'true';
+        setInlineFormattingButtonActiveState(targetingWorkspaceCard, 'italic');
+    }
+}
+
+function setInlineFormattingButtonActiveState(card, actionType) {
+    const targetingButtonElement = card.querySelector(`[data-action="${actionType}"]`);
+    if (targetingButtonElement) targetingButtonElement.classList.add('active');
+}
+
+
+/* --- PERSISTENT DATA ENGINES (LOCALSTORAGE) --- */
+function saveWorkspaceState() {
+    const workspace = document.getElementById('workspace');
+    localStorage.setItem('savedCanvasMarkup', workspace.innerHTML);
+}
+
+function loadWorkspaceState() {
+    const savedLayout = localStorage.getItem('savedCanvasMarkup');
+    if (savedLayout) {
+        const workspace = document.getElementById('workspace');
+        workspace.innerHTML = savedLayout;
+        rebindAllWorkspaceEventHandlers();
+    }
+}
+
+
+/* --- COMPILING AND RENDER ENGINES --- */
+function generateInlineStyleString(block) {
+    const styles = [];
+    if (block.dataset.align && block.dataset.align !== 'left') {
+        styles.push(`text-align: ${block.dataset.align};`);
+    }
+    if (block.dataset.bold === 'true') {
+        styles.push('font-weight: bold;');
+    }
+    if (block.dataset.italic === 'true') {
+        styles.push('font-style: italic;');
+    }
+    return styles.length > 0 ? ` style="${styles.join(' ')}"` : '';
+}
+
+function compileCardElement(block) {
+    const type = block.dataset.type;
+    const inlineStyles = generateInlineStyleString(block);
+    let markup = "";
+    
+    if(type === 'h1') {
+        const txt = block.querySelector('.val-text').innerText;
+        markup += `  <h1${inlineStyles}>${txt}</h1>\n`;
+    } else if(type === 'h2') {
+        const txt = block.querySelector('.val-text').innerText;
+        markup += `  <h2${inlineStyles}>${txt}</h2>\n`;
+    } else if (type === 'p') {
+        const txt = block.querySelector('.val-text').innerText;
+        markup += `  <p${inlineStyles}>${txt}</p>\n`;
+    } else if (type === 'a') {
+        const url = block.querySelector('.val-url').innerText;
+        const txt = block.querySelector('.val-text').innerText;
+        markup += `  <a href="${url}" target="_blank"${inlineStyles}>${txt}</a>\n`;
+    } else if (type === 'img') {
+        const src = block.querySelector('.val-src').innerText;
+        const alt = block.querySelector('.val-alt').innerText;
+        markup += `  <img src="${src}" alt="${alt}">\n`;
+    } else if (type === 'ul') {
+        markup += `  <ul${inlineStyles}>\n`;
+        block.querySelectorAll('.val-li').forEach(li => {
+            markup += `    <li>${li.innerText}</li>\n`;
+        });
+        markup += `  </ul>\n`;
+    } else if (type === 'columns') {
+        markup += `  <div style="display: flex; gap: 20px; margin: 15px 0;">\n`;
+        const zones = block.querySelectorAll('.column-zone');
+        
+        zones.forEach(zone => {
+            markup += `    <div style="flex: 1; min-width: 0;">\n`;
+            zone.querySelectorAll(':scope > .card').forEach(childCard => {
+                markup += "    " + compileCardElement(childCard).replace(/\n/g, "\n    ").trimEnd() + "\n";
+            });
+            markup += `    </div>\n`;
+        });
+
+        markup += `  </div>\n`;
+    }
+    return markup;
+}
+
+function buildHTMLString() {
+    const workspace = document.getElementById('workspace');
+    const topBlocks = workspace.querySelectorAll('#workspace > .card');
+    const placeholder = document.getElementById('placeholder');
+    
+    if(workspace.querySelectorAll('.card').length === 0) {
+        if(placeholder) placeholder.style.display = 'block';
+        return "";
+    }
+    if(placeholder) placeholder.style.display = 'none';
+
+    let htmlOutput = "";
+    topBlocks.forEach(block => {
+        htmlOutput += compileCardElement(block);
+    });
+    return htmlOutput;
+}
+
+function updatePreview() {
+    const previewFrame = document.getElementById('previewFrame');
+    const structuralCodeHtml = buildHTMLString();
+    
+    let baseDocumentTemplate = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: sans-serif; padding: 10px; margin: 0; color: #000; }
+                img { max-width: 100%; height: auto; border-radius: 4px; display: block; margin: 8px 0; }
+                a { color: #0066cc; }
+                h1 { margin-bottom: 5px; }
+                h2 { color: #555; margin-top: 5px; font-weight: 600; }
+                ul { padding-left: 20px; }
+            </style>
+        </head>
+        <body>
+            ${structuralCodeHtml || '<p style="color:#999; font-style:italic; font-size:13px;">Page preview empty...</p>'}
+        </body>
+        </html>
+    `;
+    previewFrame.srcdoc = baseDocumentTemplate;
+    
+    saveWorkspaceState();
+}
+
+function exportHTML() {
+    const studentBodyCode = buildHTMLString();
+    if (!studentBodyCode) {
+        alert('Your canvas workspace is empty!');
+        return;
+    }
+
+    let productionTemplate = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Responsive HTML Layout</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; max-width: 900px; margin: 0 auto; line-height: 1.6; }
+        img { max-width: 100%; height: auto; border-radius: 8px; margin: 15px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        a { color: #1a0dab; text-decoration: underline; font-weight: bold; }
+        h1 { color: #333; border-bottom: 2px solid #eee; padding-bottom: 8px; }
+        h2 { color: #666; margin-top: -5px; }
+        @media (max-width: 600px) {
+            div[style*="display: flex"] { flex-direction: column !important; gap: 10px !important; }
+        }
+    </style>
+</head>
+<body>
+${studentBodyCode}</body>
+</html>`;
+
+    const blobStream = new Blob([productionTemplate], { type: 'text/html' });
+    const downstreamLink = document.createElement('a');
+    downstreamLink.href = URL.createObjectURL(blobStream);
+    downstreamLink.download = 'my-layout.html';
+    downstreamLink.click();
+    URL.revokeObjectURL(downstreamLink.href);
+}
+
+window.addEventListener('click', function(e){
+    const panel = document.getElementById('accessPanel');
+    if (!panel.contains(e.target) && !e.target.closest('.accessibility-toggle')) {
+        panel.classList.remove('open');
+    }
+});
+</script>
+</body>
+</html>
