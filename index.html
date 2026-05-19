@@ -42,19 +42,20 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding-bottom: 40px;
 }
 
 /* ----------------- Button Grid ----------------- */
-#buttonGrid {
+.buttonGrid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 30px;
     width: 80%;
     max-width: 900px;
+    margin-bottom: 20px;
 }
 
 .projectButton {
-    background-color: #A81769;
     color: #fff;
     border: none;
     padding: 40px 20px;
@@ -66,9 +67,28 @@ body {
 }
 
 .projectButton:hover {
-    background-color: #08B1DB;
     transform: translateY(-5px);
+    background-color: #000; /* Fallback hover color */
 }
+
+/* ----------------- Group Color Settings (Light Mode) ----------------- */
+
+/* Student Links - Pinkish Magenta */
+.student-group .projectButton { background-color: #A81769; }
+.student-group .projectButton:hover { background-color: #c42480; }
+
+/* Year 11 Revision Links - Dark Blue */
+.revision-group .projectButton { background-color: #1a5276; }
+.revision-group .projectButton:hover { background-color: #2471a3; }
+
+/* Teacher Links - Teal/Cyan */
+.teacher-group .projectButton { background-color: #08B1DB; }
+.teacher-group .projectButton:hover { background-color: #0bc5f2; }
+
+/* Computing Teacher - Purple */
+.computing-group .projectButton { background-color: #6c3483; }
+.computing-group .projectButton:hover { background-color: #884ea0; }
+
 
 /* ----------------- Dark Mode ----------------- */
 body.dark-mode {
@@ -76,29 +96,35 @@ body.dark-mode {
     color: #fff;
 }
 
-body.dark-mode .projectButton {
-    background-color: #08B1DB;
-}
+/* Student Links (Dark Mode) */
+body.dark-mode .student-group .projectButton { background-color: #b82379; }
+body.dark-mode .student-group .projectButton:hover { background-color: #F5CC1B; color: #000; }
 
-body.dark-mode .projectButton:hover {
-    background-color: #F5CC1B;
-}
+/* Year 11 Revision Links (Dark Mode) */
+body.dark-mode .revision-group .projectButton { background-color: #2980b9; }
+body.dark-mode .revision-group .projectButton:hover { background-color: #F5CC1B; color: #000; }
+
+/* Teacher Links (Dark Mode) */
+body.dark-mode .teacher-group .projectButton { background-color: #069bb2; }
+body.dark-mode .teacher-group .projectButton:hover { background-color: #F5CC1B; color: #000; }
+
+/* Computing Teacher (Dark Mode) */
+body.dark-mode .computing-group .projectButton { background-color: #af7ac5; }
+body.dark-mode .computing-group .projectButton:hover { background-color: #F5CC1B; color: #000; }
 </style>
 </head>
 
 <body>
 
-<!-- Header -->
 <div class="header">
     <img src="https://clf.uk/wp-content/uploads/CLF-Logo-Transparent-White-Text.png"
          alt="CLF Logo"
          onclick="toggleTheme()">
 </div>
 
-<!-- Main -->
 <div id="mainContainer">
     <h3>Student Links</h3>
-    <div id="buttonGrid">
+    <div class="buttonGrid student-group">
         <button class="projectButton" onclick="location.href='quizzes/'">
             Quizzes
         </button>
@@ -124,8 +150,9 @@ body.dark-mode .projectButton:hover {
             Programming Challenges
         </button>
     </div>
+
     <h3>Year 11 Revision Links</h3>
-    <div id="buttonGrid">
+    <div class="buttonGrid revision-group">
         <button class="projectButton" onclick="location.href='vault/'">
             Programming Skills Questions
         </button>
@@ -135,48 +162,41 @@ body.dark-mode .projectButton:hover {
         <button class="projectButton" onclick="location.href='https://gate-genius-quest.lovable.app/'">
             Logic Gates Questions
         </button>
-
     </div>
+
     <h3>Teacher Links</h3>
-    <div id="buttonGrid">
+    <div class="buttonGrid teacher-group">
         <button class="projectButton" onclick="location.href='ReadingTimer/'">
             Reading Benefits Timer
         </button>
-
         <button class="projectButton" onclick="location.href='BroadcastScreen/'">
             Broadcast Screen
         </button>
-
         <button class="projectButton" onclick="location.href='Scoreboard/'">
             Scoreboard
         </button>
-
         <button class="projectButton" onclick="location.href='RandomNamePicker/'">
             Random Name Picker
         </button>
-
         <button class="projectButton" onclick="location.href='TeleScroll/'">
             Teleprompter
         </button>
-        
         <button class="projectButton" onclick="location.href='ReaderPoints/'">
             Reader Points
         </button>
-
         <button class="projectButton" onclick="location.href='seatingplan/'">
             Seating Planner
         </button>
     </div>
+
     <h3>Computing Teacher</h3>
-    <div id="buttonGrid">
+    <div class="buttonGrid computing-group">
         <button class="projectButton" onclick="location.href='bitmapimagetool/'">
             Bitmap Image Visualiser
         </button>
-        
         <button class="projectButton" onclick="location.href='soundvisualiser/'">
             Sound Visualiser
         </button>
-        
         <button class="projectButton" onclick="location.href='searches/'">
             Searching Algorithms Visualiser
         </button>
@@ -191,4 +211,3 @@ function toggleTheme() {
 
 </body>
 </html>
-
