@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IP Addresses Programming Challenge</title>
+
+<style>
+
+/* ================= BASE ================= */
+
+body {
+    margin: 0;
+    font-family: Consolas, monospace;
+    background: #f4f4f4;
+    color: #111;
+}
+
+/* ================= HEADER ================= */
+
+.header {
+    height: 80px;
+    background: #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 2px solid #bbb;
+}
+
+/* HELP BUTTON (Matched to original styling) */
+.help-btn {
+    position: absolute;
+    right: 20px;
+    padding: 10px 20px;
+    background: #111;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.help-btn:hover {
+    background: #333;
+}
+
+/* ================= MAIN ================= */
+
+.main {
+    max-width: 1400px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* ================= INFO BOX ================= */
+
+.info-box {
+    background: #e8f4fd;
+    border-left: 8px solid #2196f3;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border-top: 1px solid #b3e5fc;
+    border-right: 1px solid #b3e5fc;
+    border-bottom: 1px solid #b3e5fc;
+}
+
+.info-box h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 22px;
+    color: #0d47a1;
+}
+
+.info-box p {
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0 0 10px 0;
+}
+
+.info-box ul {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* ================= PROJECT ================= */
+
+.project {
+    background: white;
+    border-radius: 18px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    border: 1px solid #ccc;
+}
+
+/* PROJECT COMPLETION STATES */
+.project.completed-gold {
+    border: 2px solid #d4af37;
+}
+
+.project.completed-gold .project-header {
+    background: #d4af37;
+    color: white;
+}
+
+.project.completed-platinum {
+    border: 2px solid #00acc1;
+}
+
+.project.completed-platinum .project-header {
+    background: #00acc1;
+    color: white;
+}
+
+/* ================= HEADER ================= */
+
+.project-header {
+    padding: 24px;
+    cursor: pointer;
+    font-size: 26px;
+    font-weight: bold;
+    background: #ececec;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: 0.25s;
+}
+
+.project-header:hover {
+    background: #e2e2e2;
+}
+
+/* ================= CHEVRON ================= */
+
+.chevron {
+    transition: 0.3s;
+}
+
+.project.open .chevron {
+    transform: rotate(90deg);
+}
+
+/* ================= CONTENT ================= */
+
+.project-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+
+/* ================= GRID ================= */
+
+.challenge-stack {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 18px;
+    padding: 22px;
+}
+
+/* ================= CARD ================= */
+
+.card {
+    position: relative;
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    border: 1px solid #ccc;
+    transition: 0.25s ease;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+}
+
+.card.active {
+    transform: scale(1.03);
+    box-shadow: 0 10px 24px rgba(0,0,0,0.15);
+}
+
+/* ================= COMPLETED ================= */
+
+.card.completed {
+    opacity: 0.75;
+}
+
+.card.completed::after {
+    content: "✓ COMPLETE";
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #2e7d32;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* ================= DIFFICULTY ================= */
+
+.bronze { border-left: 8px solid #cd7f32; }
+.silver { border-left: 8px solid #c0c0c0; }
+.gold { border-left: 8px solid #d4af37; }
+.platinum { border-left: 8px solid #00acc1; }
+
+/* ================= TEXT ================= */
+
+.qtitle {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    padding-right: 120px;
+}
+
+.qtext {
+    line-height: 1.55;
+    font-size: 14px;
+    flex-grow: 1;
+}
+
+.qtext ul {
+    margin-top: 10px;
+}
+
+/* Inline Python Blocks inside descriptions */
+.card pre {
+    background: #ffffff;
+    color: #000000;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-family: Consolas, monospace;
+    font-size: 12px;
+    overflow-x: auto;
+    margin: 10px 0;
+}
+
+/* ================= BUTTONS ================= */
+
+.card-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.complete-btn {
+    flex: 2;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 10px;
+    background: #111;
+    color: white;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.complete-btn:hover {
+    background: #333;
+}
+
+.complete-btn.completed {
+    background: #2e7d32;
+}
+
+.card-help-btn {
+    flex: 1;
+    padding: 10px 10px;
+    border: 1px solid #111;
+    border-radius: 10px;
+    background: white;
+    color: #111;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.card-help-btn:hover {
+    background: #ececec;
+}
+
+/* ================= HELP FLYOUT ================= */
+
+.flyout-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: 0.3s;
+}
+
+.flyout-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.help-flyout {
+    position: fixed;
+    top: 0;
+    right: -550px;
+    width: 100%;
+    max-width: 500px;
+    height: 100vh;
+    background: #f4f4f4;
+    z-index: 1001;
+    box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+    border-left: 2px solid #bbb;
+    transition: right 0.4s ease;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.help-flyout.active {
+    right: 0;
+}
+
+.flyout-header {
+    background: #ddd;
+    color: #111;
+    padding: 24px;
+    font-size: 26px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #bbb;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: #111;
+    font-size: 32px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.close-btn:hover {
+    color: #ff5252;
+}
+
+.flyout-content {
+    padding: 20px;
+}
+
+.construct-box {
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    border: 1px solid #ccc;
+    margin-bottom: 20px;
+    transition: opacity 0.3s ease, filter 0.3s ease;
+}
+
+/* Gray out / Dim state for filtered help modules */
+.construct-box.muted {
+    opacity: 0.25;
+    filter: grayscale(1);
+    border-color: #ddd;
+}
+
+.construct-box h3 {
+    margin-top: 0;
+    border-bottom: 2px solid #ececec;
+    padding-bottom: 12px;
+    font-size: 20px;
+}
+
+.construct-box p {
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+/* Python IDLE Code Styling */
+.construct-box pre {
+    background: #ffffff;
+    color: #000000;
+    padding: 14px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    overflow-x: auto;
+    line-height: 1.4;
+}
+
+.py-keyword { color: #ff7700; font-weight: bold; }
+.py-builtin { color: #900090; }
+.py-string  { color: #00aa00; }
+.py-comment { color: #dd0000; }
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    IP Addresses Programming Challenge
+    <button class="help-btn" id="openHelpBtn">Help</button>
+</div>
+
+<div class="flyout-overlay" id="flyoutOverlay"></div>
+
+<div class="help-flyout" id="helpFlyout">
+    <div class="flyout-header">
+        Programming Constructs
+        <button class="close-btn" id="closeHelpBtn">&times;</button>
+    </div>
+    
+    <div class="flyout-content">
+        <p>In the OCR GCSE specification, you need to use these core programming constructs and data structures to build efficient programs.</p>
+
+        <div class="construct-box" data-construct="sequence">
+            <h3>1. Sequence</h3>
+            <p>Code is executed line-by-line, from top to bottom. Every instruction runs in the exact order it is written.</p>
+<pre><code><span class="py-comment"># Example: Executing one step after another</span>
+<span class="py-builtin">print</span>(<span class="py-string">"Welcome!"</span>)
+name = <span class="py-builtin">input</span>(<span class="py-string">"Enter your name: "</span>)
+<span class="py-builtin">print</span>(<span class="py-string">"Hello"</span>, name)</code></pre>
+
+            <p><strong>String Concatenation:</strong> Joining strings together using the <code>+</code> operator. Note that you cannot directly concatenate string datatypes with integers unless you cast them first!</p>
+<pre><code><span class="py-comment"># Example: Concatenating strings together</span>
+start = <span class="py-string">"192"</span>
+end = <span class="py-string">"168"</span>
+full_string = start + <span class="py-string">"."</span> + end
+<span class="py-builtin">print</span>(full_string) <span class="py-comment"># Outputs: 192.168</span>
+
+<span class="py-comment"># Crucial GCSE Rule: You must convert numbers to strings to mix them</span>
+age = 16
+message = <span class="py-string">"I am "</span> + <span class="py-builtin">str</span>(age) + <span class="py-string">" years old."</span>
+<span class="py-builtin">print</span>(message)</code></pre>
+        </div>
+
+        <div class="construct-box" data-construct="selection">
+            <h3>2. Selection</h3>
+            <p>Making decisions in code. The program takes different paths based on whether a condition is <code>True</code> or <code>False</code>.</p>
+<pre><code><span class="py-comment"># Example: Checking a condition</span>
+age = <span class="py-builtin">int</span>(<span class="py-builtin">input</span>(<span class="py-string">"Enter your age: "</span>))
+
+<span class="py-keyword">if</span> age >= 18:
+    <span class="py-builtin">print</span>(<span class="py-string">"You are an adult."</span>)
+<span class="py-keyword">elif</span> age == 17:
+    <span class="py-builtin">print</span>(<span class="py-string">"Almost an adult!"</span>)
+<span class="py-keyword">else</span>:
+    <span class="py-builtin">print</span>(<span class="py-string">"You are a child."</span>)</code></pre>
+        </div>
+
+        <div class="construct-box" data-construct="iteration">
+            <h3>3. Iteration</h3>
+            <p>Repeating blocks of code (looping). There are two types: <strong>Count-controlled</strong> (FOR loops) and <strong>Condition-controlled</strong> (WHILE loops).</p>
+<pre><code><span class="py-comment"># Count-controlled (FOR loop)</span>
+<span class="py-keyword">for</span> i <span class="py-keyword">in</span> <span class="py-builtin">range</span>(3):
+    <span class="py-builtin">print</span>(<span class="py-string">"Loop number"</span>, i)
+
+<span class="py-comment"># Condition-controlled (WHILE loop)</span>
+keep_going = <span class="py-keyword">True</span>
+<span class="py-keyword">while</span> keep_going == <span class="py-keyword">True</span>:
+    ans = <span class="py-builtin">input</span>(<span class="py-string">"Stop? (y/n): "</span>)
+    <span class="py-keyword">if</span> ans == <span class="py-string">"y"</span>:
+        keep_going = <span class="py-keyword">False</span></code></pre>
+        </div>
+
+        <div class="construct-box" data-construct="functions">
+            <h3>4. Functions & Subprograms</h3>
+            <p>Subprograms are blocks of code assigned to a re-usable identifier. <strong>Functions</strong> return values back to the main program using the <code>return</code> keyword.</p>
+<pre><code><span class="py-comment"># Example: Defining and calling a Function</span>
+<span class="py-keyword">def</span> <span class="py-builtin">format_ip</span>(b1, b2, b3, b4):
+    full_ip = <span class="py-builtin">str</span>(b1) + <span class="py-string">"."</span> + <span class="py-builtin">str</span>(b2) + <span class="py-string">"."</span> + <span class="py-builtin">str</span>(b3) + <span class="py-string">"."</span> + <span class="py-builtin">str</span>(b4)
+    <span class="py-keyword">return</span> full_ip
+
+<span class="py-comment"># Calling the function and saving its result</span>
+my_address = format_ip(192, 168, 0, 1)
+<span class="py-builtin">print</span>(my_address)</code></pre>
+        </div>
+
+        <div class="construct-box" data-construct="arrays">
+            <h3>5. 2D Arrays (Matrices)</h3>
+            <p>A list of lists. Data inside a 2D array is structured into rows and columns, indexed using two sets of square brackets: <code>array[row][column]</code>.</p>
+<pre><code><span class="py-comment"># Example: Working with 2D Arrays</span>
+records = [
+    [<span class="py-string">"Alice"</span>, <span class="py-string">"Admin"</span>],
+    [<span class="py-string">"Bob"</span>, <span class="py-string">"User"</span>]
+]
+
+<span class="py-comment"># Accessing elements</span>
+<span class="py-builtin">print</span>(records[0][0]) <span class="py-comment"># Outputs: Alice</span>
+
+<span class="py-comment"># Appending a new row item to the 2D array</span>
+records.append([<span class="py-string">"Charlie"</span>, <span class="py-string">"Guest"</span>])</code></pre>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+
+    <div class="info-box">
+        <h2>GCSE Core Knowledge: IP Addresses</h2>
+        <p>An <strong>IP (Internet Protocol) Address</strong> is a unique identifier allocated to every device connected to a network, allowing them to communicate with one another.</p>
+        <ul>
+            <li><strong>IPv4 Structure:</strong> Composed of 4 numeric blocks (called octets) split cleanly by periods (e.g., <code>192.168.1.45</code>).</li>
+            <li><strong>Value Range:</strong> Each individual block is an 8-bit number, meaning values must strictly fall between <strong>0 and 255</strong>.</li>
+            <li><strong>DNS Links:</strong> Because numerical IPs are difficult for humans to remember, the Domain Name System (DNS) maps human-friendly URLs (like <code>www.mxbrooke.co.uk</code>) directly to these numeric IP addresses.</li>
+        </ul>
+    </div>
+
+    <div class="project">
+        <div class="project-header">
+            Variables & Input
+            <span class="chevron">▶</span>
+        </div>
+        <div class="project-content">
+            <div class="challenge-stack">
+                <div class="card bronze" data-id="var-bronze" data-help="sequence">
+                    <div class="qtitle">Bronze — IP Address</div>
+                    <div class="qtext">
+                        Create a program that takes in an IP address as 4 integer values, formats it correctly and prints it out.
+                        Requirements:
+                        <ul>
+                            <li>Add an empty string to concatenate each integer number onto at the top of the code</li>
+                            <li>You will need to cast the int input back to a string to concatenate [You can do this with str(VARIABLE NAME HERE)]</li>
+                            <li>Add the dots between each IP address number block</li>
+                            <li>Print out the IP address</li>
+                        </ul>
+                        Use the template below to build your code:
+<pre><code>ip_address = <span class="py-string">""</span> <span class="py-comment">#This is your empty string</span>
+
+<span class="py-keyword">for</span> i <span class="py-keyword">in</span> <span class="py-builtin">range</span>(0,4):
+    ip_block = <span class="py-builtin">int</span>(<span class="py-builtin">input</span>(<span class="py-string">"Enter an IP Address Block: "</span>))
+
+    <span class="py-comment"># Concatenate your input string onto the address HERE (You will need to use casting)</span>
+
+<span class="py-comment">#Print out the IP address HERE</span></code></pre>
+                    </div>
+                    <div class="card-actions">
+                        <button class="complete-btn">Mark Complete</button>
+                        <button class="card-help-btn">Need Help?</button>
+                    </div>
+                </div>
+
+                <div class="card silver" data-id="var-silver" data-help="sequence,selection,iteration">
+                    <div class="qtitle">Silver — Input Validation</div>
+                    <div class="qtext">
+                        Add to your bronze task.
+                        Requirements:
+                        <ul>
+                            <li>Add input validation to check each IP address number block is in the range [0 to 255]</li>
+                            <li>If the user enters an invalid number then they should be asked to enter the number again until they enter a valid number</li>
+                            <li>Output a suitable message if they enter an invalid number</li>
+                        </ul>
+                    </div>
+                    <div class="card-actions">
+                        <button class="complete-btn">Mark Complete</button>
+                        <button class="card-help-btn">Need Help?</button>
+                    </div>
+                </div>
+
+                <div class="card gold" data-id="var-gold" data-help="sequence,functions">
+                    <div class="qtitle">Gold — Functions</div>
+                    <div class="qtext">
+                        Take your silver task and turn it into a function.
+                        Requirements:
+                        <ul>
+                            <li>The function should return an IP address as a string [e.g. 192.168.0.1]</li>
+                        </ul>
+                    </div>
+                    <div class="card-actions">
+                        <button class="complete-btn">Mark Complete</button>
+                        <button class="card-help-btn">Need Help?</button>
+                    </div>
+                </div>
+                
+                <div class="card platinum" data-id="var-plat" data-help="sequence,iteration,arrays">
+                    <div class="qtitle">Platinum — DNS</div>
+                    <div class="qtext">
+                        Implement a 2D array which contains a URL and its IP address equivalent.
+                        Requirements:
+                        <ul>
+                            <li>Copy the 2D array below:</li>
+<pre><code>dns = [
+    [<span class="py-string">"www.mxbrooke.co.uk"</span>, <span class="py-string">"192.168.1.45"</span>]
+]</code></pre>
+                            <li>Take user input for their URL and an IP address</li>
+                            <li>Add the IP address/URL pair to the end of the array</li>
+                            <li>They should be able to enter as many IP address and URLs as they like until they enter "STOP"</li>
+                        </ul>
+                    </div>
+                    <div class="card-actions">
+                        <button class="complete-btn">Mark Complete</button>
+                        <button class="card-help-btn">Need Help?</button>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <h1><center>Exam Questions</center></h1>
+
+</div>
+
+<script>
+
+/* =========================
+   FLYOUT MENU LOGIC
+========================= */
+
+const openHelpBtn = document.getElementById('openHelpBtn');
+const closeHelpBtn = document.getElementById('closeHelpBtn');
+const helpFlyout = document.getElementById('helpFlyout');
+const flyoutOverlay = document.getElementById('flyoutOverlay');
+const constructBoxes = document.querySelectorAll('.construct-box');
+
+function toggleFlyout() {
+    helpFlyout.classList.toggle('active');
+    flyoutOverlay.classList.toggle('active');
+}
+
+// Header Help Button reveals everything cleanly
+openHelpBtn.addEventListener('click', () => {
+    constructBoxes.forEach(box => box.classList.remove('muted'));
+    toggleFlyout();
+});
+
+closeHelpBtn.addEventListener('click', toggleFlyout);
+flyoutOverlay.addEventListener('click', toggleFlyout);
+
+/* =========================
+   OPEN / CLOSE PROJECTS
+========================= */
+
+document.querySelectorAll(".project-header").forEach(header => {
+    header.addEventListener("click", () => {
+        const project = header.parentElement;
+        const content = project.querySelector(".project-content");
+        
+        project.classList.toggle("open");
+        
+        if(project.classList.contains("open")){
+            content.style.maxHeight = content.scrollHeight + "px";
+        } else {
+            content.style.maxHeight = null;
+        }
+    });
+});
+
+/* =========================
+   ACTIVE CARD SYSTEM & CARD-SPECIFIC HELP
+========================= */
+
+document.querySelectorAll(".project").forEach(project => {
+    let activeCard = null;
+
+    project.querySelectorAll(".card").forEach(card => {
+        card.addEventListener("click", (e) => {
+            // Prevent interference if clicking structural action buttons
+            if(e.target.classList.contains("complete-btn") || e.target.classList.contains("card-help-btn")) return;
+            
+            if(activeCard === card){
+                card.classList.remove("active");
+                activeCard = null;
+                return;
+            }
+            
+            if(activeCard){
+                activeCard.classList.remove("active");
+            }
+            
+            card.classList.add("active");
+            activeCard = card;
+        });
+
+        // Contextual filter logic inside the card help button
+        const cardHelpBtn = card.querySelector(".card-help-btn");
+        if(cardHelpBtn) {
+            cardHelpBtn.addEventListener("click", (e) => {
+                e.stopPropagation(); // Stops parent card from triggering active class state toggle
+                
+                const allowedConstructs = card.dataset.help ? card.dataset.help.split(',') : [];
+                
+                constructBoxes.forEach(box => {
+                    const boxType = box.dataset.construct;
+                    if(allowedConstructs.includes(boxType)) {
+                        box.classList.remove('muted');
+                    } else {
+                        box.classList.add('muted');
+                    }
+                });
+                
+                // Open the Flyout menu with filtered items
+                if(!helpFlyout.classList.contains('active')) {
+                    toggleFlyout();
+                }
+            });
+        }
+    });
+});
+
+/* =========================
+   COMPLETION SYSTEM
+========================= */
+
+const STORAGE_KEY = "pythonVaultCompletion";
+let completed = {};
+
+try {
+    completed = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+} catch {
+    completed = {};
+}
+
+/* =========================
+   UPDATE PROJECT STATUS (Gold vs Platinum logic)
+========================= */
+
+function updateProjectCompletion(project) {
+    const goldCard = project.querySelector(".card.gold");
+    const platCard = project.querySelector(".card.platinum");
+
+    const goldId = goldCard ? goldCard.dataset.id : null;
+    const platId = platCard ? platCard.dataset.id : null;
+
+    const isGoldComplete = goldId && completed[goldId];
+    const isPlatComplete = platId && completed[platId];
+
+    // Reset classes first
+    project.classList.remove("completed-gold", "completed-platinum");
+
+    if (isPlatComplete) {
+        project.classList.add("completed-platinum");
+    } else if (isGoldComplete) {
+        project.classList.add("completed-gold");
+    }
+}
+
+/* =========================
+   APPLY SAVED PROGRESS
+========================= */
+
+document.querySelectorAll(".project").forEach(project => {
+    const cards = project.querySelectorAll(".card");
+
+    cards.forEach(card => {
+        const id = card.dataset.id;
+        const button = card.querySelector(".complete-btn");
+
+        if(completed[id]){
+            card.classList.add("completed");
+            button.classList.add("completed");
+            button.textContent = "Completed";
+        }
+
+        button.addEventListener("click", () => {
+            completed[id] = !completed[id];
+
+            if(completed[id]){
+                card.classList.add("completed");
+                button.classList.add("completed");
+                button.textContent = "Completed";
+            } else {
+                card.classList.remove("completed");
+                button.classList.remove("completed");
+                button.textContent = "Mark Complete";
+            }
+
+            localStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify(completed)
+            );
+
+            updateProjectCompletion(project);
+        });
+    });
+
+    // Run on initial load
+    updateProjectCompletion(project);
+});
+
+</script>
+
+</body>
+</html>
