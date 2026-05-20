@@ -837,16 +837,18 @@ function createCodeBlockElement(type) {
     card.dataset.align = "left";
     card.dataset.font = "Consolas, monospace";
     card.dataset.color = "#000000";
+    card.dataset.background = "transparent";
+    card.dataset.shadow = "none";
 
     bindCardEvents(card);
 
-    let headerLabel = type.toUpperCase() + ' Element Block';
+    let headerLabel = type.toUpperCase() + ' Element';
     let blockInnerMarkup = '';
     let hasFormattingToolbar = ['h1', 'h2', 'p', 'a', 'ul'].includes(type);
 
     switch(type) {
         case 'columns':
-            headerLabel = 'Layout: Dynamic Columns Container <div>';
+            headerLabel = 'Layout: Dynamic Columns <div>';
             blockInnerMarkup = `
                 <div class="code-line"><span class="html-tag">&lt;div style="display: flex; gap: 20px;"&gt;</span></div>
                 <div class="columns-container">
@@ -884,7 +886,7 @@ function createCodeBlockElement(type) {
             break;
         case 'img':
             blockInnerMarkup = `
-                <div class="code-line"><span class="html-tag">&lt;img src="</span><span contenteditable="true" class="editable-field val-src" data-attr="true">https://upload.wikimedia.org/wikipedia/commons/3/38/Arduino_Uno_-_R3.jpg</span><span class="html-tag">" alt="</span><span contenteditable="true" class="editable-field val-alt" data-attr="true">Hardware description</span><span class="html-tag">"&gt;</span></div>`;
+                <div class="code-line"><span class="html-tag">&lt;img src="</span><span contenteditable="true" class="editable-field val-src" data-attr="true">https://upload.wikimedia.org/wikipedia/commons/3/38/Arduino_Uno_-_R3.jpg</span><span class="html-tag">" alt="</span><span contenteditable="true" class="editable-field val-alt" data-attr="true">Hardware description</span><span class="html-tag">"<span class="css-attr-inline"></span>&gt;</span></div>`;
             break;
         case 'ul':
             blockInnerMarkup = `
@@ -900,10 +902,13 @@ function createCodeBlockElement(type) {
             break;
     }
 
+    // Include the standard components along with Background and Drop shadow controllers
     let toolbarHTML = '';
-    if (hasFormattingToolbar) {
-        toolbarHTML = `
-            <div class="toolbar-inline">
+    if (hasFormattingToolbar || type === 'img') {
+        toolbarHTML = `<div class="toolbar-inline">`;
+        
+        if (hasFormattingToolbar) {
+            toolbarHTML += `
                 <button class="btn-format" data-action="bold" title="Toggle Bold" onclick="handleStyleToggle(this, 'bold')">B</button>
                 <button class="btn-format" data-action="italic" title="Toggle Italic" onclick="handleStyleToggle(this, 'italic')">I</button>
                 <button class="btn-format" data-action="left" title="Align Left" onclick="handleStyleToggle(this, 'align', 'left')">⇐ Left</button>
@@ -921,9 +926,23 @@ function createCodeBlockElement(type) {
                     <option value="Georgia, serif">Georgia</option>
                 </select>
 
-                <input type="color" class="picker-format" value="#000000" oninput="handleDropdownStyle(this, 'color')" title="Pick Color">
-            </div>
-        `;
+                <input type="color" class="picker-format" value="#000000" oninput="handleDropdownStyle(this, 'color')" title="Text Color">
+            `;
+        }
+
+        // Background Color & Shadow Pickers available for Text elements & Images
+        toolbarHTML += `
+            <span style="color:#aaa; font-size:11px; margin-left:4px;">BG:</span>
+            <input type="color" class="picker-format" value="#ffffff" oninput="handleBackgroundStyle(this)" title="Background Color">
+            
+            <select class="select-format" onchange="handleShadowStyle(this)" title="Drop Shadow">
+                <option value="none" selected>No Shadow</option>
+                <option value="0 2px 5px rgba(0,0,0,0.15)">Soft Shadow</option>
+                <option value="0 4px 10px rgba(0,0,0,0.25)">Medium Shadow</option>
+                <option value="0 8px 24px rgba(0,0,0,0.3)">Deep Shadow</option>
+                <option value="5px 5px 0px #aaa">Retro Hard Shadow</option>
+            </select>
+        </div>`;
     }
 
     card.innerHTML = `
@@ -1001,198 +1020,261 @@ function handleStyleToggle(button, styleType, value = '') {
         button.classList.toggle('active', !isTrue);
     } else if (styleType === 'align') {
         card.dataset.align = value;
-        const toolbar = button.closest('.toolbar-inline');
-        toolbar.querySelectorAll('[data-action="left"], [data-action="center"], [data-action="right"]').forEach(b => {
+        button.parentNode.querySelectorAll('[data-action="left"], [data-action="center"], [data-action="right"]').forEach(b => {
             b.classList.remove('active');
         });
         button.classList.add('active');
     }
-    
     applyVisualStylesToCard(card);
     updatePreview();
 }
 
-function handleDropdownStyle(inputNode, styleType) {
+function handleDropdownStyle(element, styleType) {
     captureHistorySnapshot();
-    const card = inputNode.closest('.card');
-    card.dataset[styleType] = inputNode.value;
+    const card = element.closest('.card');
+    card.dataset[styleType] = element.value;
+    applyVisualStylesToCard(card);
+    updatePreview();
+}
+
+function handleBackgroundStyle(element) {
+    captureHistorySnapshot();
+    const card = element.closest('.card');
+    card.dataset.background = element.value;
+    applyVisualStylesToCard(card);
+    updatePreview();
+}
+
+function handleShadowStyle(element) {
+    captureHistorySnapshot();
+    const card = element.closest('.card');
+    card.dataset.shadow = element.value;
     applyVisualStylesToCard(card);
     updatePreview();
 }
 
 function applyVisualStylesToCard(card) {
-    const styleStrings = [];
-    const cssDisplayOutputElement = card.querySelector('.css-attr-inline');
-    const inputTextFields = card.querySelectorAll('.editable-field:not([data-attr="true"]), .list-items-box .val-li');
+    const inlineAttrContainer = card.querySelector('.css-attr-inline');
+    if (!inlineAttrContainer) return;
 
-    if (card.dataset.align && card.dataset.align !== 'left') {
-        styleStrings.push(`text-align: ${card.dataset.align};`);
-    }
-    if (card.dataset.bold === 'true') {
-        styleStrings.push('font-weight: bold;');
-    }
-    if (card.dataset.italic === 'true') {
-        styleStrings.push('font-style: italic;');
-    }
-    if (card.dataset.font && card.dataset.font !== 'Consolas, monospace') {
-        styleStrings.push(`font-family: ${card.dataset.font};`);
-    }
-    if (card.dataset.color && card.dataset.color !== '#000000') {
-        styleStrings.push(`color: ${card.dataset.color};`);
-    }
+    let styles = [];
+    if (card.dataset.bold === "true") styles.push("font-weight: bold;");
+    if (card.dataset.italic === "true") styles.push("font-style: italic;");
+    if (card.dataset.align && card.dataset.align !== "left") styles.push(`text-align: ${card.dataset.align};`);
+    if (card.dataset.font && card.dataset.font !== "Consolas, monospace") styles.push(`font-family: ${card.dataset.font};`);
+    if (card.dataset.color && card.dataset.color !== "#000000") styles.push(`color: ${card.dataset.color};`);
+    if (card.dataset.background && card.dataset.background !== "transparent") styles.push(`background-color: ${card.dataset.background}; padding: 10px; border-radius: 4px;`);
+    if (card.dataset.shadow && card.dataset.shadow !== "none") styles.push(`box-shadow: ${card.dataset.shadow};`);
 
-    inputTextFields.forEach(field => {
-        field.style.textAlign = card.dataset.align || 'left';
-        field.style.fontWeight = card.dataset.bold === 'true' ? 'bold' : 'normal';
-        field.style.fontStyle = card.dataset.italic === 'true' ? 'italic' : 'normal';
-        field.style.fontFamily = card.dataset.font || 'Consolas, monospace';
-        field.style.color = card.dataset.color || '#000000';
-    });
+    if (styles.length > 0) {
+        inlineAttrContainer.innerHTML = ` style="${styles.join(' ')}"`;
+    } else {
+        inlineAttrContainer.innerHTML = "";
+    }
+}
 
-    if (cssDisplayOutputElement) {
-        if (styleStrings.length > 0) {
-            cssDisplayOutputElement.innerText = ` style="${styleStrings.join(' ')}"`;
-        } else {
-            cssDisplayOutputElement.innerText = '';
+/* --- LIVE PREVIEW GENERATION CODE ENGINE --- */
+function compileWorkspaceHTML(targetContainer) {
+    let outputHTML = "";
+    const children = targetContainer.children;
+    
+    for (let child of children) {
+        if (!child.classList.contains('card')) continue;
+        
+        const type = child.dataset.type;
+        
+        // Assemble CSS Styles
+        let styles = [];
+        if (child.dataset.bold === "true") styles.push("font-weight: bold;");
+        if (child.dataset.italic === "true") styles.push("font-style: italic;");
+        if (child.dataset.align && child.dataset.align !== "left") styles.push(`text-align: ${child.dataset.align};`);
+        if (child.dataset.font) styles.push(`font-family: ${child.dataset.font};`);
+        if (child.dataset.color) styles.push(`color: ${child.dataset.color};`);
+        if (child.dataset.background && child.dataset.background !== "transparent") styles.push(`background-color: ${child.dataset.background}; padding: 10px; border-radius: 4px;`);
+        if (child.dataset.shadow && child.dataset.shadow !== "none") styles.push(`box-shadow: ${child.dataset.shadow};`);
+        
+        let styleString = styles.length > 0 ? ` style="${styles.join(' ')}"` : "";
+
+        if (type === 'columns') {
+            outputHTML += `<div style="display: flex; gap: 20px; flex-wrap: wrap; margin: 15px 0;">\n`;
+            const zones = child.querySelectorAll('.column-zone');
+            zones.forEach(zone => {
+                outputHTML += `  <div style="flex: 1; min-width: 250px;">\n`;
+                outputHTML += compileWorkspaceHTML(zone);
+                outputHTML += `  </div>\n`;
+            });
+            outputHTML += `</div>\n`;
+        } 
+        else if (type === 'img') {
+            const src = child.querySelector('.val-src').innerText.trim();
+            const alt = child.querySelector('.val-alt').innerText.trim();
+            outputHTML += `<img src="${src}" alt="${alt}"${styleString} style="max-width:100%; height:auto; ${styles.join(' ')}">\n`;
+        } 
+        else if (type === 'ul') {
+            outputHTML += `<ul${styleString}>\n`;
+            child.querySelectorAll('.val-li').forEach(li => {
+                outputHTML += `  <li>${li.innerText}</li>\n`;
+            });
+            outputHTML += `</ul>\n`;
+        } 
+        else if (type === 'a') {
+            const url = child.querySelector('.val-url').innerText.trim();
+            const txt = child.querySelector('.val-text').innerText.trim();
+            outputHTML += `<a href="${url}"${styleString}>${txt}</a>\n`;
+        } 
+        else if (['h1', 'h2', 'p'].includes(type)) {
+            const txt = child.querySelector('.val-text').innerText.trim();
+            outputHTML += `<${type}${styleString}>${txt}</${type}>\n`;
         }
     }
-}
-
-/* --- PREVIEW AND GENERATOR ENGINE --- */
-function processNodeToHTML(node) {
-    if (node.classList.contains('workspace-placeholder')) return '';
-    
-    if (node.dataset.type === 'columns') {
-        let colsHTML = '<div style="display: flex; gap: 20px;">\n';
-        const zones = node.querySelectorAll('.column-zone');
-        zones.forEach(zone => {
-            colsHTML += '  <div style="flex: 1; min-width: 0;">\n';
-            const childCards = zone.querySelectorAll(':scope > .card');
-            childCards.forEach(cc => {
-                colsHTML += '    ' + processNodeToHTML(cc).replace(/\n/g, '\n    ') + '\n';
-            });
-            colsHTML += '  </div>\n';
-        });
-        colsHTML += '</div>';
-        return colsHTML;
-    }
-
-    const type = node.dataset.type;
-    let inlineStyles = [];
-    if (node.dataset.align && node.dataset.align !== 'left') inlineStyles.push(`text-align: ${node.dataset.align};`);
-    if (node.dataset.bold === 'true') inlineStyles.push('font-weight: bold;');
-    if (node.dataset.italic === 'true') inlineStyles.push('font-style: italic;');
-    if (node.dataset.font && node.dataset.font !== 'Consolas, monospace') inlineStyles.push(`font-family: ${node.dataset.font};`);
-    if (node.dataset.color && node.dataset.color !== '#000000') inlineStyles.push(`color: ${node.dataset.color};`);
-    
-    let styleAttr = inlineStyles.length > 0 ? ` style="${inlineStyles.join(' ')}"` : '';
-
-    if (['h1', 'h2', 'p'].includes(type)) {
-        const text = node.querySelector('.val-text').innerText;
-        return `<${type}${styleAttr}>${text}</${type}>`;
-    }
-    if (type === 'a') {
-        const url = node.querySelector('.val-url').innerText;
-        const text = node.querySelector('.val-text').innerText;
-        return `<a href="${url}"${styleAttr}>${text}</a>`;
-    }
-    if (type === 'img') {
-        const src = node.querySelector('.val-src').innerText;
-        const alt = node.querySelector('.val-alt').innerText;
-        return `<img src="${src}" alt="${alt}" style="max-width:100%; height:auto;">`;
-    }
-    if (type === 'ul') {
-        let ulHTML = `<ul${styleAttr}>\n`;
-        node.querySelectorAll('.val-li').forEach(li => {
-            ulHTML += `  <li>${li.innerText}</li>\n`;
-        });
-        ulHTML += '</ul>';
-        return ulHTML;
-    }
-    return '';
-}
-
-function compileFullPageDocument() {
-    const workspace = document.getElementById('workspace');
-    const blocks = workspace.querySelectorAll(':scope > .card');
-    let innerBodyContent = '';
-    
-    blocks.forEach(b => {
-        innerBodyContent += processNodeToHTML(b) + '\n';
-    });
-
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Rendered Production Page Preview</title>
-    <style>
-        body { font-family: sans-serif; padding: 20px; margin: 0; line-height: 1.6; }
-        img { max-width: 100%; height: auto; display: block; margin: 10px 0; }
-    </style>
-</head>
-<body>
-${innerBodyContent}
-</body>
-</html>`;
+    return outputHTML;
 }
 
 function updatePreview() {
-    const compiledSource = compileFullPageDocument();
+    const workspace = document.getElementById('workspace');
     const iframe = document.getElementById('previewFrame');
     
-    const frameDoc = iframe.contentDocument || iframe.contentWindow.document;
-    frameDoc.open();
-    frameDoc.write(compiledSource);
-    frameDoc.close();
+    let userPageContent = compileWorkspaceHTML(workspace);
+    if(userPageContent.trim() === "") {
+        userPageContent = `<p style="color:#999; font-style:italic; font-family:sans-serif; text-align:center; margin-top:100px;">Your built document yields layout views here dynamically.</p>`;
+    }
+    
+    const fullDocumentStructure = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: sans-serif; margin: 20px; padding-bottom: 50px; word-wrap: break-word; }
+                img { max-width: 100%; height: auto; display: block; }
+            </style>
+        </head>
+        <body>
+            ${userPageContent}
+        </body>
+        </html>
+    `;
+    
+    iframe.srcdoc = fullDocumentStructure;
+    
+    // Sync into raw text lock area view if open
+    if (document.getElementById('lockedHtmlWrapper').style.display !== 'none') {
+        document.getElementById('lockedHtmlTextArea').value = userPageContent;
+    }
+}
 
-    if(document.getElementById('lockedHtmlWrapper').style.display !== 'none') {
-        document.getElementById('lockedHtmlTextArea').value = compiledSource;
+/* --- EXPORT, INTERFACE MODES & PREVIEW MANAGEMENT --- */
+function toggleExpandPreview() {
+    const overlay = document.getElementById('previewOverlay');
+    const btn = document.getElementById('btnExpandPreview');
+    overlay.classList.toggle('expanded');
+    if(overlay.classList.contains('expanded')) {
+        btn.innerText = "Collapse ⤜";
+    } else {
+        btn.innerText = "Expand ⤢";
     }
 }
 
 function toggleEditorMode() {
-    const canvas = document.getElementById('workspace');
-    const rawCodeWrapper = document.getElementById('lockedHtmlWrapper');
-    const toggleBtn = document.getElementById('btnViewToggle');
+    const workspace = document.getElementById('workspace');
+    const lockArea = document.getElementById('lockedHtmlWrapper');
     const toolbox = document.getElementById('toolboxPanel');
+    const toggleBtn = document.getElementById('btnViewToggle');
+    const title = document.getElementById('workspaceTitle');
 
-    if(rawCodeWrapper.style.display === 'none') {
-        document.getElementById('lockedHtmlTextArea').value = compileFullPageDocument();
-        canvas.style.display = 'none';
-        rawCodeWrapper.style.display = 'block';
-        toolbox.classList.add('disabled-state');
-        toggleBtn.innerText = "Switch to Block Editor";
-    } else {
-        canvas.style.display = 'block';
-        rawCodeWrapper.style.display = 'none';
+    if (workspace.style.display === 'none') {
+        workspace.style.display = 'block';
+        lockArea.style.display = 'none';
         toolbox.classList.remove('disabled-state');
         toggleBtn.innerText = "View Raw Code";
-        updatePreview();
+        title.innerText = "Editor Canvas";
+    } else {
+        document.getElementById('lockedHtmlTextArea').value = compileWorkspaceHTML(workspace);
+        workspace.style.display = 'none';
+        lockArea.style.display = 'block';
+        toolbox.classList.add('disabled-state');
+        toggleBtn.innerText = "Edit Blocks View";
+        title.innerText = "Raw HTML Code Asset View";
     }
 }
 
-function toggleExpandPreview() {
-    const preview = document.getElementById('previewOverlay');
-    const btn = document.getElementById('btnExpandPreview');
-    preview.classList.toggle('expanded');
-    btn.innerText = preview.classList.contains('expanded') ? "Minimize ⤜" : "Expand ⤢";
-}
-
 function clearWorkspace() {
-    if(confirm("Are you sure you want to completely clear the current canvas?")) {
+    if(confirm("Are you sure you want to completely clear your canvas workspace? All adjustments will reset.")) {
         captureHistorySnapshot();
-        document.getElementById('workspace').innerHTML = '<div class="workspace-placeholder" id="placeholder">Drag code blocks here to build your webpage...</div>';
+        const workspace = document.getElementById('workspace');
+        workspace.innerHTML = `<div class="workspace-placeholder" id="placeholder">Drag code blocks here to build your webpage...</div>`;
         updatePreview();
     }
 }
 
 function exportHTML() {
-    const blob = new Blob([compileFullPageDocument()], { type: "text/html;charset=utf-8" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "custom_layout.html";
-    link.click();
+    const plainHTML = compileWorkspaceHTML(document.getElementById('workspace'));
+    const dynamicBlob = new Blob([plainHTML], { type: "text/html;charset=utf-8" });
+    const downloadAnchor = document.createElement("a");
+    downloadAnchor.href = URL.createObjectURL(dynamicBlob);
+    downloadAnchor.download = "layout-export.html";
+    downloadAnchor.click();
+}
+
+function handleHTMLImport(event) {
+    const targetedFile = event.target.files[0];
+    if (!targetedFile) return;
+    
+    const fileReader = new FileReader();
+    fileReader.onload = function(e) {
+        const foreignMarkup = e.target.result;
+        captureHistorySnapshot();
+        
+        const tempContainer = document.createElement('div');
+        tempContainer.innerHTML = foreignMarkup;
+        
+        const workspace = document.getElementById('workspace');
+        workspace.innerHTML = '';
+        
+        // Basic parser to pull imported standard code rows back into draggable blocks
+        Array.from(tempContainer.children).forEach(node => {
+            let tag = node.tagName.toLowerCase();
+            if (['h1', 'h2', 'p', 'a', 'ul', 'img'].includes(tag)) {
+                let card = createCodeBlockElement(tag);
+                workspace.appendChild(card);
+                
+                if (tag === 'img') {
+                    card.querySelector('.val-src').innerText = node.getAttribute('src') || '';
+                    card.querySelector('.val-alt').innerText = node.getAttribute('alt') || '';
+                } else if (tag === 'a') {
+                    card.querySelector('.val-url').innerText = node.getAttribute('href') || '';
+                    card.querySelector('.val-text').innerText = node.innerText || '';
+                } else if (tag === 'ul') {
+                    const box = card.querySelector('.list-items-box');
+                    box.innerHTML = '';
+                    node.querySelectorAll('li').forEach(li => {
+                        const row = document.createElement('div');
+                        row.className = 'list-item-row';
+                        row.innerHTML = `
+                            <span class="html-tag">&lt;li&gt;</span><span contenteditable="true" class="editable-field val-li">${li.innerText}</span><span class="html-tag">&lt;/li&gt;</span>
+                            <button class="btn-delete" onclick="captureHistorySnapshot(); this.parentNode.remove(); updatePreview();">✖</button>`;
+                        box.appendChild(row);
+                    });
+                } else {
+                    card.querySelector('.val-text').innerText = node.innerText;
+                }
+                
+                // Parse out and restore baseline colors/backgrounds if configured inline
+                if (node.style.color) card.dataset.color = node.style.color;
+                if (node.style.backgroundColor) card.dataset.background = node.style.backgroundColor;
+                if (node.style.boxShadow) card.dataset.shadow = node.style.boxShadow;
+                applyVisualStylesToCard(card);
+            }
+        });
+        
+        if (workspace.children.length === 0) {
+            workspace.innerHTML = `<div class="workspace-placeholder" id="placeholder">Drag code blocks here to build your webpage...</div>`;
+        }
+        
+        updatePreview();
+        event.target.value = ''; 
+    };
+    fileReader.readAsText(targetedFile);
 }
 </script>
 </body>
