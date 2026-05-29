@@ -2,20 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Seating Planner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pro Room & Seating Planner</title>
 
 <style>
 :root {
-  --color-x: transparent;
   --bg: #FBF9F7;
   --primary: #4A4A4A;
   --secondary: #D9D5D1;
-
   --seat-default: #03a4bd;
-  --seat-active: #6003ac;
-  --seat-corridor: #4A4A4A;
-
+  --text-dark: #4A4A4A;
+  --border: var(--primary);
+  
   --color-blue: #03a4bd;
   --color-green: #00C38A;
   --color-purple: #6003ac;
@@ -23,98 +21,320 @@
   --color-orange: #FFA500;
   --color-yellow: #FFD700;
   --color-pink: #d4016a;
-
-  --text-dark: var(--primary);
-  --text-light: var(--bg);
-  --border: var(--primary);
 }
 
-body { font-family: Consolas, monospace; margin:0; background:var(--bg); font-size:20px; }
-.header { height:80px; background:var(--primary); border-bottom:2px solid var(--primary); display:flex; align-items:center; justify-content:center; position:relative; }
-.logo{font-family: Consolas; color: var(--secondary)}
-.nav { position:absolute; right:10px; display:flex; gap:10px; }
-.nav button { padding:14px 18px; border-radius:8px; border:1px solid var(--border); background:var(--secondary); cursor:pointer; font-weight:bold; font-size:18px; }
-.main { display:flex; height:calc(100vh - 80px); flex-direction:row; }
-.left { flex:0 0 250px; padding:20px; border-right:2px solid var(--border); background:var(--bg); display:flex; flex-direction:column; justify-content:space-between; gap:10px; }
-.right { flex:1; padding:20px; overflow:auto; }
-.flyout { flex:0 0 250px; border-left:2px solid var(--border); background:var(--bg); padding:20px; display:flex; flex-direction:column; gap:10px; }
-.grid { display:grid; gap:14px; }
-.seat { padding:20px; border-radius:12px; text-align:center; color:var(--text-dark); font-size:18px; cursor:pointer; }
-.seat.active { color:var(--text-dark); }
-.seat.empty { color:transparent; }
-.seat.corridor { color:transparent; background:var(--seat-corridor); cursor:default; }
-.seat input, .seat textarea { width:95%; margin-top:5px; font-size:16px; padding:6px; }
-.seat textarea { resize: vertical; min-height:40px; overflow:auto; }
-.controls { margin-top:8px; display:flex; justify-content:center; gap:12px; }
-.sidebar-btn { display:flex; justify-content:center; align-items:center; margin:6px 0; padding:14px; border-radius:8px; border:1px solid var(--secondary); background:var(--secondary); cursor:pointer; font-weight:bold; width:100%; font-size:17px; box-sizing:border-box; }
-.row-col-controls { display:flex; justify-content:space-between; gap:8px; margin-bottom:10px; }
-.file-input { display:none; }
-.color-btn { width:32px; height:32px; border:2px solid var(--primary); border-radius:8px; cursor:pointer; padding:0; transition: transform 0.2s; flex-shrink:0; }
-.color-btn:hover { transform:scale(1.1); }
-.podium { display:flex; align-items:flex-end; justify-content:center; gap:20px; margin-top:40px; flex-wrap:wrap; }
-.place { width:180px; text-align:center; border-radius:10px 10px 0 0; padding:16px; font-size:18px; }
-.first { height:240px; background:var(--color-blue); }
-.second { height:190px; background:var(--color-green); }
-.third { height:160px; background:var(--color-purple); }
-.others { margin-top:30px; text-align:center; display:flex; flex-direction:column; align-items:center; }
-.others div { margin:8px 0; font-size:20px; }
-.color-btn.selected { transform: scale(1.3); border-color: var(--text-dark); }
-
-@media (max-width:768px){
-  .main { flex-direction:column; }
-  .left { flex:0 0 auto; width:100%; border-right:none; border-bottom:2px solid var(--border); padding:10px; }
-  .right { padding:10px; }
-  .nav button, .sidebar-btn { font-size:20px; padding:16px 20px; }
-  .seat { padding:24px; font-size:20px; }
-  .seat input, .seat textarea { font-size:18px; padding:8px; }
-  .place { width:140px; padding:18px; font-size:20px; }
+body { 
+  font-family: Consolas, monospace; 
+  margin: 0; 
+  background: var(--bg); 
+  font-size: 18px; 
+  color: var(--text-dark);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-@media (min-width: 0px) {
-  .grid .seat {
-    min-height: 100px; /* adjust as needed */
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-
-  .grid .seat .controls {
-    margin-top: auto; /* push +/- buttons to bottom */
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-  }
+.header { 
+  height: 80px; 
+  background: var(--primary); 
+  border-bottom: 2px solid var(--border); 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  padding: 0 20px;
+  box-sizing: border-box;
+  z-index: 101;
+  position: relative;
 }
 
+.logo { color: var(--secondary); margin: 0; font-size: 24px; }
+
+.nav { display: flex; gap: 8px; align-items: center; }
+.nav button { 
+  padding: 10px 14px; 
+  border-radius: 8px; 
+  border: 1px solid var(--border); 
+  background: var(--secondary); 
+  cursor: pointer; 
+  font-weight: bold; 
+  font-size: 15px; 
+  min-height: 44px;
+}
+.nav button.active-view { background: var(--seat-default); color: white; }
+
+.main { display: flex; height: calc(100vh - 80px); flex-direction: row; position: relative; }
+
+.left { 
+  flex: 0 0 310px; 
+  padding: 20px; 
+  border-right: 2px solid var(--border); 
+  background: var(--bg); 
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px; 
+  box-sizing: border-box; 
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.right { 
+  flex: 1; 
+  position: relative;
+  background: #f0ede9;
+  overflow: auto;
+}
+
+.canvas-container {
+  width: 3000px;
+  height: 3000px;
+  position: relative;
+  transform-origin: top left;
+}
+
+.flyout { 
+  flex: 0 0 280px; 
+  border-left: 2px solid var(--border); 
+  background: var(--bg); 
+  padding: 20px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 15px; 
+  box-sizing: border-box; 
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.free-seat { 
+  position: absolute;
+  border-radius: 12px; 
+  border: 2px solid var(--border); 
+  background: white;
+  box-sizing: border-box; 
+  box-shadow: 0 4px 6px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+}
+.free-seat.dragging { box-shadow: 0 10px 25px rgba(0,0,0,0.18); z-index: 999 !important; }
+.free-seat.swap-selected { border: 4px dashed #FFD700 !important; animation: pulseGlow 1.5s infinite ease-in-out; z-index: 998; }
+.free-seat.drag-over-desk { border: 3px dashed var(--color-green) !important; background: rgba(0, 195, 138, 0.1) !important; }
+
+.free-seat.type-projector { background: #333 !important; color: white !important; border-radius: 4px; }
+.free-seat.type-door { background: #d2b48c !important; color: #5c4033 !important; border-left: 6px solid #5c4033; border-radius: 2px; }
+.free-seat.type-window { background: #e0f7fa !important; color: #0288d1 !important; border: 3px double #0288d1; border-radius: 2px; }
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 4px #FFD700; }
+  50% { box-shadow: 0 0 16px #FFD700; }
+  100% { box-shadow: 0 0 4px #FFD700; }
+}
+
+.drag-bar {
+  height: 30px;
+  background: rgba(0,0,0,0.06);
+  cursor: move;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 6px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.type-projector .drag-bar, .type-door .drag-bar, .type-window .drag-bar { border-radius: 0; }
+
+.num-input {
+  position: absolute;
+  top: 5px;
+  left: 6px;
+  width: 45px;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: bold;
+  color: inherit;
+  padding: 2px;
+}
+.num-input:focus { background: white; color: black; outline: 1px solid var(--primary); border-radius: 4px; }
+
+.view-num-tag {
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  font-size: 12px;
+  font-weight: bold;
+  opacity: 0.8;
+}
+
+.seat-tool-btn {
+  background: white;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  font-weight: bold;
+  touch-action: none;
+  color: black;
+}
+
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: se-resize;
+  background: linear-gradient(135deg, transparent 50%, var(--primary) 50%);
+  border-bottom-right-radius: 10px;
+}
+
+.seat-form-wrapper {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  justify-content: space-between;
+}
+.seat-form-wrapper input[type="text"] {
+  width: 100%;
+  font-size: 13px;
+  padding: 4px;
+  box-sizing: border-box;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 4px;
+}
+
+.checkbox-matrix {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.checkbox-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 9px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.checkbox-unit input { margin: 2px 0 0 0; cursor: pointer; }
+
+.present-flags-strip {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.flag-badge {
+  font-size: 9px;
+  font-weight: bold;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.present-card { display: flex; width: 100%; height: 100%; position: relative; flex: 1; }
+.tap-zone { width: 50%; height: 100%; position: relative; z-index: 1; }
+.tap-zone:active { background: rgba(255, 255, 255, 0.2); }
+.present-details {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+  text-align: center;
+  z-index: 2;
+}
+
+.sidebar-btn { 
+  display: flex; justify-content: center; align-items: center; padding: 12px; 
+  border-radius: 8px; border: 1px solid var(--primary); background: var(--secondary); 
+  cursor: pointer; font-weight: bold; width: 100%; font-size: 15px; min-height: 46px;
+  box-sizing: border-box; color: var(--text-dark); 
+}
+.roster-draggable-item { cursor: grab; user-select: none; -webkit-user-drag: element; }
+.roster-draggable-item:active { cursor: grabbing; }
+
+.color-btn { width: 44px; height: 44px; border: 2px solid var(--primary); border-radius: 8px; cursor: pointer; padding: 0; flex-shrink: 0; position: relative; }
+.color-btn.selected { transform: scale(1.15); border-color: #000; box-shadow: 0 0 6px rgba(0,0,0,0.6); z-index: 2; }
+.color-btn.none-btn { background: #fff; overflow: hidden; }
+.color-btn.none-btn::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top right, transparent calc(50% - 2px), var(--color-red) calc(50% - 2px), var(--color-red) calc(50% + 2px), transparent calc(50% + 2px)); }
+
+.zoom-widget { position: fixed; bottom: 25px; right: 25px; display: flex; flex-direction: column; gap: 10px; z-index: 1000; }
+.zoom-btn { width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--primary); background: white; color: var(--text-dark); font-size: 28px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.25); }
+
+.structural-spawn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.struct-btn { padding: 6px; font-size: 11px; min-height: 38px; font-weight: bold; border-radius: 6px; cursor: pointer; border: 1px solid var(--primary); background: #eee; text-align: center; }
+
+.deck-selector { padding: 8px; border-radius: 6px; border: 1px solid var(--primary); font-family: inherit; font-weight: bold; background: white; width: 100%; max-width: 200px; font-size: 14px; }
+
+.leaderboard-wrap { width: 100%; max-width: 700px; margin: 40px auto; padding: 20px; background: white; border: 2px solid var(--border); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); box-sizing: border-box; }
+.leaderboard-title { margin-top: 0; border-bottom: 2px dashed var(--border); padding-bottom: 12px; text-align: center; }
+.leaderboard-list { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.leaderboard-row { display: flex; align-items: center; padding: 12px 18px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); font-weight: bold; }
+.rank-badge { width: 110px; padding: 4px 8px; border-radius: 4px; text-align: center; font-size: 12px; font-weight: bold; text-transform: uppercase; border: 1px solid var(--border); margin-right: 20px; }
+.rank-gold { background: var(--color-yellow); color: black; }
+.rank-silver { background: #E0E0E0; color: black; }
+.rank-bronze { background: #CD7F32; color: white; }
+.rank-standard { background: white; color: var(--text-dark); }
+.leaderboard-name { flex: 1; font-size: 18px; }
+.leaderboard-pts { font-size: 18px; font-family: monospace; }
+
+@media (max-width: 1024px) {
+  .main { flex-direction: column; overflow-y: auto; }
+  .left, .flyout { width: 100%; flex: none; border: none; border-bottom: 2px solid var(--border); }
+  .right { min-height: 600px; overflow: auto; }
+}
 </style>
 </head>
 <body>
+
 <div class="header">
-  <h1 class="logo">&lt;MxBrooke.co.uk&gt;</h1>
+  <h1 class="logo">MxBrooke.co.uk</h1>
   <div class="nav">
-    <button onclick="setView('setup')">Setup</button>
-    <button onclick="setView('present')">Present</button>
-    <button onclick="setView('leaderboard')">Leaderboard</button>
+    <select id="deckSelect" class="deck-selector" onchange="switchDeck(this.value)" style="display:none;"></select>
+    <button id="btn-setup" class="active-view" onclick="setView('setup')">Setup</button>
+    <button id="btn-teach-present" onclick="setView('teach-present')">Teacher Present</button>
+    <button id="btn-stud-present" onclick="setView('stud-present')">Student Present</button>
+    <button id="btn-leaderboard" onclick="setView('leaderboard')">Leaderboard</button>
   </div>
 </div>
 
 <div class="main">
-
   <div class="left" id="sidebar">
     <div>
-      <h3>Setup Controls</h3>
-      <div class="row-col-controls">
-        <button class="sidebar-btn" onclick="addRow()">+ Row</button>
-        <button class="sidebar-btn" onclick="removeRow()">- Row</button>
-      </div>
-      <div class="row-col-controls">
-        <button class="sidebar-btn" onclick="addCol()">+ Column</button>
-        <button class="sidebar-btn" onclick="removeCol()">- Column</button>
+      <h3 style="margin-top:0; margin-bottom:10px; font-size:18px;">Furniture & Seating</h3>
+      <button class="sidebar-btn" onclick="addNewSeat()">+ Add Desk Card</button>
+    </div>
+
+    <div>
+      <h4 style="margin-top:0; margin-bottom:8px; font-size:14px;">Architecture Elements</h4>
+      <div class="structural-spawn-grid">
+        <button class="struct-btn" onclick="addStructural('projector')">Screen</button>
+        <button class="struct-btn" onclick="addStructural('door')">Door</button>
+        <button class="struct-btn" onclick="addStructural('window')">Window</button>
       </div>
     </div>
-    <div style="margin-top:20px;">
-      <h4>Seat Color</h4>
-      <div style="display:flex; flex-wrap:wrap; gap:5px;">
+    
+    <div>
+      <h4 style="margin-bottom:10px; margin-top:5px; font-size:16px;">Desk Color Painter</h4>
+      <div style="display:flex; flex-wrap:wrap; gap:8px;">
+        <button class="sidebar-btn color-btn none-btn selected" data-color="none" title="No Painting" onclick="setSelectedColor('none')"></button>
         <button class="sidebar-btn color-btn" data-color="--color-red" style="background:var(--color-red);" onclick="setSelectedColor('--color-red')"></button>
         <button class="sidebar-btn color-btn" data-color="--color-orange" style="background:var(--color-orange);" onclick="setSelectedColor('--color-orange')"></button>
         <button class="sidebar-btn color-btn" data-color="--color-yellow" style="background:var(--color-yellow);" onclick="setSelectedColor('--color-yellow')"></button>
@@ -122,32 +342,75 @@ body { font-family: Consolas, monospace; margin:0; background:var(--bg); font-si
         <button class="sidebar-btn color-btn" data-color="--color-blue" style="background:var(--color-blue);" onclick="setSelectedColor('--color-blue')"></button>
         <button class="sidebar-btn color-btn" data-color="--color-purple" style="background:var(--color-purple);" onclick="setSelectedColor('--color-purple')"></button>
         <button class="sidebar-btn color-btn" data-color="--color-pink" style="background:var(--color-pink);" onclick="setSelectedColor('--color-pink')"></button>
-        <button class="sidebar-btn color-btn" data-color="--color-x" style="background:var(--bg); color:var(--primary); font-weight:bold;" onclick="setSelectedColor('--color-x')">X</button>
+        <button class="sidebar-btn color-btn" data-color="--seat-default" style="background:var(--seat-default);" onclick="setSelectedColor('--seat-default')"></button>
       </div>
     </div>
-    <div style="margin-top:auto;">
-      <button class="sidebar-btn" onclick="exportCSV()">Export CSV</button>
-      <button class="sidebar-btn" onclick="document.getElementById('fileInput').click()">Import CSV</button>
-      <input id="fileInput" class="file-input" type="file" onchange="importCSV(event)">
+    
+    <div>
+      <h4 style="margin-top:0; margin-bottom:8px; font-size:14px;">Import Strategy</h4>
+      <button class="sidebar-btn" onclick="document.getElementById('layoutFileInput').click()">Import JSON Layouts</button>
+      <input id="layoutFileInput" type="file" accept=".json" multiple webkitdirectory directory style="display:none;" onchange="executeLayoutImport(event)">
+    </div>
+
+    <div style="margin-top:auto; display:flex; flex-direction:column; gap:8px;">
+      <button class="sidebar-btn" style="background:#eef;" onclick="exportJSON(true)">Export Full Data</button>
+      <button class="sidebar-btn" style="background:#efe;" onclick="exportJSON(false)">Export Layout Only</button>
     </div>
   </div>
 
-  <div class="right" id="app"></div>
-
-  <div class="flyout" id="studentFlyout">
-    <h3>Students</h3>
-    <textarea id="studentListInput" placeholder="Enter names (one per line)" style="width:100%; height:120px;"></textarea>
-    <button class="sidebar-btn" onclick="loadStudentList()">Load</button>
-    <div id="studentList" style="margin-top:10px; display:flex; flex-direction:column; gap:6px;"></div>
+  <div class="right" id="canvasViewport">
+    <div class="canvas-container" id="zoomContainer">
+      <div id="app" style="width:100%; height:100%; position:relative;"></div>
+    </div>
   </div>
 
+  <div class="flyout" id="studentFlyout">
+    <h3 style="margin-top:0; margin-bottom:10px; font-size:18px;">Roster Pool</h3>
+    <textarea id="studentListInput" style="width:100%; height:80px; box-sizing:border-box; font-family:inherit; resize:none;" placeholder="Type names here...&#10;(One per line)"></textarea>
+    <button class="sidebar-btn" style="margin-top:4px;" onclick="loadStudentList()">Populate Pool</button>
+    <div id="studentList" style="margin-top:10px; display:flex; flex-direction:column; gap:8px;"></div>
+  </div>
+</div>
+
+<div class="zoom-widget" id="zoomControls">
+  <label id="togglePointsWrapper" style="display:none; background:white; padding:8px; border:2px solid var(--primary); border-radius:8px; font-size:11px; font-weight:bold; cursor:pointer; flex-direction:column; align-items:center; gap:4px; text-align:center;">
+    Points Visible
+    <input type="checkbox" id="showPointsToggle" checked onchange="render()">
+  </label>
+  <button class="zoom-btn" onclick="adjustZoom(0.1)">+</button>
+  <button class="zoom-btn" onclick="adjustZoom(-0.1)">-</button>
 </div>
 
 <script>
-let selectedColor = '--seat-default';
-let draggedSeat = null;
-let draggedStudent = null;
+let selectedColor = 'none';
 let studentPool = [];
+let view = 'setup';
+let zoomScale = 1.0;
+let swapSelectedSeatId = null;
+
+let activeDeckKey = "Default Project";
+let projectDecks = {
+  "Default Project": {
+    seats: [
+      { id: 1, type: 'seat', label: "1", name: 'Inky', points: 5, color: '--color-blue', x: 150, y: 150, w: 170, h: 145, r: 0, flags: { PP: true, SEN: false, EAL: false, FSM: false } },
+      { id: 2, type: 'seat', label: "2", name: 'Blinky', points: 8, color: '--color-red', x: 320, y: 150, w: 170, h: 145, r: 0, flags: { PP: false, SEN: true, EAL: false, FSM: false } },
+      { id: 4, type: 'projector', x: 200, y: 40, w: 260, h: 40, r: 0 }
+    ],
+    studentPool: []
+  }
+};
+
+let seats = projectDecks[activeDeckKey].seats;
+
+const textContrastMap = {
+  '--color-blue': 'white', '--color-purple': 'white', '--color-red': 'white', '--color-pink': 'white',
+  '--color-green': 'black', '--color-yellow': 'black', '--color-orange': 'black', '--seat-default': 'white'
+};
+
+function adjustZoom(amount) {
+  zoomScale = Math.max(0.3, Math.min(1.5, zoomScale + amount));
+  document.getElementById('zoomContainer').style.transform = `scale(${zoomScale})`;
+}
 
 function setSelectedColor(color) {
   selectedColor = color;
@@ -156,180 +419,622 @@ function setSelectedColor(color) {
   });
 }
 
-let view = 'setup';
-let grid = [
-  [{ name: 'Inky', points: 5, notes: 'Blue ghost', color: '--color-blue' },
-   { name: 'NA', points: 0, notes: '', color: '--seat-corridor' },
-   { name: 'Blinky', points: 8, notes: 'Red ghost', color: '--color-red' }],
-  [{ name: 'Bonny', points: 3, notes: 'Pink ghost', color: '--color-pink' },
-   { name: 'NA', points: 0, notes: '', color: '--seat-corridor' },
-   { name: 'Clyde', points: 4, notes: 'Orange ghost', color: '--color-orange' }]
-];
+function setView(v) { 
+  view = v; 
+  swapSelectedSeatId = null;
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active-view'));
+  
+  const targetBtn = document.getElementById(`btn-${v}`);
+  if (targetBtn) targetBtn.classList.add('active-view');
+  
+  document.getElementById('zoomControls').style.display = (v === 'leaderboard') ? 'none' : 'flex';
+  document.getElementById('togglePointsWrapper').style.display = (v === 'stud-present') ? 'flex' : 'none';
+  document.getElementById('sidebar').style.display = (v === 'setup') ? 'flex' : 'none';
+  document.getElementById('studentFlyout').style.display = (v === 'setup') ? 'flex' : 'none';
+  
+  render(); 
+}
 
-function setView(v) { view = v; render(); }
-function addRow() { const cols = grid[0]?.length || 1; grid.push(Array.from({ length: cols }, () => ({ name: '', points: 0, notes: '', color: '--seat-default' }))); render(); }
-function removeRow() { if (grid.length > 0) { grid.pop(); render(); } }
-function addCol() { if (grid.length === 0) { grid.push([{ name: '', points: 0, notes: '', color: '--seat-default' }]); } else grid.forEach(row => row.push({ name: '', points: 0, notes: '', color: '--seat-default' })); render(); }
-function removeCol() { grid.forEach(row => { if (row.length > 0) row.pop(); }); grid = grid.filter(row => row.length > 0); render(); }
+function generateNextId() {
+  return seats.reduce((max, s) => s.id > max ? s.id : max, 0) + 1;
+}
+
+function addNewSeat() {
+  const nextId = generateNextId();
+  seats.push({
+    id: nextId, type: 'seat', label: String(nextId), name: '', points: 0,
+    color: '--seat-default', x: 180, y: 180, w: 170, h: 145, r: 0,
+    flags: { PP: false, SEN: false, EAL: false, FSM: false }
+  });
+  render();
+}
+
+function addStructural(structType) {
+  const nextId = generateNextId();
+  let width = 160, height = 50;
+  if (structType === 'projector') { width = 240; height = 35; }
+  if (structType === 'window') { width = 180; height = 25; }
+  if (structType === 'door') { width = 110; height = 45; }
+
+  seats.push({
+    id: nextId, type: structType, x: 250, y: 200, w: width, h: height, r: 0
+  });
+  render();
+}
+
+function getConnectedCluster(startSeat) {
+  let cluster = new Set([startSeat]);
+  let frontier = [startSeat];
+  const snapThreshold = 18;
+
+  while(frontier.length > 0) {
+    let current = frontier.pop();
+    seats.forEach(other => {
+      if (cluster.has(other)) return;
+      
+      let matchesX = Math.abs(current.x - (other.x + other.w)) < snapThreshold || Math.abs((current.x + current.w) - other.x) < snapThreshold || Math.abs(current.x - other.x) < snapThreshold;
+      let matchesY = Math.abs(current.y - (other.y + other.h)) < snapThreshold || Math.abs((current.y + current.h) - other.y) < snapThreshold || Math.abs(current.y - other.y) < snapThreshold;
+      
+      if (matchesX && matchesY) {
+        cluster.add(other);
+        frontier.push(other);
+      }
+    });
+  }
+  return Array.from(cluster);
+}
+
+function checkSnapping(draggedCluster) {
+  const snapThreshold = 15;
+  let offsetX = 0, offsetY = 0;
+  let snapFound = false;
+
+  for (let activeSeat of draggedCluster) {
+    for (let other of seats) {
+      if (draggedCluster.some(c => c.id === other.id)) continue;
+      if (Math.abs(other.r - activeSeat.r) % 90 !== 0) continue; 
+
+      if (Math.abs(activeSeat.x - (other.x + other.w)) < snapThreshold && Math.abs(activeSeat.y - other.y) < snapThreshold * 2) {
+        offsetX = (other.x + other.w) - activeSeat.x; offsetY = other.y - activeSeat.y; snapFound = true; break;
+      }
+      if (Math.abs((activeSeat.x + activeSeat.w) - other.x) < snapThreshold && Math.abs(activeSeat.y - other.y) < snapThreshold * 2) {
+        offsetX = (other.x - activeSeat.w) - activeSeat.x; offsetY = other.y - activeSeat.y; snapFound = true; break;
+      }
+      if (Math.abs(activeSeat.y - (other.y + other.h)) < snapThreshold && Math.abs(activeSeat.x - other.x) < snapThreshold * 2) {
+        offsetY = (other.y + other.h) - activeSeat.y; offsetX = other.x - activeSeat.x; snapFound = true; break;
+      }
+      if (Math.abs((activeSeat.y + activeSeat.h) - other.y) < snapThreshold && Math.abs(activeSeat.x - other.x) < snapThreshold * 2) {
+        offsetY = (other.y - activeSeat.h) - activeSeat.y; offsetX = other.x - activeSeat.x; snapFound = true; break;
+      }
+    }
+    if (snapFound) break;
+  }
+
+  if (snapFound) {
+    draggedCluster.forEach(s => { s.x += offsetX; s.y += offsetY; });
+  }
+}
+
+function setupInteractions(element, seatObj) {
+  let holdTimer = null;
+  let dragCluster = [];
+  let isDragging = false;
+  let lastTap = 0;
+  
+  let startX = 0, startY = 0;
+  let initialPositions = [];
+
+  const dragBar = element.querySelector('.drag-bar');
+
+  dragBar.addEventListener('click', (e) => {
+    if (view !== 'setup' || e.target.closest('.seat-tool-btn')) return;
+    const now = Date.now();
+    if (now - lastTap < 300) {
+      seatObj.x += 25;
+      seatObj.y += 25;
+      render();
+    }
+    lastTap = now;
+  });
+
+  function onPointerDown(e) {
+    if (view !== 'setup' || e.target.closest('input') || e.target.closest('.seat-tool-btn')) return;
+
+    const clientX = e.clientX || e.touches?.[0].clientX;
+    const clientY = e.clientY || e.touches?.[0].clientY;
+    startX = clientX;
+    startY = clientY;
+    isDragging = false;
+
+    if (seatObj.type === 'seat') {
+      holdTimer = setTimeout(() => { if (!isDragging) handleHoldSwap(seatObj.id); }, 1000);
+    }
+
+    dragCluster = getConnectedCluster(seatObj);
+    initialPositions = dragCluster.map(s => ({ id: s.id, x: s.x, y: s.y }));
+
+    function onPointerMove(moveEvent) {
+      const curX = moveEvent.clientX || moveEvent.touches?.[0].clientX;
+      const curY = moveEvent.clientY || moveEvent.touches?.[0].clientY;
+      
+      const dx = (curX - startX) / zoomScale;
+      const dy = (curY - startY) / zoomScale;
+
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        isDragging = true;
+        clearTimeout(holdTimer);
+      }
+
+      if (isDragging) {
+        dragCluster.forEach((s, idx) => {
+          s.x = initialPositions[idx].x + dx;
+          s.y = initialPositions[idx].y + dy;
+          let dom = document.getElementById(`seat-${s.id}`);
+          if (dom) { dom.style.left = `${s.x}px`; dom.style.top = `${s.y}px`; }
+        });
+        checkSnapping(dragCluster);
+      }
+    }
+
+    function onPointerUp() {
+      clearTimeout(holdTimer);
+      document.removeEventListener('mousemove', onPointerMove);
+      document.removeEventListener('mouseup', onPointerUp);
+      document.removeEventListener('touchmove', onPointerMove);
+      document.removeEventListener('touchend', onPointerUp);
+      if (isDragging) { render(); }
+    }
+
+    document.addEventListener('mousemove', onPointerMove);
+    document.addEventListener('mouseup', onPointerUp);
+    document.addEventListener('touchmove', onPointerMove, { passive: false });
+    document.addEventListener('touchend', onPointerUp);
+  }
+
+  dragBar.addEventListener('mousedown', onPointerDown);
+  dragBar.addEventListener('touchstart', onPointerDown, { passive: false });
+}
+
+function handleHoldSwap(id) {
+  if (swapSelectedSeatId === null) {
+    swapSelectedSeatId = id;
+    render();
+  } else {
+    if (swapSelectedSeatId !== id) {
+      let seatA = seats.find(s => s.id === swapSelectedSeatId);
+      let seatB = seats.find(s => s.id === id);
+      
+      if (seatA && seatB && seatA.type === 'seat' && seatB.type === 'seat') {
+        let temp = { name: seatA.name, points: seatA.points, color: seatA.color, flags: {...seatA.flags} };
+        seatA.name = seatB.name; seatA.points = seatB.points; seatA.color = seatB.color; seatA.flags = {...seatB.flags};
+        seatB.name = temp.name; seatB.points = temp.points; seatB.color = temp.color; seatB.flags = temp.flags;
+      }
+    }
+    swapSelectedSeatId = null;
+    render();
+  }
+}
+
+function setupClickRotation(btn, seatObj) {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    let currentRot = seatObj.r || 0;
+    seatObj.r = (currentRot + 45) % 360;
+    render();
+  });
+}
+
+function setupResizing(handle, element, seatObj) {
+  function onPointerDown(e) {
+    e.preventDefault(); e.stopPropagation();
+    const startX = e.clientX || e.touches?.[0].clientX;
+    const startY = e.clientY || e.touches?.[0].clientY;
+    
+    let resizeCluster = getConnectedCluster(seatObj);
+    let originalSnapshot = seats.map(s => ({ id: s.id, x: s.x, y: s.y, w: s.w, h: s.h }));
+    let subjectStart = originalSnapshot.find(s => s.id === seatObj.id);
+
+    function onPointerMove(moveEvent) {
+      const curX = moveEvent.clientX || moveEvent.touches?.[0].clientX;
+      const curY = moveEvent.clientY || moveEvent.touches?.[0].clientY;
+      
+      const dw = (curX - startX) / zoomScale;
+      const dh = (curY - startY) / zoomScale;
+
+      const nextW = Math.max(40, subjectStart.w + dw);
+      const nextH = Math.max(20, subjectStart.h + dh);
+
+      const scaleXFactor = nextW / subjectStart.w;
+      const scaleYFactor = nextH / subjectStart.h;
+
+      resizeCluster.forEach(s => {
+        let snapRecord = originalSnapshot.find(snap => snap.id === s.id);
+        s.w = nextW;
+        s.h = nextH;
+
+        let relativeX = snapRecord.x - subjectStart.x;
+        let relativeY = snapRecord.y - subjectStart.y;
+
+        s.x = subjectStart.x + (relativeX * scaleXFactor);
+        s.y = subjectStart.y + (relativeY * scaleYFactor);
+
+        let dom = document.getElementById(`seat-${s.id}`);
+        if(dom) {
+          dom.style.width = `${s.w}px`; dom.style.height = `${s.h}px`;
+          dom.style.left = `${s.x}px`; dom.style.top = `${s.y}px`;
+        }
+      });
+    }
+
+    function onPointerUp() {
+      document.removeEventListener('mousemove', onPointerMove);
+      document.removeEventListener('mouseup', onPointerUp);
+      document.removeEventListener('touchmove', onPointerMove);
+      document.removeEventListener('touchend', onPointerUp);
+      render();
+    }
+    document.addEventListener('mousemove', onPointerMove);
+    document.addEventListener('mouseup', onPointerUp);
+    document.addEventListener('touchmove', onPointerMove, { passive: false });
+    document.addEventListener('touchend', onPointerUp);
+  }
+  handle.addEventListener('mousedown', onPointerDown);
+  handle.addEventListener('touchstart', onPointerDown, { passive: false });
+}
 
 function loadStudentList() {
   const input = document.getElementById('studentListInput').value;
-  studentPool = input.split('\n').map(n => n.trim()).filter(Boolean);
+  const names = input.split('\n').map(n => n.trim()).filter(Boolean);
+  studentPool = [...new Set([...studentPool, ...names])];
+  projectDecks[activeDeckKey].studentPool = studentPool;
+  document.getElementById('studentListInput').value = '';
   renderStudentList();
 }
 
 function renderStudentList() {
-  const container = document.getElementById('studentList');
-  container.innerHTML = '';
+  const container = document.getElementById('studentList'); container.innerHTML = '';
   studentPool.forEach((name, index) => {
-    const div = document.createElement('div');
-    div.style.display = 'flex'; div.style.justifyContent = 'space-between'; div.style.alignItems = 'center';
+    const div = document.createElement('div'); 
+    div.className = 'sidebar-btn roster-draggable-item';
+    div.setAttribute('draggable', 'true');
+    div.style.padding = '8px 12px'; div.style.minHeight = '38px'; div.style.justifyContent = 'space-between';
+    
+    div.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', name);
+      e.dataTransfer.setData('source-index', index);
+    });
+
     const span = document.createElement('span'); span.textContent = name;
-    const removeBtn = document.createElement('button'); removeBtn.textContent = 'X'; removeBtn.style.marginLeft = '5px';
-    removeBtn.onclick = () => { studentPool.splice(index, 1); renderStudentList(); };
-    div.appendChild(span); div.appendChild(removeBtn);
-    div.className = 'sidebar-btn';
-    div.draggable = true;
-    div.ondragstart = () => { draggedStudent = { name, index }; draggedSeat = null; };
-    container.appendChild(div);
+    span.onclick = () => {
+      const emptySeat = seats.find(s => s.type === 'seat' && !s.name);
+      if (emptySeat) {
+        emptySeat.name = name; studentPool.splice(index, 1);
+        render(); renderStudentList();
+      }
+    };
+    const removeBtn = document.createElement('button'); removeBtn.textContent = '×'; 
+    removeBtn.style = 'background:none; border:none; font-weight:bold; cursor:pointer; font-size:20px; color:red;';
+    removeBtn.onclick = (e) => { e.stopPropagation(); studentPool.splice(index, 1); renderStudentList(); };
+    
+    div.appendChild(span); div.appendChild(removeBtn); container.appendChild(div);
   });
 }
 
-// Lighten color helper
-function lightenColor(hex, percent) {
-  const num = parseInt(hex.slice(1), 16);
-  let r = (num >> 16) & 0xFF;
-  let g = (num >> 8) & 0xFF;
-  let b = num & 0xFF;
-  r = Math.round(r + (255 - r) * percent);
-  g = Math.round(g + (255 - g) * percent);
-  b = Math.round(b + (255 - b) * percent);
-  return `rgb(${r},${g},${b})`;
+function executeLayoutImport(e) {
+  const files = e.target.files; if (!files || files.length === 0) return;
+  
+  let filesToProcess = Array.from(files).filter(f => f.name.endsWith('.json'));
+  let processedCount = 0;
+  let firstKey = null;
+
+  filesToProcess.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      try {
+        const parsed = JSON.parse(evt.target.result);
+        if (!parsed.seats || !Array.isArray(parsed.seats)) {
+          console.error("Invalid structural schema inside layout file.");
+          return;
+        }
+
+        const titleKey = file.name.replace('.json', '');
+        if (!firstKey) firstKey = titleKey;
+        
+        projectDecks[titleKey] = {
+          seats: parsed.seats,
+          studentPool: parsed.studentPool || []
+        };
+        
+        processedCount++;
+        
+        // Once all concurrent file items finish processing, refresh and switch view
+        if (processedCount === filesToProcess.length) {
+          if (firstKey && projectDecks[firstKey]) {
+            activeDeckKey = firstKey;
+            seats = projectDecks[activeDeckKey].seats;
+            studentPool = projectDecks[activeDeckKey].studentPool;
+          }
+          updateDeckDropdown();
+        }
+      } catch(err) { console.error("Could not parse file index layout: ", err); }
+    };
+    reader.readAsText(file);
+  });
+  
+  e.target.value = '';
 }
 
-function render() {
-  const app = document.getElementById('app');
-  const sidebar = document.getElementById('sidebar');
-  const flyout = document.getElementById('studentFlyout');
-  sidebar.style.display = (view === 'setup') ? 'flex' : 'none';
-  flyout.style.display = (view === 'setup') ? 'flex' : 'none';
-  app.innerHTML = '';
-
-  if (view === 'leaderboard') {
-    let students = grid.flat().filter(s => s.name && s.name !== 'NA');
-    students.sort((a, b) => b.points - a.points);
-    const scores = [...new Set(students.map(s => s.points))].sort((a, b) => b - a);
-    const podiumScores = scores.slice(0, 3);
-    const podium = document.createElement('div'); podium.className = 'podium';
-    podiumScores.forEach((score, i) => {
-      const tied = students.filter(s => s.points === score);
-      const div = document.createElement('div');
-      div.className = `place ${i === 0 ? 'first' : i === 1 ? 'second' : 'third'}`;
-      div.innerHTML = `<strong>${i + 1}${['st','nd','rd'][i]}</strong><br>` + tied.map(s => s.name).join('<br>') + `<br><strong>${score}</strong>`;
-      podium.appendChild(div);
+function updateDeckDropdown() {
+  const select = document.getElementById('deckSelect');
+  select.innerHTML = '';
+  
+  // Extract keys and sort them alphabetically
+  const keys = Object.keys(projectDecks).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
+  
+  if (keys.length > 1) {
+    select.style.display = 'inline-block';
+    keys.forEach(key => {
+      const opt = document.createElement('option');
+      opt.value = key; opt.textContent = key;
+      opt.selected = (key === activeDeckKey);
+      select.appendChild(opt);
     });
-    app.appendChild(podium);
-    const othersDiv = document.createElement('div'); othersDiv.className = 'others';
-    students.forEach(s => { if (s.points < Math.min(...podiumScores.concat([Infinity]))) { const div = document.createElement('div'); div.textContent = `${s.name} - ${s.points}`; othersDiv.appendChild(div); } });
-    app.appendChild(othersDiv);
-    return;
+  } else {
+    select.style.display = 'none';
   }
-
-  if (grid.length === 0) return;
-  const gridDiv = document.createElement('div'); gridDiv.className = 'grid';
-  gridDiv.style.gridTemplateColumns = `repeat(${grid[0].length},1fr)`;
-
-  grid.forEach(row => { row.forEach(s => {
-    const seat = document.createElement('div'); seat.className = 'seat';
-    if (s.name === 'NA') { seat.classList.add('corridor'); seat.style.background = 'var(--seat-corridor)'; seat.style.cursor = 'default'; }
-    else seat.style.background = `var(${s.color || '--seat-default'})`;
-
-    if (view === 'setup') {
-      seat.draggable = (s.name !== 'NA');
-      seat.ondragstart = () => { draggedSeat = s; draggedStudent = null; };
-      seat.ondragover = e => e.preventDefault();
-      seat.ondrop = () => {
-        if (draggedSeat && draggedSeat !== s) { if (s.name === 'NA' || draggedSeat.name === 'NA') return; const temp = {...s}; Object.assign(s, draggedSeat); Object.assign(draggedSeat, temp); render(); return; }
-        if (draggedStudent) { if (s.name === 'NA') return; const old = s.name; s.name = draggedStudent.name; s.points = 0; s.notes = ''; if(old) studentPool.push(old); studentPool.splice(draggedStudent.index,1); draggedStudent=null; render(); renderStudentList(); }
-      };
-
-      const nameInput = document.createElement('input'); nameInput.value = s.name; nameInput.placeholder = 'Name'; nameInput.maxLength = 20;
-      nameInput.oninput = e => s.name = e.target.value;
-      seat.appendChild(nameInput);
-
-      const notesInput = document.createElement('textarea'); notesInput.value = s.notes; notesInput.placeholder = 'Notes';
-      notesInput.oninput = e => s.notes = e.target.value;
-      notesInput.style.height = 'auto'; notesInput.style.minHeight = '40px';
-      notesInput.addEventListener('input', function(){ this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
-      if(s.name && s.name !== 'NA') seat.appendChild(notesInput);
-
-      // Remove X button
-      if(s.name && s.name !== 'NA'){
-        const removeBtn = document.createElement('button'); removeBtn.textContent = 'X'; removeBtn.style.marginTop = '5px';
-        removeBtn.onclick = (e) => { e.stopPropagation(); studentPool.push(s.name); s.name=''; s.points=0; s.notes=''; render(); renderStudentList(); };
-        seat.appendChild(removeBtn);
-      }
-
-      if(s.name !== 'NA'){
-        seat.onclick = () => { if(selectedColor === '--color-x') return; s.color = selectedColor; seat.style.background = `var(${selectedColor})`; };
-      }
-
-    } else {
-      // Present view
-      if(s.name === 'NA'){
-        seat.innerHTML = ''; seat.style.background = 'var(--seat-corridor)';
-      } else if(s.name){
-        seat.innerHTML = `<strong>${s.name}</strong><br><strong>Points: ${s.points}</strong>`;
-        seat.style.background = `var(${s.color || '--seat-default'})`;
-        seat.style.color = 'black';
-
-        const controls = document.createElement('div'); controls.className = 'controls';
-        const plus = document.createElement('button'); plus.textContent = '+'; plus.onclick = ()=>{ s.points++; render(); };
-        const minus = document.createElement('button'); minus.textContent = '-'; minus.onclick = ()=>{ s.points--; render(); };
-        plus.style.fontSize='20px'; plus.style.padding='8px 12px';
-        minus.style.fontSize='20px'; minus.style.padding='8px 12px';
-        controls.appendChild(plus); controls.appendChild(minus);
-        seat.appendChild(controls);
-
-      } else {
-        // Empty non-NA seat: pastel version
-        let seatColor = getComputedStyle(document.documentElement).getPropertyValue(s.color || '--seat-default').trim();
-        seat.style.background = lightenColor(seatColor, 0.7);
-        seat.innerHTML = '';
-      }
-    }
-
-    gridDiv.appendChild(seat);
-  }); });
-
-  app.appendChild(gridDiv);
+  render();
   renderStudentList();
 }
 
-// CSV export/import
-function exportCSV(){
-  let rows = [];
-  grid.forEach((row,r)=>{ row.forEach((s,c)=>{ rows.push([r,c,s.name,s.points,s.notes,s.color||'--seat-default'].join(',')); }); });
-  const blob = new Blob([rows.join('\n')],{type:'text/csv'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'seating.csv'; a.click();
+function switchDeck(key) {
+  if (!projectDecks[key]) return;
+  activeDeckKey = key;
+  seats = projectDecks[activeDeckKey].seats;
+  studentPool = projectDecks[activeDeckKey].studentPool;
+  render();
+  renderStudentList();
 }
 
-function importCSV(e){
-  const file = e.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(){
-    const lines = reader.result.split('\n'); let newGrid = [];
-    lines.forEach(line=>{
-      const [r,c,name,points,notes,color] = line.split(',');
-      if(!newGrid[r]) newGrid[r]=[];
-      newGrid[r][c]={name:name||'', points:+points||0, notes:notes||'', color:color||'--seat-default'};
+function render() {
+  const app = document.getElementById('app'); app.innerHTML = '';
+
+  if (view === 'leaderboard') {
+    let activeStudents = seats.filter(s => s.type === 'seat' && s.name);
+    if(activeStudents.length === 0) { 
+      app.innerHTML = '<p style="text-align:center; padding-top:60px;">No student entries discovered.</p>'; 
+      return; 
+    }
+    
+    const allZero = activeStudents.every(s => s.points === 0);
+    let sorted = [...activeStudents].sort((a, b) => b.points - a.points);
+    
+    const wrap = document.createElement('div'); wrap.className = 'leaderboard-wrap';
+    wrap.innerHTML = `<h2 class="leaderboard-title">Classroom Leaderboard Ranking</h2>`;
+    
+    const listCont = document.createElement('div'); listCont.className = 'leaderboard-list';
+    let distinctScores = [...new Set(sorted.map(s => s.points))].sort((a,b)=>b-a);
+    
+    sorted.forEach(s => {
+      const row = document.createElement('div'); row.className = 'leaderboard-row';
+      const badge = document.createElement('div');
+      
+      if (allZero) {
+        badge.className = 'rank-badge rank-standard'; badge.textContent = "Ranked";
+      } else {
+        let rankIdx = distinctScores.indexOf(s.points);
+        if (rankIdx === 0 && s.points > 0) {
+          badge.className = 'rank-badge rank-gold'; badge.textContent = "Gold Medal";
+        } else if (rankIdx === 1 && s.points > 0) {
+          badge.className = 'rank-badge rank-silver'; badge.textContent = "Silver Medal";
+        } else if (rankIdx === 2 && s.points > 0) {
+          badge.className = 'rank-badge rank-bronze'; badge.textContent = "Bronze Medal";
+        } else {
+          badge.className = 'rank-badge rank-standard'; badge.textContent = `Rank ${rankIdx + 1}`;
+        }
+      }
+      
+      row.innerHTML = `
+        <div class="leaderboard-name">${s.name}</div>
+        <div class="leaderboard-pts">${s.points} Pts</div>
+      `;
+      row.insertBefore(badge, row.firstChild);
+      listCont.appendChild(row);
     });
-    grid = newGrid; render();
-  };
-  reader.readAsText(file);
+    
+    wrap.appendChild(listCont); wrap.appendChild(listCont); app.appendChild(wrap);
+    return;
+  }
+
+  seats.forEach(s => {
+    if(!s.type) s.type = 'seat';
+    const isFurniture = s.type !== 'seat';
+
+    const seat = document.createElement('div');
+    seat.className = `free-seat type-${s.type}`;
+    seat.id = `seat-${s.id}`;
+    seat.style.left = `${s.x}px`; seat.style.top = `${s.y}px`;
+    seat.style.width = `${s.w}px`; seat.style.height = `${s.h}px`;
+    seat.style.transform = `rotate(${s.r}deg)`;
+
+    if (!isFurniture) {
+      seat.style.background = `var(${s.color})`;
+      seat.style.color = textContrastMap[s.color] || 'black';
+      if(!s.flags) s.flags = { PP: false, SEN: false, EAL: false, FSM: false };
+      if (swapSelectedSeatId === s.id) seat.classList.add('swap-selected');
+
+      seat.addEventListener('dragover', (e) => {
+        if (view === 'setup') { e.preventDefault(); seat.classList.add('drag-over-desk'); }
+      });
+      seat.addEventListener('dragleave', () => { seat.classList.remove('drag-over-desk'); });
+
+      seat.addEventListener('drop', (e) => {
+        if (view !== 'setup') return;
+        e.preventDefault();
+        seat.classList.remove('drag-over-desk');
+        
+        const draggedName = e.dataTransfer.getData('text/plain');
+        const sourceIndexStr = e.dataTransfer.getData('source-index');
+        
+        if (draggedName) {
+          if (s.name) { studentPool.push(s.name); }
+          s.name = draggedName;
+          if (sourceIndexStr !== "") {
+            const srcIdx = parseInt(sourceIndexStr, 10);
+            studentPool.splice(srcIdx, 1);
+          }
+          render(); renderStudentList();
+        }
+      });
+    }
+
+    if (view === 'setup') {
+      const bar = document.createElement('div');
+      bar.className = 'drag-bar';
+
+      if (!isFurniture) {
+        const numInp = document.createElement('input');
+        numInp.className = 'num-input';
+        numInp.value = s.label || "";
+        numInp.onchange = (e) => { s.label = e.target.value; };
+        seat.appendChild(numInp);
+      } else {
+        const labelTag = document.createElement('span');
+        labelTag.style = "position:absolute; left:6px; top:6px; font-size:10px; font-weight:bold; text-transform:uppercase; opacity:0.7;";
+        labelTag.textContent = s.type;
+        seat.appendChild(labelTag);
+      }
+
+      const rotBtn = document.createElement('button');
+      rotBtn.className = 'seat-tool-btn'; rotBtn.innerHTML = '↻';
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'seat-tool-btn'; delBtn.innerHTML = '×'; delBtn.style.color = 'red';
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (s.name) studentPool.push(s.name);
+        seats = seats.filter(item => item.id !== s.id);
+        render(); renderStudentList();
+      };
+
+      bar.appendChild(rotBtn); bar.appendChild(delBtn);
+      seat.appendChild(bar);
+
+      if (!isFurniture) {
+        const form = document.createElement('div');
+        form.className = 'seat-form-wrapper';
+        const nameInp = document.createElement('input');
+        nameInp.type = "text"; nameInp.value = s.name; nameInp.placeholder = "Empty Desk";
+        nameInp.onchange = (e) => { 
+          const oldName = s.name;
+          const newName = e.target.value.trim();
+          s.name = newName; 
+          if (oldName && !newName) { studentPool.push(oldName); renderStudentList(); }
+        };
+        form.appendChild(nameInp);
+
+        const matrix = document.createElement('div'); matrix.className = 'checkbox-matrix';
+        ['PP', 'SEN', 'EAL', 'FSM'].forEach(fKey => {
+          const label = document.createElement('label'); label.className = 'checkbox-unit'; label.textContent = fKey;
+          const chk = document.createElement('input'); chk.type = 'checkbox';
+          chk.checked = s.flags[fKey] || false;
+          chk.onchange = (e) => { s.flags[fKey] = e.target.checked; };
+          label.appendChild(chk); matrix.appendChild(label);
+        });
+        form.appendChild(matrix); seat.appendChild(form);
+
+        seat.onclick = (e) => {
+          if(e.target.closest('.drag-bar') || e.target.closest('input') || e.target.closest('label')) return;
+          if (selectedColor !== 'none') { s.color = selectedColor; render(); }
+        };
+      } else {
+        const iconContainer = document.createElement('div');
+        iconContainer.style = "display:flex; flex:1; align-items:center; justify-content:center; font-size:12px; font-weight:bold; letter-spacing:1px; text-transform:uppercase; opacity:0.6; color:inherit;";
+        iconContainer.textContent = s.type;
+        seat.appendChild(iconContainer);
+      }
+
+      const resizer = document.createElement('div'); resizer.className = 'resize-handle';
+      seat.appendChild(resizer);
+
+      app.appendChild(seat);
+      setupInteractions(seat, s); setupClickRotation(rotBtn, s); setupResizing(resizer, seat, s);
+
+    } else {
+      if (isFurniture) {
+        const structuralLabel = document.createElement('div');
+        structuralLabel.style = "width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold; text-transform:uppercase; letter-spacing:1px;";
+        structuralLabel.textContent = s.type === 'projector' ? 'PROJECTOR SCREEN' : s.type;
+        seat.appendChild(structuralLabel); app.appendChild(seat);
+        return;
+      }
+
+      if (s.label) {
+        const tag = document.createElement('div'); tag.className = 'view-num-tag'; tag.textContent = s.label;
+        seat.appendChild(tag);
+      }
+
+      if (s.name) {
+        const presCard = document.createElement('div'); presCard.className = 'present-card';
+        const minusZone = document.createElement('div'); minusZone.className = 'tap-zone';
+        minusZone.onclick = (e) => { e.stopPropagation(); s.points--; render(); };
+        const plusZone = document.createElement('div'); plusZone.className = 'tap-zone';
+        plusZone.onclick = (e) => { e.stopPropagation(); s.points++; render(); };
+        presCard.appendChild(minusZone); presCard.appendChild(plusZone);
+
+        let activePillsHtml = '';
+        if (view === 'teach-present') {
+          ['PP', 'SEN', 'EAL', 'FSM'].forEach(fKey => {
+            if(s.flags && s.flags[fKey]) activePillsHtml += `<span class="flag-badge">${fKey}</span>`;
+          });
+        }
+
+        const showPts = (view !== 'stud-present' || document.getElementById('showPointsToggle').checked);
+
+        const details = document.createElement('div'); details.className = 'present-details';
+        if (view === 'teach-present') {
+          details.innerHTML = `<strong>${s.name}</strong><div class="present-flags-strip">${activePillsHtml}</div><div style="font-size:14px; font-weight:bold; margin-top:auto;">Pts: ${s.points}</div>`;
+        } else {
+          details.innerHTML = `
+            <strong style="font-size:20px;">${s.name}</strong>
+            ${showPts ? `<div style="font-size:18px; font-weight:bold; margin-top:15px;">Pts: ${s.points}</div>` : ''}
+          `;
+        }
+        presCard.appendChild(details); seat.appendChild(presCard);
+      } else {
+        seat.style.borderStyle = 'dashed'; seat.style.opacity = 0.4;
+        const msg = document.createElement('span'); msg.style = 'margin:auto; font-size:12px;'; msg.textContent = 'Vacant Desk';
+        seat.appendChild(msg);
+      }
+      app.appendChild(seat);
+    }
+  });
+}
+
+function exportJSON(includeStudentData) {
+  let exportSeats = [];
+  if (includeStudentData) {
+    exportSeats = seats;
+  } else {
+    exportSeats = seats.map(s => {
+      if (s.type !== 'seat') return { ...s };
+      return {
+        id: s.id, type: s.type, label: s.label,
+        x: s.x, y: s.y, w: s.w, h: s.h, r: s.r, color: s.color,
+        name: "", points: 0, flags: { PP: false, SEN: false, EAL: false, FSM: false }
+      };
+    });
+  }
+
+  const payload = { seats: exportSeats, studentPool: includeStudentData ? studentPool : [] };
+  const nameSuffix = includeStudentData ? "full_data" : "anonymous_layout";
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload));
+  const dlAnchor = document.createElement('a');
+  dlAnchor.setAttribute("href", dataStr); dlAnchor.setAttribute("download", `classroom_${nameSuffix}.json`);
+  dlAnchor.click();
 }
 
 render();
+renderStudentList();
 </script>
 </body>
 </html>
