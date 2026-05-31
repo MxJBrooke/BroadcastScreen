@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Who Wants to Be a Hardware Millionaire?</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a28;
+            --bg-secondary: #111140;
+            --accent-blue: #0044ff;
+            --accent-gold: #ffd700;
+            --text-light: #ffffff;
+            --correct-green: #00aa00;
+            --wrong-red: #cc0000;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .game-container {
+            width: 90%;
+            max-width: 900px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(0, 68, 255, 0.3);
+            border: 2px solid var(--accent-blue);
+            position: relative;
+        }
+
+        h1 {
+            color: var(--accent-gold);
+            font-size: 2.3rem;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            margin-bottom: 5px;
+        }
+
+        .money-display {
+            font-size: 1.8rem;
+            color: var(--accent-gold);
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, transparent, rgba(255,215,0,0.15), transparent);
+            padding: 5px 0;
+        }
+
+        .lifelines {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .lifeline-btn {
+            background: var(--bg-secondary);
+            color: var(--text-light);
+            border: 2px solid var(--accent-blue);
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .lifeline-btn:hover:not(:disabled) {
+            background: var(--accent-blue);
+            box-shadow: 0 0 10px var(--accent-blue);
+        }
+
+        .lifeline-btn:disabled {
+            border-color: #555;
+            color: #555;
+            text-decoration: line-through;
+            cursor: not-allowed;
+        }
+
+        /* Phone a Friend Overlay */
+        .friend-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 40, 0.95);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+            z-index: 10;
+        }
+
+        .friend-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .phone-animation {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: ring 0.5s infinite alternate ease-in-out;
+            display: inline-block;
+        }
+
+        .phone-text {
+            font-size: 1.4rem;
+            max-width: 80%;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            min-height: 80px;
+        }
+
+        .friend-close-btn {
+            background: var(--accent-gold);
+            color: #000;
+            border: none;
+            padding: 10px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none;
+        }
+
+        /* House Point Winner Overlay */
+        .win-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #1a0033 0%, #050010 100%);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease;
+            z-index: 20;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .win-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .trophy-graphic {
+            font-size: 6rem;
+            animation: bounceAndGlow 2s infinite ease-in-out;
+            margin-bottom: 10px;
+        }
+
+        .hand-graphic {
+            font-size: 5rem;
+            animation: raiseHand 1.5s infinite alternate ease-in-out;
+            margin-bottom: 20px;
+        }
+
+        .win-title {
+            color: var(--accent-gold);
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 10px 0;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+        }
+
+        .win-instructions {
+            font-size: 1.8rem;
+            color: #fff;
+            margin: 15px 0;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px 30px;
+            border-radius: 50px;
+            border: 2px dashed var(--accent-gold);
+        }
+
+        .question-box {
+            background: linear-gradient(180deg, #1a1a5a 0%, #0d0d3a 100%);
+            border: 2px solid var(--text-light);
+            padding: 25px;
+            border-radius: 15px;
+            font-size: 1.3rem;
+            margin-bottom: 30px;
+            position: relative;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .option-btn {
+            background: linear-gradient(90deg, #111140 0%, #070724 100%);
+            border: 2px solid var(--accent-blue);
+            color: var(--text-light);
+            padding: 15px 20px;
+            text-align: left;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--accent-gold);
+            background: linear-gradient(90deg, #1b1b5c 0%, #0f0f42 100%);
+        }
+
+        .option-btn span {
+            color: var(--accent-gold);
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .option-btn.correct {
+            background: var(--correct-green) !important;
+            border-color: #fff !important;
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        .option-btn.wrong {
+            background: var(--wrong-red) !important;
+            border-color: #fff !important;
+        }
+
+        .explanation-box {
+            margin-top: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid var(--accent-gold);
+            text-align: left;
+            display: none;
+        }
+
+        .explanation-box h3 {
+            margin-top: 0;
+            color: var(--accent-gold);
+        }
+
+        .next-btn {
+            background: var(--accent-gold);
+            color: #000;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            display: none;
+            transition: transform 0.2s;
+        }
+
+        .next-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .start-btn {
+            background: var(--accent-blue);
+            color: #fff;
+            border: 2px solid var(--accent-gold);
+            padding: 15px 40px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(0, 64, 255, 0.5);
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .start-btn:hover {
+            background: var(--accent-gold);
+            color: #000;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.9; }
+            100% { opacity: 1; transform: scale(1.01); }
+        }
+
+        @keyframes ring {
+            0% { transform: rotate(-10deg) scale(1); }
+            100% { transform: rotate(10deg) scale(1.1); }
+        }
+
+        @keyframes settle {
+            0% { transform: scale(1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes bounceAndGlow {
+            0% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 5px rgba(255,215,0,0.4)); }
+            50% { transform: translateY(-10px) scale(1.05); filter: drop-shadow(0 0 25px rgba(255,215,0,0.9)); }
+            100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 5px rgba(255,215,0,0.4)); }
+        }
+
+        @keyframes raiseHand {
+            0% { transform: translateY(15px); opacity: 0.7; }
+            100% { transform: translateY(-5px); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <div id="friend-overlay" class="friend-overlay">
+            <div id="phone-icon" class="phone-animation">📞</div>
+            <div id="phone-text" class="phone-text">Calling friend...</div>
+            <button id="friend-close-btn" class="friend-close-btn" onclick="closeFriendOverlay()">Back to Game</button>
+        </div>
+
+        <div id="win-overlay" class="win-overlay">
+            <div class="trophy-graphic">🏆</div>
+            <div class="win-title">👑 HARDWARE MILLIONAIRE! 👑</div>
+            <div class="win-instructions">✋ PUT YOUR HAND UP TO CLAIM A HOUSE POINT! ✋</div>
+            <button class="start-btn" onclick="restartFromWin()">Play Again</button>
+        </div>
+
+        <div id="start-screen" class="screen active">
+            <h1>Who Wants to Be a<br>Hardware Millionaire?</h1>
+            <p style="font-size: 1.2rem; margin: 20px 0; color: #aaa;">Year 7 Computer Science Edition</p>
+            <button class="start-btn" onclick="startGame()">Let's Play!</button>
+        </div>
+
+        <div id="game-screen" class="screen">
+            <div class="money-display" id="money-display">$100</div>
+
+            <div class="lifelines">
+                <button class="lifeline-btn" id="lifeline-5050" onclick="use5050()">50:50</button>
+                <button class="lifeline-btn" id="lifeline-friend" onclick="usePhoneAFriend()">📞 Phone a Friend</button>
+            </div>
+
+            <div class="question-box" id="question-text">
+                Question text goes here?
+            </div>
+
+            <div class="options-grid">
+                <button class="option-btn" id="btn-0" onclick="selectOption(0)"><span>A:</span> <span class="text">Option A</span></button>
+                <button class="option-btn" id="btn-1" onclick="selectOption(1)"><span>B:</span> <span class="text">Option B</span></button>
+                <button class="option-btn" id="btn-2" onclick="selectOption(2)"><span>C:</span> <span class="text">Option C</span></button>
+                <button class="option-btn" id="btn-3" onclick="selectOption(3)"><span>D:</span> <span class="text">Option D</span></button>
+            </div>
+
+            <div class="explanation-box" id="explanation-box">
+                <h3 id="result-title">Correct!</h3>
+                <p id="explanation-text">Explanation goes here...</p>
+            </div>
+
+            <button class="next-btn" id="next-btn" onclick="nextQuestion()">Next Question</button>
+        </div>
+
+        <div id="end-screen" class="screen">
+            <h1 id="end-title">Game Over</h1>
+            <p id="end-subtitle" style="font-size: 1.5rem; margin: 20px 0;"></p>
+            <button class="start-btn" onclick="startGame()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "Let's start simple. What do the letters CPU actually stand for?",
+                options: ["Computer Processing Unit", "Central Processing Unit", "Central Power Unit", "Core Program Utility"],
+                correct: 1,
+                money: "$100",
+                why: "CPU stands for Central Processing Unit. It's 'central' because it is at the middle of everything the computer does!"
+            },
+            {
+                question: "Adam is building his first ever gaming PC. Why does he absolutely need to buy a CPU?",
+                options: ["To store all his downloaded games forever", "To plug his headphones into", "To act as the 'brain' that processes instructions and commands", "To keep the computer case cool"],
+                correct: 2,
+                money: "$1,000",
+                why: "The CPU is the brain. Without it, Adam's PC wouldn't be able to process commands, calculate game physics, or run software."
+            },
+            {
+                question: "What do the letters RAM stand for?",
+                options: ["Random Access Memory", "Ready Application Module", "Read Always Memory", "Rapid Audio Maker"],
+                correct: 0,
+                money: "$10,000",
+                why: "RAM stands for Random Access Memory. It is the super-fast temporary storage your computer uses right now."
+            },
+            {
+                question: "Chloe is working on a school project. Why does her computer need RAM while she is typing it?",
+                options: ["To hold the open app and data temporarily so the CPU can get to it quickly", "To permanently save her files so they never get deleted", "To connect her computer to the school Wi-Fi", "To supply power to the keyboard and mouse"],
+                correct: 0,
+                money: "$50,000",
+                why: "RAM acts as the computer's short-term memory. It holds apps you are currently using. If you turn the PC off, RAM completely forgets it!"
+            },
+            {
+                question: "Which of these best describes what a Hard Drive (HDD) is used for?",
+                options: ["It processes fast graphics for high-end video games", "It connects the computer to the monitor screen", "It provides the power supply to the whole computer", "It is permanent storage that keeps your files safe even when the PC is turned off"],
+                correct: 3,
+                money: "$100,000",
+                why: "The Hard Drive is your long-term memory. It uses magnetic platters to save your Operating System, games, and homework safely without needing power."
+            },
+            {
+                question: "Sarah saves a drawing file on her computer. Why did her computer use the Hard Drive instead of the RAM to save it?",
+                options: ["Because the Hard Drive is faster than the RAM", "Because RAM is temporary and would lose her drawing as soon as the PC turned off", "Because the Motherboard cannot talk to the RAM", "Because the CPU only likes using the Hard Drive"],
+                correct: 1,
+                money: "$250,000",
+                why: "RAM is volatile (temporary), so turning off the PC wipes it clean. The Hard Drive is non-volatile (permanent), keeping Sarah's drawing safe for tomorrow."
+            },
+            {
+                question: "What is the Motherboard, and why does a computer need it?",
+                options: ["It is a fan that cools down the hard drive", "It is the main screen where you see your desktop", "It is the main circuit board that connects all the parts together so they can communicate", "It is a special button used to restart the PC"],
+                correct: 2,
+                money: "$500,000",
+                why: "The Motherboard is like a giant highway or nervous system. It lets the CPU, RAM, and Hard Drive plug in and talk to one another."
+            },
+            {
+                question: "To win the Million: We call things like the CPU, RAM, Motherboard, and Hard Drive internal 'components'. What does the word 'component' mean?",
+                options: ["An old computer program that doesn't work anymore", "An individual part or piece that makes up a larger machine or system", "A wire used to connect a computer to a printer", "The plastic box that sits on the outside of the desk"],
+                correct: 1,
+                money: "$1,000,000",
+                why: "A component is simply a part or link that forms a bigger system! All these internal hardware parts are components that join together to make a working computer."
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let hasAnswered = false;
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function startGame() {
+            currentQuestionIndex = 0;
+            hasAnswered = false;
+            document.getElementById('lifeline-5050').disabled = false;
+            document.getElementById('lifeline-friend').disabled = false;
+            document.getElementById('win-overlay').classList.remove('active');
+            showScreen('game-screen');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            hasAnswered = false;
+            const q = questions[currentQuestionIndex];
+            
+            document.getElementById('money-display').innerText = `Question for: ${q.money}`;
+            document.getElementById('question-text').innerText = q.question;
+            document.getElementById('explanation-box').style.display = 'none';
+            document.getElementById('next-btn').style.display = 'none';
+
+            for (let i = 0; i < 4; i++) {
+                const btn = document.getElementById(`btn-${i}`);
+                btn.querySelector('.text').innerText = q.options[i];
+                btn.className = 'option-btn'; 
+                btn.disabled = false;
+                btn.style.visibility = 'visible';
+            }
+        }
+
+        function selectOption(index) {
+            if (hasAnswered) return;
+            hasAnswered = true;
+
+            const q = questions[currentQuestionIndex];
+            const selectedBtn = document.getElementById(`btn-${index}`);
+            const correctBtn = document.getElementById(`btn-${q.correct}`);
+
+            if (index === q.correct) {
+                selectedBtn.classList.add('correct');
+                document.getElementById('result-title').innerText = "Correct! 🎉";
+                document.getElementById('result-title').style.color = "var(--correct-green)";
+            } else {
+                selectedBtn.classList.add('wrong');
+                correctBtn.classList.add('correct');
+                document.getElementById('result-title').innerText = "Incorrect! ❌";
+                document.getElementById('result-title').style.color = "var(--wrong-red)";
+            }
+
+            document.getElementById('explanation-text').innerText = q.why;
+            document.getElementById('explanation-box').style.display = 'block';
+            
+            const nextBtn = document.getElementById('next-btn');
+            if (currentQuestionIndex === questions.length - 1 && index === q.correct) {
+                nextBtn.innerText = "Claim the Million!";
+            } else if (index !== q.correct) {
+                nextBtn.innerText = "See Results";
+            } else {
+                nextBtn.innerText = "Next Question";
+            }
+            nextBtn.style.display = 'inline-block';
+        }
+
+        function nextQuestion() {
+            const selectedCorrectly = document.querySelector('.option-btn.wrong') === null;
+
+            if (!selectedCorrectly) {
+                document.getElementById('end-title').innerText = "Game Over!";
+                document.getElementById('end-subtitle').innerText = `Great try! You made it to ${questions[currentQuestionIndex].money}. Double-check your hardware definitions and try again!`;
+                showScreen('end-screen');
+            } else if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                loadQuestion();
+            } else {
+                // Show the unique House Point overlay celebration instead of default screen
+                document.getElementById('win-overlay').classList.add('active');
+            }
+        }
+
+        function restartFromWin() {
+            document.getElementById('win-overlay').classList.remove('active');
+            startGame();
+        }
+
+        function use5050() {
+            if (hasAnswered) return;
+            const q = questions[currentQuestionIndex];
+            
+            let incorrectIndexes = [];
+            for(let i=0; i<4; i++) {
+                if(i !== q.correct && document.getElementById(`btn-${i}`).style.visibility !== 'hidden') {
+                    incorrectIndexes.push(i);
+                }
+            }
+
+            incorrectIndexes.sort(() => Math.random() - 0.5);
+            
+            if(incorrectIndexes.length >= 1) document.getElementById(`btn-${incorrectIndexes[0]}`).style.visibility = 'hidden';
+            if(incorrectIndexes.length >= 2) document.getElementById(`btn-${incorrectIndexes[1]}`).style.visibility = 'hidden';
+            
+            document.getElementById('lifeline-5050').disabled = true;
+        }
+
+        function usePhoneAFriend() {
+            if (hasAnswered) return;
+            const q = questions[currentQuestionIndex];
+            const letters = ["A", "B", "C", "D"];
+            
+            document.getElementById('lifeline-friend').disabled = true;
+            
+            const overlay = document.getElementById('friend-overlay');
+            const phoneIcon = document.getElementById('phone-icon');
+            const phoneText = document.getElementById('phone-text');
+            const closeBtn = document.getElementById('friend-close-btn');
+            
+            phoneIcon.style.animation = "ring 0.3s infinite alternate ease-in-out";
+            phoneText.innerText = "Calling friend...";
+            closeBtn.style.display = "none";
+            overlay.classList.add('active');
+
+            let wrongIndexes = [];
+            for(let i=0; i<4; i++) {
+                if(i !== q.correct && document.getElementById(`btn-${i}`).style.visibility !== 'hidden') {
+                    wrongIndexes.push(i);
+                }
+            }
+            
+            const possibleRemovals = [0, 1, 2];
+            const numToRemove = possibleRemovals[Math.floor(Math.random() * possibleRemovals.length)];
+            
+            wrongIndexes.sort(() => Math.random() - 0.5);
+            
+            let eliminatedLetters = [];
+            let actualRemoved = 0;
+            
+            for(let i=0; i < numToRemove && i < wrongIndexes.length; i++) {
+                const idx = wrongIndexes[i];
+                document.getElementById(`btn-${idx}`).style.visibility = 'hidden';
+                eliminatedLetters.push(letters[idx]);
+                actualRemoved++;
+            }
+
+            setTimeout(() => {
+                phoneIcon.style.animation = "settle 0.5s forwards";
+                phoneIcon.innerText = "📱";
+                
+                let answerMessage = "";
+                if (actualRemoved === 0) {
+                    answerMessage = "Friend: \"hmm im not sure ngl. I can't rule any options out for you! Good luck!\"";
+                } else if (actualRemoved === 1) {
+                    answerMessage = `Friend: \"I know its not ${eliminatedLetters[0]}... but for the rest, I'm not totally sure ngl!\"`;
+                } else {
+                    answerMessage = `Friend: \"I know its not ${eliminatedLetters[0]} or ${eliminatedLetters[1]}. That should make it easier!\"`;
+                }
+                
+                phoneText.innerText = answerMessage;
+                closeBtn.style.display = "inline-block";
+            }, 2000);
+        }
+
+        function closeFriendOverlay() {
+            document.getElementById('friend-overlay').classList.remove('active');
+            document.getElementById('phone-icon').innerText = "📞";
+        }
+    </script>
+</body>
+</html>
