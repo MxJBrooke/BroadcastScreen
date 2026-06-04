@@ -51,16 +51,36 @@ body {
 
 .nav { display: flex; gap: 8px; align-items: center; }
 .nav button { 
-  padding: 10px 14px; 
+  padding: 0 14px; 
   border-radius: 8px; 
   border: 1px solid var(--border); 
   background: var(--secondary); 
   cursor: pointer; 
   font-weight: bold; 
   font-size: 15px; 
-  min-height: 44px;
+  height: 44px; /* Exact uniform explicit height */
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .nav button.active-view { background: var(--seat-default); color: white; }
+
+/* Dynamic Header Check-In Counter */
+.student-counter-badge {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-green);
+  color: black;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-weight: bold;
+  font-size: 15px;
+  height: 44px; /* Exact button match */
+  box-sizing: border-box;
+}
 
 .main { display: flex; height: calc(100vh - 80px); flex-direction: row; position: relative; }
 
@@ -281,7 +301,19 @@ body {
 .structural-spawn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .struct-btn { padding: 6px; font-size: 11px; min-height: 38px; font-weight: bold; border-radius: 6px; cursor: pointer; border: 1px solid var(--primary); background: #eee; text-align: center; }
 
-.deck-selector { padding: 8px; border-radius: 6px; border: 1px solid var(--primary); font-family: inherit; font-weight: bold; background: white; width: 100%; max-width: 200px; font-size: 14px; }
+.deck-selector { 
+  height: 44px; /* Matches layout elements exactly */
+  box-sizing: border-box;
+  padding: 0 8px; 
+  border-radius: 6px; 
+  border: 1px solid var(--primary); 
+  font-family: inherit; 
+  font-weight: bold; 
+  background: white; 
+  width: 100%; 
+  max-width: 200px; 
+  font-size: 14px; 
+}
 
 .leaderboard-wrap { width: 100%; max-width: 700px; margin: 40px auto; padding: 20px; background: white; border: 2px solid var(--border); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); box-sizing: border-box; }
 .leaderboard-title { margin-top: 0; border-bottom: 2px dashed var(--border); padding-bottom: 12px; text-align: center; }
@@ -294,6 +326,23 @@ body {
 .rank-standard { background: white; color: var(--text-dark); }
 .leaderboard-name { flex: 1; font-size: 18px; }
 .leaderboard-pts { font-size: 18px; font-family: monospace; }
+
+/* Wheel View Specific Styles */
+.picker-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; box-sizing: border-box; min-height: 100%; width: 100%; position: relative; }
+.wheel-wrapper { position: relative; width: 450px; height: 450px; margin-bottom: 25px; }
+#wheelCanvas { width: 100%; height: 100%; background: transparent; border-radius: 50%; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+.wheel-pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 18px solid transparent; border-right: 18px solid transparent; border-top: 30px solid var(--color-red); z-index: 5; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+.picker-btn { width: 220px; font-size: 18px; background: var(--color-green); color: white; border: 2px solid var(--primary); transition: transform 0.1s; }
+.picker-btn:active { transform: scale(0.96); }
+.picker-btn:disabled { background: var(--secondary); color: grey; cursor: not-allowed; }
+
+/* Pop-out overlay graphic */
+.popout-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.75); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+.popout-overlay.active { opacity: 1; pointer-events: auto; }
+.popout-card { background: white; border: 4px solid var(--primary); padding: 40px; border-radius: 20px; text-align: center; max-width: 500px; width: 85%; box-shadow: 0 20px 50px rgba(0,0,0,0.5); transform: scale(0.5); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.popout-overlay.active .popout-card { transform: scale(1); }
+.popout-title { color: var(--color-purple); font-size: 20px; text-transform: uppercase; letter-spacing: 2px; margin-top: 0; }
+.popout-name { font-size: 42px; font-weight: bold; margin: 20px 0; color: #111; word-wrap: break-word; }
 
 @media (max-width: 1024px) {
   .main { flex-direction: column; overflow-y: auto; }
@@ -308,9 +357,13 @@ body {
   <h1 class="logo">MxBrooke.co.uk</h1>
   <div class="nav">
     <select id="deckSelect" class="deck-selector" onchange="switchDeck(this.value)" style="display:none;"></select>
+    
+    <div id="studentCounter" class="student-counter-badge">Students: <span id="cntValue">0</span></div>
+    
     <button id="btn-setup" class="active-view" onclick="setView('setup')">Setup</button>
     <button id="btn-teach-present" onclick="setView('teach-present')">Teacher Present</button>
     <button id="btn-stud-present" onclick="setView('stud-present')">Student Present</button>
+    <button id="btn-picker" onclick="setView('picker')">Random Picker</button>
     <button id="btn-leaderboard" onclick="setView('leaderboard')">Leaderboard</button>
   </div>
 </div>
@@ -381,12 +434,26 @@ body {
   <button class="zoom-btn" onclick="adjustZoom(-0.1)">-</button>
 </div>
 
+<div class="popout-overlay" id="winnerOverlay">
+  <div class="popout-card">
+    <p class="popout-title">🎉 Selected Student 🎉</p>
+    <div class="popout-name" id="winnerNameDisplay">Student Name</div>
+    <button class="sidebar-btn" style="background:var(--secondary); margin-top:10px;" onclick="closePopout()">Dismiss</button>
+  </div>
+</div>
+
 <script>
 let selectedColor = 'none';
 let studentPool = [];
 let view = 'setup';
 let zoomScale = 1.0;
 let swapSelectedSeatId = null;
+
+let wheelAnimationId = null;
+let wheelAngle = 0;
+let wheelVelocity = 0;
+let isWheelSpinning = false;
+const wheelPalette = ['#03a4bd', '#00C38A', '#6003ac', '#c90101', '#FFA500', '#FFD700', '#d4016a'];
 
 let activeDeckKey = "Default Project";
 let projectDecks = {
@@ -422,15 +489,28 @@ function setSelectedColor(color) {
 function setView(v) { 
   view = v; 
   swapSelectedSeatId = null;
+  if(wheelAnimationId) { cancelAnimationFrame(wheelAnimationId); isWheelSpinning = false; }
+  
   document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active-view'));
   
   const targetBtn = document.getElementById(`btn-${v}`);
   if (targetBtn) targetBtn.classList.add('active-view');
   
-  document.getElementById('zoomControls').style.display = (v === 'leaderboard') ? 'none' : 'flex';
+  document.getElementById('zoomControls').style.display = (v === 'leaderboard' || v === 'picker') ? 'none' : 'flex';
   document.getElementById('togglePointsWrapper').style.display = (v === 'stud-present') ? 'flex' : 'none';
   document.getElementById('sidebar').style.display = (v === 'setup') ? 'flex' : 'none';
   document.getElementById('studentFlyout').style.display = (v === 'setup') ? 'flex' : 'none';
+  
+  const zoomCont = document.getElementById('zoomContainer');
+  if (v === 'picker' || v === 'leaderboard') {
+    zoomCont.style.transform = "none";
+    zoomCont.style.width = "100%";
+    zoomCont.style.height = "100%";
+  } else {
+    zoomCont.style.transform = `scale(${zoomScale})`;
+    zoomCont.style.width = "3000px";
+    zoomCont.style.height = "3000px";
+  }
   
   render(); 
 }
@@ -747,7 +827,6 @@ function executeLayoutImport(e) {
         
         processedCount++;
         
-        // Once all concurrent file items finish processing, refresh and switch view
         if (processedCount === filesToProcess.length) {
           if (firstKey && projectDecks[firstKey]) {
             activeDeckKey = firstKey;
@@ -764,277 +843,301 @@ function executeLayoutImport(e) {
   e.target.value = '';
 }
 
+/* Fixed Cutoff Functionality Block */
 function updateDeckDropdown() {
   const select = document.getElementById('deckSelect');
+  if (!select) return;
   select.innerHTML = '';
   
-  // Extract keys and sort them alphabetically
-  const keys = Object.keys(projectDecks).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base', numeric: true }));
-  
-  if (keys.length > 1) {
-    select.style.display = 'inline-block';
-    keys.forEach(key => {
-      const opt = document.createElement('option');
-      opt.value = key; opt.textContent = key;
-      opt.selected = (key === activeDeckKey);
-      select.appendChild(opt);
-    });
-  } else {
-    select.style.display = 'none';
-  }
-  render();
-  renderStudentList();
+  Object.keys(projectDecks).forEach(key => {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = key;
+    if (key === activeDeckKey) opt.selected = true;
+    select.appendChild(opt);
+  });
+  select.style.display = Object.keys(projectDecks).length > 1 ? 'block' : 'none';
 }
 
 function switchDeck(key) {
   if (!projectDecks[key]) return;
   activeDeckKey = key;
   seats = projectDecks[activeDeckKey].seats;
-  studentPool = projectDecks[activeDeckKey].studentPool;
+  studentPool = projectDecks[activeDeckKey].studentPool || [];
   render();
   renderStudentList();
 }
 
-function render() {
-  const app = document.getElementById('app'); app.innerHTML = '';
+function exportJSON(fullData) {
+  let dataStr = "";
+  if (fullData) {
+    dataStr = JSON.stringify(projectDecks, null, 2);
+  } else {
+    dataStr = JSON.stringify({ seats: seats, studentPool: studentPool }, null, 2);
+  }
+  const blob = new Blob([dataStr], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fullData ? "seating-planner-full-export.json" : `${activeDeckKey}-layout.json`;
+  a.click();
+}
 
-  if (view === 'leaderboard') {
-    let activeStudents = seats.filter(s => s.type === 'seat' && s.name);
-    if(activeStudents.length === 0) { 
-      app.innerHTML = '<p style="text-align:center; padding-top:60px;">No student entries discovered.</p>'; 
-      return; 
+function closePopout() {
+  document.getElementById('winnerOverlay').classList.remove('active');
+}
+
+/* Master Grid View Render Loop Engine */
+function render() {
+  const app = document.getElementById('app');
+  if (!app) return;
+  app.innerHTML = '';
+
+  // Dynamic Check-In Counter Tracker Updates
+  const counterElement = document.getElementById('studentCounter');
+  if (counterElement) {
+    if (view === 'teach-present' || view === 'stud-present') {
+      counterElement.style.display = 'inline-flex';
+      const populatedCount = seats.filter(s => s.type === 'seat' && s.name && s.name.trim() !== '').length;
+      document.getElementById('cntValue').textContent = populatedCount;
+    } else {
+      counterElement.style.display = 'none';
     }
-    
-    const allZero = activeStudents.every(s => s.points === 0);
-    let sorted = [...activeStudents].sort((a, b) => b.points - a.points);
-    
-    const wrap = document.createElement('div'); wrap.className = 'leaderboard-wrap';
-    wrap.innerHTML = `<h2 class="leaderboard-title">Classroom Leaderboard Ranking</h2>`;
-    
-    const listCont = document.createElement('div'); listCont.className = 'leaderboard-list';
-    let distinctScores = [...new Set(sorted.map(s => s.points))].sort((a,b)=>b-a);
-    
-    sorted.forEach(s => {
-      const row = document.createElement('div'); row.className = 'leaderboard-row';
-      const badge = document.createElement('div');
-      
-      if (allZero) {
-        badge.className = 'rank-badge rank-standard'; badge.textContent = "Ranked";
-      } else {
-        let rankIdx = distinctScores.indexOf(s.points);
-        if (rankIdx === 0 && s.points > 0) {
-          badge.className = 'rank-badge rank-gold'; badge.textContent = "Gold Medal";
-        } else if (rankIdx === 1 && s.points > 0) {
-          badge.className = 'rank-badge rank-silver'; badge.textContent = "Silver Medal";
-        } else if (rankIdx === 2 && s.points > 0) {
-          badge.className = 'rank-badge rank-bronze'; badge.textContent = "Bronze Medal";
-        } else {
-          badge.className = 'rank-badge rank-standard'; badge.textContent = `Rank ${rankIdx + 1}`;
-        }
-      }
-      
-      row.innerHTML = `
-        <div class="leaderboard-name">${s.name}</div>
-        <div class="leaderboard-pts">${s.points} Pts</div>
-      `;
-      row.insertBefore(badge, row.firstChild);
-      listCont.appendChild(row);
-    });
-    
-    wrap.appendChild(listCont); wrap.appendChild(listCont); app.appendChild(wrap);
+  }
+
+  if (view === 'picker') {
+    app.innerHTML = `
+      <div class="picker-container">
+        <div class="wheel-wrapper">
+          <div class="wheel-pointer"></div>
+          <canvas id="wheelCanvas" width="450" height="450"></canvas>
+        </div>
+        <button class="sidebar-btn picker-btn" id="spinBtn" onclick="spinWheel()">SPIN WHEEL</button>
+      </div>
+    `;
+    drawWheel();
     return;
   }
 
-  seats.forEach(s => {
-    if(!s.type) s.type = 'seat';
-    const isFurniture = s.type !== 'seat';
+  if (view === 'leaderboard') {
+    const clearPool = seats.filter(s => s.type === 'seat' && s.name).sort((a,b) => b.points - a.points);
+    let rowsHtml = clearPool.map((s, i) => {
+      let rankClass = "rank-standard";
+      if (i === 0) rankClass = "rank-gold";
+      if (i === 1) rankClass = "rank-silver";
+      if (i === 2) rankClass = "rank-bronze";
+      return `
+        <div class="leaderboard-row">
+          <div class="rank-badge ${rankClass}">Rank ${i+1}</div>
+          <div class="leaderboard-name">${s.name}</div>
+          <div class="leaderboard-pts">${s.points} Pts</div>
+        </div>
+      `;
+    }).join('');
+    
+    app.innerHTML = `
+      <div class="leaderboard-wrap">
+        <h2 class="leaderboard-title">🏆 Student Leaderboard 🏆</h2>
+        <div class="leaderboard-list">${rowsHtml || '<p style="text-align:center;">No students assigned to cards.</p>'}</div>
+      </div>
+    `;
+    return;
+  }
 
-    const seat = document.createElement('div');
-    seat.className = `free-seat type-${s.type}`;
-    seat.id = `seat-${s.id}`;
-    seat.style.left = `${s.x}px`; seat.style.top = `${s.y}px`;
-    seat.style.width = `${s.w}px`; seat.style.height = `${s.h}px`;
-    seat.style.transform = `rotate(${s.r}deg)`;
+  // Draw Structural Furniture and Desk Cards Maps
+  seats.forEach(seat => {
+    const div = document.createElement('div');
+    div.id = `seat-${seat.id}`;
+    div.className = `free-seat`;
+    if (seat.type !== 'seat') div.classList.add(`type-${seat.type}`);
+    if (swapSelectedSeatId === seat.id) div.classList.add('swap-selected');
 
-    if (!isFurniture) {
-      seat.style.background = `var(${s.color})`;
-      seat.style.color = textContrastMap[s.color] || 'black';
-      if(!s.flags) s.flags = { PP: false, SEN: false, EAL: false, FSM: false };
-      if (swapSelectedSeatId === s.id) seat.classList.add('swap-selected');
+    div.style.left = `${seat.x}px`;
+    div.style.top = `${seat.y}px`;
+    div.style.width = `${seat.w}px`;
+    div.style.height = `${seat.h}px`;
+    div.style.transform = `rotate(${seat.r || 0}deg)`;
 
-      seat.addEventListener('dragover', (e) => {
-        if (view === 'setup') { e.preventDefault(); seat.classList.add('drag-over-desk'); }
-      });
-      seat.addEventListener('dragleave', () => { seat.classList.remove('drag-over-desk'); });
-
-      seat.addEventListener('drop', (e) => {
-        if (view !== 'setup') return;
-        e.preventDefault();
-        seat.classList.remove('drag-over-desk');
-        
-        const draggedName = e.dataTransfer.getData('text/plain');
-        const sourceIndexStr = e.dataTransfer.getData('source-index');
-        
-        if (draggedName) {
-          if (s.name) { studentPool.push(s.name); }
-          s.name = draggedName;
-          if (sourceIndexStr !== "") {
-            const srcIdx = parseInt(sourceIndexStr, 10);
-            studentPool.splice(srcIdx, 1);
-          }
-          render(); renderStudentList();
-        }
-      });
+    if (seat.type === 'seat' && seat.color !== 'none') {
+      div.style.background = `var(${seat.color})`;
+      div.style.color = textContrastMap[seat.color] || 'black';
     }
 
     if (view === 'setup') {
-      const bar = document.createElement('div');
-      bar.className = 'drag-bar';
+      let inner = `<div class="drag-bar">`;
+      inner += `<button class="seat-tool-btn rot-trigger">↻</button>`;
+      inner += `<button class="seat-tool-btn del-trigger" style="color:var(--color-red);">×</button>`;
+      inner += `</div>`;
 
-      if (!isFurniture) {
-        const numInp = document.createElement('input');
-        numInp.className = 'num-input';
-        numInp.value = s.label || "";
-        numInp.onchange = (e) => { s.label = e.target.value; };
-        seat.appendChild(numInp);
-      } else {
-        const labelTag = document.createElement('span');
-        labelTag.style = "position:absolute; left:6px; top:6px; font-size:10px; font-weight:bold; text-transform:uppercase; opacity:0.7;";
-        labelTag.textContent = s.type;
-        seat.appendChild(labelTag);
+      if (seat.type === 'seat') {
+        inner += `<input type="text" class="num-input" value="${seat.label || ''}">`;
+        inner += `
+          <div class="seat-form-wrapper">
+            <input type="text" class="name-edit-field" placeholder="Student Name" value="${seat.name || ''}" data-lpignore="true">
+            <div class="checkbox-matrix">
+              ${['PP', 'SEN', 'EAL', 'FSM'].map(f => `
+                <label class="checkbox-unit">${f}<input type="checkbox" class="flag-toggle" data-flag="${f}" ${seat.flags?.[f] ? 'checked' : ''}></label>
+              `).join('')}
+            </div>
+          </div>
+        `;
       }
+      inner += `<div class="resize-handle"></div>`;
+      div.innerHTML = inner;
 
-      const rotBtn = document.createElement('button');
-      rotBtn.className = 'seat-tool-btn'; rotBtn.innerHTML = '↻';
+      // Click Painting Action Handlers
+      div.addEventListener('click', (e) => {
+        if (selectedColor !== 'none' && !e.target.closest('input') && !e.target.closest('button')) {
+          seat.color = selectedColor;
+          render();
+        }
+      });
 
-      const delBtn = document.createElement('button');
-      delBtn.className = 'seat-tool-btn'; delBtn.innerHTML = '×'; delBtn.style.color = 'red';
-      delBtn.onclick = (e) => {
-        e.stopPropagation();
-        if (s.name) studentPool.push(s.name);
-        seats = seats.filter(item => item.id !== s.id);
-        render(); renderStudentList();
-      };
+      // Roster Pool Drag-and-Drop Triggers
+      div.addEventListener('dragover', (e) => { if(seat.type === 'seat') e.preventDefault(); });
+      div.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const dropName = e.dataTransfer.getData('text/plain');
+        const sourceIndex = e.dataTransfer.getData('source-index');
+        if (seat.type === 'seat' && dropName) {
+          if(seat.name) studentPool.push(seat.name);
+          seat.name = dropName;
+          if(sourceIndex !== "") studentPool.splice(parseInt(sourceIndex), 1);
+          render();
+          renderStudentList();
+        }
+      });
 
-      bar.appendChild(rotBtn); bar.appendChild(delBtn);
-      seat.appendChild(bar);
-
-      if (!isFurniture) {
-        const form = document.createElement('div');
-        form.className = 'seat-form-wrapper';
-        const nameInp = document.createElement('input');
-        nameInp.type = "text"; nameInp.value = s.name; nameInp.placeholder = "Empty Desk";
-        nameInp.onchange = (e) => { 
-          const oldName = s.name;
-          const newName = e.target.value.trim();
-          s.name = newName; 
-          if (oldName && !newName) { studentPool.push(oldName); renderStudentList(); }
-        };
-        form.appendChild(nameInp);
-
-        const matrix = document.createElement('div'); matrix.className = 'checkbox-matrix';
-        ['PP', 'SEN', 'EAL', 'FSM'].forEach(fKey => {
-          const label = document.createElement('label'); label.className = 'checkbox-unit'; label.textContent = fKey;
-          const chk = document.createElement('input'); chk.type = 'checkbox';
-          chk.checked = s.flags[fKey] || false;
-          chk.onchange = (e) => { s.flags[fKey] = e.target.checked; };
-          label.appendChild(chk); matrix.appendChild(label);
+      // Dynamic State Modification Binding
+      const nameInp = div.querySelector('.name-edit-field');
+      if (nameInp) nameInp.addEventListener('input', (e) => { seat.name = e.target.value; });
+      const numInp = div.querySelector('.num-input');
+      if (numInp) numInp.addEventListener('input', (e) => { seat.label = e.target.value; });
+      
+      div.querySelectorAll('.flag-toggle').forEach(chk => {
+        chk.addEventListener('change', (e) => {
+          const flg = e.target.getAttribute('data-flag');
+          if(!seat.flags) seat.flags = {};
+          seat.flags[flg] = e.target.checked;
         });
-        form.appendChild(matrix); seat.appendChild(form);
+      });
 
-        seat.onclick = (e) => {
-          if(e.target.closest('.drag-bar') || e.target.closest('input') || e.target.closest('label')) return;
-          if (selectedColor !== 'none') { s.color = selectedColor; render(); }
-        };
-      } else {
-        const iconContainer = document.createElement('div');
-        iconContainer.style = "display:flex; flex:1; align-items:center; justify-content:center; font-size:12px; font-weight:bold; letter-spacing:1px; text-transform:uppercase; opacity:0.6; color:inherit;";
-        iconContainer.textContent = s.type;
-        seat.appendChild(iconContainer);
-      }
+      div.querySelector('.del-trigger').addEventListener('click', () => {
+        if(seat.name) studentPool.push(seat.name);
+        seats = seats.filter(s => s.id !== seat.id);
+        projectDecks[activeDeckKey].seats = seats;
+        render();
+        renderStudentList();
+      });
 
-      const resizer = document.createElement('div'); resizer.className = 'resize-handle';
-      seat.appendChild(resizer);
-
-      app.appendChild(seat);
-      setupInteractions(seat, s); setupClickRotation(rotBtn, s); setupResizing(resizer, seat, s);
+      setupInteractions(div, seat);
+      setupClickRotation(div.querySelector('.rot-trigger'), seat);
+      setupResizing(div.querySelector('.resize-handle'), div, seat);
 
     } else {
-      if (isFurniture) {
-        const structuralLabel = document.createElement('div');
-        structuralLabel.style = "width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:bold; text-transform:uppercase; letter-spacing:1px;";
-        structuralLabel.textContent = s.type === 'projector' ? 'PROJECTOR SCREEN' : s.type;
-        seat.appendChild(structuralLabel); app.appendChild(seat);
-        return;
-      }
-
-      if (s.label) {
-        const tag = document.createElement('div'); tag.className = 'view-num-tag'; tag.textContent = s.label;
-        seat.appendChild(tag);
-      }
-
-      if (s.name) {
-        const presCard = document.createElement('div'); presCard.className = 'present-card';
-        const minusZone = document.createElement('div'); minusZone.className = 'tap-zone';
-        minusZone.onclick = (e) => { e.stopPropagation(); s.points--; render(); };
-        const plusZone = document.createElement('div'); plusZone.className = 'tap-zone';
-        plusZone.onclick = (e) => { e.stopPropagation(); s.points++; render(); };
-        presCard.appendChild(minusZone); presCard.appendChild(plusZone);
-
-        let activePillsHtml = '';
-        if (view === 'teach-present') {
-          ['PP', 'SEN', 'EAL', 'FSM'].forEach(fKey => {
-            if(s.flags && s.flags[fKey]) activePillsHtml += `<span class="flag-badge">${fKey}</span>`;
-          });
+      // Presentation/Live Check-In Setup
+      if (seat.type === 'seat') {
+        const pointsVisible = document.getElementById('showPointsToggle')?.checked !== false;
+        let badges = [];
+        if (seat.flags) {
+          Object.keys(seat.flags).forEach(f => { if(seat.flags[f]) badges.push(`<span class="flag-badge">${f}</span>`); });
         }
+        
+        div.innerHTML = `
+          <div class="view-num-tag">${seat.label || ''}</div>
+          <div class="present-card">
+            ${view === 'teach-present' ? '<div class="tap-zone dec-zone"></div><div class="tap-zone inc-zone"></div>' : ''}
+            <div class="present-details">
+              <div style="font-weight:bold; font-size:18px;">${seat.name || '---'}</div>
+              ${pointsVisible ? `<div style="font-size:14px; margin-top:2px;">Points: ${seat.points || 0}</div>` : ''}
+              <div class="present-flags-strip">${badges.join('')}</div>
+            </div>
+          </div>
+        `;
 
-        const showPts = (view !== 'stud-present' || document.getElementById('showPointsToggle').checked);
-
-        const details = document.createElement('div'); details.className = 'present-details';
         if (view === 'teach-present') {
-          details.innerHTML = `<strong>${s.name}</strong><div class="present-flags-strip">${activePillsHtml}</div><div style="font-size:14px; font-weight:bold; margin-top:auto;">Pts: ${s.points}</div>`;
-        } else {
-          details.innerHTML = `
-            <strong style="font-size:20px;">${s.name}</strong>
-            ${showPts ? `<div style="font-size:18px; font-weight:bold; margin-top:15px;">Pts: ${s.points}</div>` : ''}
-          `;
+          div.querySelector('.dec-zone').addEventListener('click', (e) => { e.stopPropagation(); seat.points = (seat.points || 0) - 1; render(); });
+          div.querySelector('.inc-zone').addEventListener('click', (e) => { e.stopPropagation(); seat.points = (seat.points || 0) + 1; render(); });
         }
-        presCard.appendChild(details); seat.appendChild(presCard);
-      } else {
-        seat.style.borderStyle = 'dashed'; seat.style.opacity = 0.4;
-        const msg = document.createElement('span'); msg.style = 'margin:auto; font-size:12px;'; msg.textContent = 'Vacant Desk';
-        seat.appendChild(msg);
       }
-      app.appendChild(seat);
     }
+
+    app.appendChild(div);
   });
 }
 
-function exportJSON(includeStudentData) {
-  let exportSeats = [];
-  if (includeStudentData) {
-    exportSeats = seats;
-  } else {
-    exportSeats = seats.map(s => {
-      if (s.type !== 'seat') return { ...s };
-      return {
-        id: s.id, type: s.type, label: s.label,
-        x: s.x, y: s.y, w: s.w, h: s.h, r: s.r, color: s.color,
-        name: "", points: 0, flags: { PP: false, SEN: false, EAL: false, FSM: false }
-      };
-    });
+/* Random Picker Logic System */
+function drawWheel() {
+  const canvas = document.getElementById('wheelCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const pool = seats.filter(s => s.type === 'seat' && s.name).map(s => s.name);
+  
+  ctx.clearRect(0, 0, 450, 450);
+  if (pool.length === 0) {
+    ctx.fillStyle = "#aaa";
+    ctx.beginPath(); ctx.arc(225, 225, 210, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = "white"; ctx.font = "16px monospace"; ctx.textAlign = "center";
+    ctx.fillText("No active students seated", 225, 230);
+    return;
   }
 
-  const payload = { seats: exportSeats, studentPool: includeStudentData ? studentPool : [] };
-  const nameSuffix = includeStudentData ? "full_data" : "anonymous_layout";
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload));
-  const dlAnchor = document.createElement('a');
-  dlAnchor.setAttribute("href", dataStr); dlAnchor.setAttribute("download", `classroom_${nameSuffix}.json`);
-  dlAnchor.click();
+  const arcSize = (Math.PI * 2) / pool.length;
+  pool.forEach((name, i) => {
+    const start = wheelAngle + (i * arcSize);
+    const end = start + arcSize;
+    ctx.fillStyle = wheelPalette[i % wheelPalette.length];
+    ctx.beginPath(); ctx.moveTo(225, 225); ctx.arc(225, 225, 210, start, end); ctx.lineTo(225, 225); ctx.fill();
+    
+    ctx.save();
+    ctx.translate(225, 225);
+    ctx.rotate(start + arcSize / 2);
+    ctx.fillStyle = "white";
+    ctx.font = "bold 14px monospace";
+    ctx.textAlign = "right";
+    ctx.fillText(name.substring(0, 15), 190, 5);
+    ctx.restore();
+  });
 }
 
-render();
-renderStudentList();
+function spinWheel() {
+  if (isWheelSpinning) return;
+  const pool = seats.filter(s => s.type === 'seat' && s.name).map(s => s.name);
+  if (pool.length === 0) return;
+
+  isWheelSpinning = true;
+  document.getElementById('spinBtn').disabled = true;
+  wheelVelocity = Math.random() * 0.4 + 0.35;
+
+  function animate() {
+    wheelAngle += wheelVelocity;
+    wheelVelocity *= 0.985;
+    drawWheel();
+
+    if (wheelVelocity < 0.002) {
+      isWheelSpinning = false;
+      document.getElementById('spinBtn').disabled = false;
+      cancelAnimationFrame(wheelAnimationId);
+      
+      const arcSize = (Math.PI * 2) / pool.length;
+      let normalizedAngle = (Math.PI * 1.5 - wheelAngle) % (Math.PI * 2);
+      if (normalizedAngle < 0) normalizedAngle += Math.PI * 2;
+      const winnerIndex = Math.floor(normalizedAngle / arcSize) % pool.length;
+      
+      document.getElementById('winnerNameDisplay').textContent = pool[winnerIndex];
+      document.getElementById('winnerOverlay').classList.add('active');
+    } else {
+      wheelAnimationId = requestAnimationFrame(animate);
+    }
+  }
+  animate();
+}
+
+window.onload = () => {
+  updateDeckDropdown();
+  renderStudentList();
+  setView('setup');
+};
 </script>
 </body>
 </html>
