@@ -34,13 +34,70 @@ body {
   z-index: 15;
 }
 
+.header-controls-left {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.header-controls-right {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+button {
+  background: #2b2b2b;
+  color: #f0f0f0;
+  border: 1px solid #4a4a4a;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: Consolas, monospace;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+button:hover {
+  background: #3a3a3a;
+  border-color: #666;
+  color: #ffffff;
+}
+
 #animateButton {
-  background: #333;
+  background: #1b4d22;
+  border-color: #2e7d32;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 8px 16px;
+}
+
+#animateButton:hover {
+  background: #2e7d32;
+  border-color: #4caf50;
+}
+
+#settingsBtn {
+  background: #1976d2;
+  border-color: #2196f3;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 8px 16px;
+}
+
+#settingsBtn:hover {
+  background: #2196f3;
+  border-color: #64b5f6;
+}
+
+#configSwitcher {
+  background: #222;
   color: white;
   border: 1px solid #555;
-  font-size: 18px;
-  padding: 8px 14px;
-  cursor: pointer;
+  border-radius: 4px;
+  font-size: 16px;
+  padding: 8px;
+  font-family: Consolas, monospace;
 }
 
 #header img {
@@ -54,13 +111,13 @@ body {
   white-space: nowrap;
 }
 
-/* Sidebar */
+/* Sidebar Layout - Shifted down to prevent header cutting off text */
 #sidebar {
   position: fixed;
-  top: 0;
+  top: 80px; 
   left: 0;
   width: 260px;
-  height: 100vh;
+  height: calc(100vh - 80px);
   background: #222;
   border-right: 2px solid #555;
   padding: 20px;
@@ -70,38 +127,216 @@ body {
   overflow-y: auto;
 }
 
-#sidebar button,
-#sidebar input,
+#sidebar h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 18px;
+  border-bottom: 1px solid #444;
+  padding-bottom: 10px;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-group {
+  margin-bottom: 20px;
+}
+
+.sidebar-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #aaa;
+  font-weight: bold;
+}
+
 #sidebar textarea {
   width: 100%;
-  margin-bottom: 10px;
+  resize: vertical;
+  background: #333;
+  color: white;
+  border: 1px solid #555;
+  padding: 8px;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-family: Consolas, monospace;
+}
+
+/* Proportional, Non-stretching Target Row Controls */
+.target-input-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  width: 100%;
+}
+
+.target-input-group input[type="number"] {
+  width: 90px;
+  height: 34px;
+  background: #333;
+  color: white;
+  border: 1px solid #555;
+  padding: 0 10px;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-family: Consolas, monospace;
+}
+
+.target-input-group input[type="color"] {
+  width: 40px;
+  height: 34px;
+  background: none;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+}
+
+/* Multi-browser color swatch formatting safeguards */
+.target-input-group input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.target-input-group input[type="color"]::-webkit-color-swatch { border: none; border-radius: 3px; }
+
+.target-input-group button {
+  flex: 1;
+  height: 34px;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.target-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #333;
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  font-size: 13px;
+  border: 1px solid #444;
+  border-radius: 4px;
+}
+
+.target-item button {
+  width: auto;
+  margin: 0;
+  padding: 2px 8px;
+  background: #c62828;
+  border: 1px solid #b71c1c;
+  font-size: 11px;
+  color: white;
+}
+
+.target-item button:hover {
+  background: #d32f2f;
+}
+
+/* Config Manager Styling */
+.config-action-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#sidebar button.full-width {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+#exportBtn {
+  background: #4e342e;
+  border-color: #5d4037;
+}
+#exportBtn:hover {
+  background: #5d4037;
+  border-color: #6d4c41;
+}
+
+#importBtn {
+  background: #006064;
+  border-color: #00838f;
+}
+#importBtn:hover {
+  background: #00838f;
+  border-color: #0097a7;
+}
+
+#jsonInput {
+  display: none;
+}
+
+/* Floating Settings Window */
+#floatingSettings {
+  display: none;
+  position: fixed;
+  top: 90px;
+  right: 20px;
+  width: 280px;
+  background: #222;
+  border: 2px solid #555;
+  border-radius: 6px;
+  padding: 15px;
+  box-sizing: border-box;
+  color: white;
+  z-index: 50;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+}
+
+#floatingSettings.open {
+  display: block;
+}
+
+#floatingSettings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #444;
+  padding-bottom: 10px;
+}
+
+#floatingSettings-header h3 { margin: 0; font-size: 16px; }
+
+#closeSettingsBtn {
+  background: none;
+  border: none;
+  color: #ccc;
+  font-size: 16px;
+  cursor: pointer;
+}
+#closeSettingsBtn:hover { color: white; }
+
+#floatingSettings label {
+  display: block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #ccc;
+}
+#floatingSettings input[type="number"],
+#floatingSettings input[type="range"] {
+  width: 100%;
+  margin-bottom: 5px;
   background: #333;
   color: white;
   border: 1px solid #555;
   padding: 6px;
-  font-family: Consolas, monospace;
+  box-sizing: border-box;
+  border-radius: 4px;
 }
 
-#sidebar label {
-  display: block;
-  margin-top: 8px;
-}
-
-#sidebar textarea {
-  resize: vertical;
-}
-
-/* Toggle button */
+/* Toggle sidebar button */
 #toggleSidebar {
   position: fixed;
-  left: 0;
+  left: 10px;
   bottom: 10px;
   z-index: 20;
-  padding: 10px 15px;
-  background: grey;
-  color: white;
-  border: none;
-  cursor: pointer;
+  background: #424242;
+  border-color: #616161;
+}
+#toggleSidebar:hover {
+  background: #616161;
+  border-color: #757575;
 }
 
 /* Board container */
@@ -124,6 +359,29 @@ body {
   align-items: flex-end;
   justify-content: center;
   gap: 10px;
+  position: relative;
+}
+
+/* Target Line Overlays */
+.target-line {
+  position: absolute;
+  left: -40px;
+  right: -40px;
+  border-bottom: 2px dashed;
+  z-index: 5;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  transition: bottom 0.2s;
+}
+
+.target-label {
+  background: #111;
+  padding: 2px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+  font-weight: bold;
+  transform: translateY(50%);
 }
 
 /* Columns */
@@ -134,9 +392,10 @@ body {
   border-left: 2px solid #555;
   border-right: 2px solid #555;
   padding: 2px;
+  position: relative;
+  z-index: 2;
 }
 
-/* Column text */
 .column-text {
   margin-bottom: 16px;
   color: white;
@@ -145,14 +404,8 @@ body {
   visibility: hidden;
 }
 
-.column-text div {
-  writing-mode: vertical-rl;
-}
-
-.column:hover .column-text {
-  transform: scale(1.5);
-  color: gold;
-}
+.column-text div { writing-mode: vertical-rl; }
+.column:hover .column-text { transform: scale(1.5); color: gold; }
 
 /* Medals */
 .gold { box-shadow: 0 0 25px 8px gold; }
@@ -163,12 +416,12 @@ body {
 .blocks-wrapper {
   display: flex;
   flex-direction: column-reverse;
+  gap: 1px;
 }
 
 .block-row {
   display: grid;
   gap: 1px;
-  margin-bottom: 1px;
 }
 
 .block {
@@ -179,32 +432,61 @@ body {
   transform: translateY(-30px);
 }
 
-@keyframes fallIn {
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.block.animate {
-  animation: fallIn 0.3s ease forwards;
-}
+@keyframes fallIn { to { opacity: 1; transform: translateY(0); } }
+.block.animate { animation: fallIn 0.3s ease forwards; }
 </style>
 </head>
 
 <body>
 
 <header id="header">
-  <button id="animateButton">▶ Play</button>
+  <div class="header-controls-left">
+    <button id="animateButton">Play</button>
+    <select id="configSwitcher" style="display:none;"></select>
+  </div>
   <img src="https://clf.uk/wp-content/uploads/CLF-Logo-Transparent-White-Text.png">
-  <div id="pointsDisplay">5 points per block</div>
+  <div class="header-controls-right">
+    <div id="pointsDisplay">5 points per block</div>
+    <button id="settingsBtn">Settings</button>
+  </div>
 </header>
 
 <div id="sidebar">
-  <h2>Controls</h2>
+  <h2>Data & Targets</h2>
 
-  <label>Student data (Name,Points)</label>
-  <textarea id="dataInput" rows="14"></textarea>
+  <div class="sidebar-group">
+    <label>Student data (Name,Points)</label>
+    <textarea id="dataInput" rows="12"></textarea>
+  </div>
 
-  <button id="fileButton">Choose File</button>
-  <input type="file" id="fileInput" accept=".txt" hidden>
+  <div class="sidebar-group">
+    <label>Target Lines</label>
+    <div class="target-input-group">
+      <input type="number" id="targetPointsInput" placeholder="Pts">
+      <input type="color" id="targetColorInput" value="#FF00FF">
+      <button id="addTargetBtn">Add</button>
+    </div>
+    <div id="targetListContainer" style="margin-top: 10px;"></div>
+  </div>
+
+  <div class="sidebar-group" style="margin-top: 30px; border-top: 1px solid #444; padding-top: 20px;">
+    <label>Config Manager</label>
+    <div class="config-action-group">
+      <button id="exportBtn" class="full-width">Save Config</button>
+      <button id="importBtn" class="full-width">Upload Configs</button>
+    </div>
+    <input type="file" id="jsonInput" accept=".json" multiple hidden>
+  </div>
+</div>
+
+<div id="floatingSettings">
+  <div id="floatingSettings-header">
+    <h3>Layout Settings</h3>
+    <button id="closeSettingsBtn">X</button>
+  </div>
+
+  <label>Starting point (Min Pts)</label>
+  <input type="number" id="baseInput" value="0" min="0">
 
   <label>Points per block</label>
   <input type="number" id="scaleInput" value="5" min="1">
@@ -212,7 +494,7 @@ body {
   <label>Blocks per row</label>
   <input type="range" id="widthSlider" min="1" max="20" value="8">
 
-  <label>Bunching</label>
+  <label>Bunching (Gap)</label>
   <input type="range" id="gapSlider" min="0" max="30" value="10">
 
   <label>Zoom</label>
@@ -221,12 +503,12 @@ body {
   <label>Animation speed</label>
   <input type="range" id="speedSlider" min="10" max="100" value="25">
 
-  <label>
-    <input type="checkbox" id="medalCheckbox" checked> Show Gold/Silver/Bronze
+  <label style="margin-top: 15px; display: flex; align-items: center; gap: 8px;">
+    <input type="checkbox" id="medalCheckbox" checked style="margin:0;"> Show Medals
   </label>
 </div>
 
-<button id="toggleSidebar">☰</button>
+<button id="toggleSidebar">Controls</button>
 
 <div id="boardContainer">
   <div id="boardZoom">
@@ -239,20 +521,43 @@ const board = document.getElementById('board');
 const boardZoom = document.getElementById('boardZoom');
 const boardContainer = document.getElementById('boardContainer');
 const dataInput = document.getElementById('dataInput');
-const fileInput = document.getElementById('fileInput');
-const fileButton = document.getElementById('fileButton');
 const animateButton = document.getElementById('animateButton');
+
+// Settings Elements
+const settingsBtn = document.getElementById('settingsBtn');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+const floatingSettings = document.getElementById('floatingSettings');
+
+const baseInput = document.getElementById('baseInput');
 const scaleInput = document.getElementById('scaleInput');
 const widthSlider = document.getElementById('widthSlider');
 const gapSlider = document.getElementById('gapSlider');
 const zoomSlider = document.getElementById('zoomSlider');
 const speedSlider = document.getElementById('speedSlider');
 const medalCheckbox = document.getElementById('medalCheckbox');
+
 const sidebar = document.getElementById('sidebar');
+const toggleSidebar = document.getElementById('toggleSidebar');
 const pointsDisplay = document.getElementById('pointsDisplay');
+
+const targetPointsInput = document.getElementById('targetPointsInput');
+const targetColorInput = document.getElementById('targetColorInput');
+const addTargetBtn = document.getElementById('addTargetBtn');
+const targetListContainer = document.getElementById('targetListContainer');
+
+const exportBtn = document.getElementById('exportBtn');
+const importBtn = document.getElementById('importBtn');
+const jsonInput = document.getElementById('jsonInput');
+const configSwitcher = document.getElementById('configSwitcher');
 
 const rainbowColors = ['#FF0000','#FF7F00','#FFFF00','#00FF00','#0000FF','#4B0082','#8B00FF'];
 let dataStore = [];
+let targetLines = [];
+let loadedConfigs = {};
+
+/* Floating Settings Toggle */
+settingsBtn.onclick = () => floatingSettings.classList.toggle('open');
+closeSettingsBtn.onclick = () => floatingSettings.classList.remove('open');
 
 /* Sidebar toggle */
 toggleSidebar.onclick = () => {
@@ -260,10 +565,41 @@ toggleSidebar.onclick = () => {
   boardContainer.style.marginLeft = sidebar.style.display === 'none' ? '0' : '260px';
 };
 
+/* Live listeners */
 zoomSlider.oninput = () => boardZoom.style.transform = `scale(${zoomSlider.value/100})`;
 gapSlider.oninput = () => board.style.gap = gapSlider.value + 'px';
+baseInput.oninput = renderBoard;
 widthSlider.oninput = renderBoard;
 scaleInput.oninput = renderBoard;
+
+/* Target Lines Logic */
+function updateTargetUI() {
+  targetListContainer.innerHTML = '';
+  targetLines.forEach((t, index) => {
+    const el = document.createElement('div');
+    el.className = 'target-item';
+    el.innerHTML = `
+      <span><span style="color:${t.color}">■</span> ${t.points} pts</span>
+      <button onclick="removeTarget(${index})">Remove</button>
+    `;
+    targetListContainer.appendChild(el);
+  });
+  renderBoard();
+}
+
+window.removeTarget = (index) => {
+  targetLines.splice(index, 1);
+  updateTargetUI();
+};
+
+addTargetBtn.onclick = () => {
+  const pts = +targetPointsInput.value;
+  if (pts > 0) {
+    targetLines.push({ points: pts, color: targetColorInput.value });
+    targetPointsInput.value = '';
+    updateTargetUI();
+  }
+};
 
 /* Data parsing */
 function parseData() {
@@ -279,13 +615,7 @@ function parseData() {
 
 dataInput.addEventListener('input', parseData);
 
-fileButton.onclick = () => fileInput.click();
-fileInput.onchange = async e => {
-  dataInput.value = await e.target.files[0].text();
-  parseData();
-};
-
-/* Render board */
+/* Render board & Target Lines */
 function renderBoard() {
   board.innerHTML = '';
   if (!dataStore.length) return;
@@ -293,12 +623,16 @@ function renderBoard() {
   const sorted = [...dataStore].sort((a,b)=>b.points-a.points);
   const blocksPerRow = +widthSlider.value;
   const pointsPerBlock = Math.max(1, +scaleInput.value);
-  pointsDisplay.textContent = `${pointsPerBlock} points per block`;
+  const basePoints = Math.max(0, +baseInput.value);
+  
+  pointsDisplay.textContent = `${pointsPerBlock} pts/block (Baseline: ${basePoints})`;
 
+  // Calculate grid dimensions based on points above baseline
   const maxRows = Math.max(...sorted.map(s =>
-    Math.ceil(s.points / pointsPerBlock / blocksPerRow)
+    Math.ceil(Math.max(0, s.points - basePoints) / pointsPerBlock / blocksPerRow)
   ));
 
+  // Render Student Columns
   sorted.forEach((item, index) => {
     const col = document.createElement('div');
     col.className = 'column';
@@ -312,7 +646,9 @@ function renderBoard() {
     const wrap = document.createElement('div');
     wrap.className = 'blocks-wrapper';
 
-    const totalBlocks = Math.ceil(item.points / pointsPerBlock);
+    // Calculate total blocks remaining above starting baseline
+    const effectivePoints = Math.max(0, item.points - basePoints);
+    const totalBlocks = Math.ceil(effectivePoints / pointsPerBlock);
 
     for (let r=0; r<maxRows; r++) {
       const row = document.createElement('div');
@@ -338,6 +674,25 @@ function renderBoard() {
     col.appendChild(wrap);
     board.appendChild(col);
   });
+
+  // Target lines math adjusted for baseline offsets
+  const pointsPerRow = pointsPerBlock * blocksPerRow;
+  
+  targetLines.forEach(line => {
+    const effectiveTargetPoints = line.points - basePoints;
+    if (effectiveTargetPoints < 0) return; 
+    
+    const rowsNeeded = Math.ceil(effectiveTargetPoints / pointsPerRow);
+    const heightInPx = rowsNeeded * 25;
+    
+    const lineEl = document.createElement('div');
+    lineEl.className = 'target-line';
+    
+    lineEl.style.bottom = `${heightInPx + 1}px`; 
+    lineEl.style.borderBottomColor = line.color;
+    lineEl.innerHTML = `<span class="target-label" style="color:${line.color}; border: 1px solid ${line.color};">${line.points}</span>`;
+    board.appendChild(lineEl);
+  });
 }
 
 /* Animate columns sequentially */
@@ -354,9 +709,7 @@ animateButton.onclick = () => {
     });
   });
 
-  const ordered = [...columns].sort(
-    (a,b) => a.dataset.points - b.dataset.points
-  );
+  const ordered = [...columns].sort((a,b) => a.dataset.points - b.dataset.points);
 
   function animateColumn(i) {
     if (i >= ordered.length) {
@@ -369,6 +722,12 @@ animateButton.onclick = () => {
     }
 
     const blocks = [...ordered[i].querySelectorAll('[data-active]')];
+    if (blocks.length === 0) {
+      ordered[i].querySelector('.column-text').style.visibility = 'visible';
+      animateColumn(i+1);
+      return;
+    }
+
     blocks.forEach((b,j)=> {
       setTimeout(()=>b.classList.add('animate'), j * speed);
     });
@@ -382,13 +741,92 @@ animateButton.onclick = () => {
   animateColumn(0);
 };
 
-/* Seed data */
+/* JSON Save & Load System */
+exportBtn.onclick = () => {
+  const config = {
+    data: dataInput.value,
+    base: baseInput.value,
+    scale: scaleInput.value,
+    width: widthSlider.value,
+    gap: gapSlider.value,
+    zoom: zoomSlider.value,
+    speed: speedSlider.value,
+    medals: medalCheckbox.checked,
+    lines: targetLines
+  };
+  const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  
+  let filename = configSwitcher.value ? configSwitcher.value : 'Class_Scoreboard';
+  a.download = `${filename}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+importBtn.onclick = () => jsonInput.click();
+
+jsonInput.onchange = async (e) => {
+  const files = e.target.files;
+  if (!files.length) return;
+
+  for (let file of files) {
+    try {
+      const text = await file.text();
+      const config = JSON.parse(text);
+      const name = file.name.replace('.json', '');
+      loadedConfigs[name] = config;
+    } catch (err) {
+      console.error('Failed to parse JSON for file:', file.name);
+    }
+  }
+  
+  updateSwitcherUI();
+}
+
+function updateSwitcherUI() {
+  const names = Object.keys(loadedConfigs);
+  if (names.length === 0) return;
+
+  configSwitcher.style.display = 'inline-block';
+  configSwitcher.innerHTML = names.map(n => `<option value="${n}">${n}</option>`).join('');
+  loadConfig(names[0]);
+}
+
+configSwitcher.onchange = () => loadConfig(configSwitcher.value);
+
+function loadConfig(name) {
+  const c = loadedConfigs[name];
+  if (!c) return;
+
+  dataInput.value = c.data || '';
+  baseInput.value = c.base || 0;
+  scaleInput.value = c.scale || 5;
+  widthSlider.value = c.width || 8;
+  gapSlider.value = c.gap || 10;
+  zoomSlider.value = c.zoom || 100;
+  speedSlider.value = c.speed || 25;
+  medalCheckbox.checked = c.medals ?? true;
+  targetLines = c.lines || [];
+
+  zoomSlider.oninput();
+  gapSlider.oninput();
+  parseData(); 
+  updateTargetUI();
+}
+
+/* Seed data initialization */
 dataInput.value=`Alan Turing,400
 Grace Hopper,380
 Donald Knuth,360
 Edsger Dijkstra,340
 Barbara Liskov,320`;
+baseInput.value = 300; 
+targetLines = [{points: 350, color: "#00FF00"}, {points: 400, color: "#00BFFF"}];
+
 parseData();
+updateTargetUI();
 </script>
 
 </body>
