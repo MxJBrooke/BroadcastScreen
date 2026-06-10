@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Validation J836</title>
+<style>
+body {
+    font-family: Consolas, monospace;
+    margin: 0;
+    transition: all 0.3s ease;
+    word-spacing: normal;
+    font-size: 16px;
+}
+
+.header {
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    color: #000;
+    transition: all 0.3s ease;
+}
+
+.header h1 {
+    color: #fff;
+}
+
+.accessibility-toggle {
+    position: absolute;
+    left: 20px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.accessibility-scale {
+    left: 20px;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* FIXED PANEL */
+.accessibility-panel {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 250px;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: left 0.3s ease;
+    z-index: 1000;
+    background: #fff;
+}
+
+.accessibility-panel.open {
+    left: 0;
+}
+
+.color-spot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    margin: 5px;
+    cursor: pointer;
+    border: 1px solid #777;
+}
+
+/* TWO COLUMN SIDE-BY-SIDE LAYOUT */
+.main-wrapper {
+    max-width: 95%;
+    margin: 40px auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+@media (max-width: 900px) {
+    .main-wrapper {
+        grid-template-columns: 1fr;
+    }
+}
+
+.column-title {
+    text-align: center;
+    border-bottom: 2px dashed #ccc;
+    padding-bottom: 10px;
+    margin-top: 0;
+}
+
+/* CARDS MAINTAINED FROM TEMPLATE */
+.card {
+    background: #fff;
+    padding: 20px;
+    margin: 15px 0;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+input[type="text"], input[type="password"], select {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #aaa;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 1em;
+    transition: all 0.3s ease;
+}
+
+/* RADIO STYLING BOXES */
+.radio-group {
+    padding: 10px;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.radio-option input {
+    margin-right: 10px;
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+/* RED GLOW COMPONENT FOR FAILED VALIDATION */
+.invalid-input {
+    border-color: #ff3333 !important;
+    background-color: #ffe6e6 !important;
+    box-shadow: 0 0 10px #ff3333 !important;
+}
+
+/* SPECIAL RULE FOR RADIO CONTAINER HIGHLIGHT */
+.invalid-radio-container {
+    border-color: #ff3333 !important;
+    background-color: #ffe6e6 !important;
+    box-shadow: 0 0 10px #ff3333 !important;
+}
+
+/* DARK MODE OVERRIDES FOR INVALID STATE */
+body.access-dark .invalid-input,
+body.access-dark .invalid-radio-container {
+    background-color: #551111 !important;
+    border-color: #ff5555 !important;
+    box-shadow: 0 0 10px #ff5555 !important;
+}
+
+.submit-container {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.submit-btn {
+    padding: 12px 24px;
+    font-size: 1.1em;
+    font-weight: bold;
+    background: #fff;
+    color: #000;
+    border: 2px solid #000;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+.submit-btn:hover {
+    background: #000;
+    color: #fff;
+}
+
+body.access-dark .submit-btn {
+    background: #222;
+    color: #fff;
+    border-color: #fff;
+}
+body.access-dark .submit-btn:hover {
+    background: #fff;
+    color: #000;
+}
+
+.status-box {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: bold;
+    border: 2px solid #000;
+    background: #e0e0e0;
+    color: #000;
+}
+
+.status-box.success {
+    border-color: green;
+    background: #e8f5e9;
+    color: #03543f;
+}
+
+.status-box.error {
+    border-color: #ff3333;
+    background: #ffe6e6;
+    color: #721c24;
+}
+
+body.access-dark .status-box.error {
+    background: #551111;
+    color: #ffcccc;
+}
+
+/* RESTORED CARD COLOURS */
+body.access-white .card { background: #f5f5f5; }
+body.access-red .card { background: #ffcccc; }
+body.access-orange .card { background: #ffe5cc; }
+body.access-yellow .card { background: #fff9c4; }
+body.access-green .card { background: #e8f5e9; }
+body.access-blue .card { background: #e3f2fd; }
+body.access-purple .card { background: #e6e0f8; }
+body.access-pink .card { background: #fce4ec; }
+body.access-dark .card { background: #222; color:#fff; }
+
+.az-nav {
+    position: fixed;
+    right: 10px;
+    top: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.az-nav button {
+    font-size: 12px;
+    padding: 4px;
+    cursor: pointer;
+    background: #e0e0e0;
+    color: #000;
+    border-radius: 6px;
+    border: 1px solid #000;
+}
+
+.accessibility-control {
+    margin: 10px 0;
+}
+</style>
+</head>
+<body>
+
+<div class="header" id="header">
+    <button class="accessibility-toggle" onclick="toggleAccessibility()">Accessibility</button>
+    <h1>Data Validation J836</h1>
+</div>
+
+<div class="accessibility-panel" id="accessPanel">
+    <button onclick="toggleAccessibility()">✖</button>
+    <h3>Colours</h3>
+    <button class="color-spot" style="background:#f5f5f5" onclick="setBackground('white')"></button>
+    <button class="color-spot" style="background:#ffcccc" onclick="setBackground('red')"></button>
+    <button class="color-spot" style="background:#ffe5cc" onclick="setBackground('orange')"></button>
+    <button class="color-spot" style="background:#fff9c4" onclick="setBackground('yellow')"></button>
+    <button class="color-spot" style="background:#e8f5e9" onclick="setBackground('green')"></button>
+    <button class="color-spot" style="background:#e3f2fd" onclick="setBackground('blue')"></button>
+    <button class="color-spot" style="background:#e6e0f8" onclick="setBackground('purple')"></button>
+    <button class="color-spot" style="background:#fce4ec" onclick="setBackground('pink')"></button>
+    <button class="color-spot" style="background:#121212" onclick="setBackground('dark')"></button>
+
+    <h3>Word Spacing</h3>
+    <div class="accessibility-control">
+        <button class="accessibility-scale" onclick="adjustWordSpacing(0.1)">Increase</button>
+        <button class="accessibility-scale" onclick="adjustWordSpacing(-0.1)">Decrease</button>
+    </div>
+
+    <h3>Font Size</h3>
+    <div class="accessibility-control">
+        <button class="accessibility-scale" onclick="adjustFontSize(1)">Increase</button>
+        <button class="accessibility-scale" onclick="adjustFontSize(-1)">Decrease</button>
+    </div>
+</div>
+
+<div class="az-nav" id="azNav"></div>
+
+<div class="main-wrapper">
+
+    <!-- LEFT COLUMN: LIVE SIGN UP MODULE -->
+    <div id="formContainer" data-letter="S">
+        <h2 class="column-title">www.MxBrooke.co.uk - Sign Up</h2>
+        
+        <div id="statusBox" class="status-box">
+            System Status: Ready
+        </div>
+
+        <form id="validationForm" onsubmit="runFormValidation(event)">
+            
+            <div class="card">
+                <label for="username">Username:</label>
+                <input type="text" id="username" placeholder="Enter username...">
+            </div>
+
+            <div class="card">
+                <label for="pin">Security PIN:</label>
+                <input type="password" id="pin" placeholder="Enter PIN..." maxlength="10">
+            </div>
+
+            <div class="card">
+                <label for="yearGroup">School Year Group:</label>
+                <input type="text" id="yearGroup" placeholder="Enter year group...">
+            </div>
+
+            <div class="card">
+                <label for="seatCode">Allocated Desk Reference ID:</label>
+                <input type="text" id="seatCode" placeholder="Enter desk code...">
+            </div>
+
+            <div class="card">
+                <label for="house">School House Assignment:</label>
+                <select id="house">
+                    <option value="">-- Select Option --</option>
+                    <option value="Malala">Malala House</option>
+                    <option value="Rashford">Rashford House</option>
+                    <option value="Amika">Amika House</option>
+                    <option value="Stephenson">Stephenson House</option>
+                </select>
+            </div>
+
+            <!-- J836 SPECIFIC ADDITION: RADIO INPUTS -->
+            <div class="card">
+                <label>Account Status Type:</label>
+                <div class="radio-group" id="statusRadioWrapper">
+                    <label class="radio-option">
+                        <input type="radio" name="accountStatus" value="Student"> Student Account
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="accountStatus" value="Staff"> Staff / Administrator
+                    </label>
+                </div>
+            </div>
+
+            <div class="submit-container">
+                <button type="submit" class="submit-btn">Register Account</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- RIGHT COLUMN: REVISED OCR J836 REFERENCE DESK (DATA PROPERTIES) -->
+    <div id="infoContainer" data-letter="R">
+        <h2 class="column-title">OCR J836 Reference Desk</h2>
+        
+        <div class="card">
+            <h3>Data Types check</h3>
+            <p><strong>Definition:</strong> Checks that the value entered is of the required data type (e.g., checking that an alphanumeric text string does not contain integers, or that a numerical field accepts only numbers).</p>
+        </div>
+
+        <div class="card">
+            <h3>Presence Check</h3>
+            <p><strong>Definition:</strong> Verifies that critical fields or data blocks have not been completely omitted. The computer program scans the form input and flags instances where required data entries remain completely empty or blank.</p>
+        </div>
+
+        <div class="card">
+            <h3>Range Check</h3>
+            <p><strong>Definition:</strong> Forces numerical values to fit within a predefined boundary window locked by an upper and lower mathematical threshold. Data falling outside those exact bounds is automatically flagged as an entry error.</p>
+        </div>
+
+        <div class="card">
+            <h3>Length Check</h3>
+            <p><strong>Definition:</strong> Monitors the data string array constraints. This rule checks if the total quantity of characters typed matches a specific fixed value, or complies with a predefined minimum or maximum length threshold.</p>
+        </div>
+
+        <div class="card">
+            <h3>Lookup Check</h3>
+            <p><strong>Definition:</strong> Compares and restricts input options directly against an index table or a pre-approved list of options stored inside the database. This stops users from generating unstructured free-text responses.</p>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function toggleAccessibility() {
+    document.getElementById('accessPanel').classList.toggle('open');
+}
+
+function darkenColor(hex, percent) {
+    hex = hex.replace('#','');
+    let r=parseInt(hex.substring(0,2),16);
+    let g=parseInt(hex.substring(2,4),16);
+    let b=parseInt(hex.substring(4,6),16);
+    r=Math.floor(r*(1-percent/100));
+    g=Math.floor(g*(1-percent/100));
+    b=Math.floor(b*(1-percent/100));
+    return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+
+function setBackground(color) {
+    localStorage.setItem('bgColor', color);
+    document.body.className='';
+    document.body.classList.add('access-'+color);
+
+    const map={
+        white:'#f5f5f5', red:'#ffcccc', orange:'#ffe5cc',
+        yellow:'#fff9c4', green:'#e8f5e9', blue:'#e3f2fd',
+        purple:'#e6e0f8', pink:'#fce4ec', dark:'#121212'
+    };
+
+    document.body.style.background = map[color];
+    const header=document.getElementById('header');
+    const panel=document.getElementById('accessPanel');
+    const darkHex=color==='dark' ? '#000' : darkenColor(map[color],40);
+    header.style.background=darkHex;
+    panel.style.background = map[color];
+
+    panel.querySelectorAll('button:not(.color-spot)').forEach(el=>{
+        el.style.background = '#fff';
+        el.style.color = '#000';
+        el.style.border = '1px solid #aaa';
+    });
+
+    if(color==='dark'){
+        document.body.style.color='#fff';
+        header.style.color='#fff';
+    } else {
+        document.body.style.color='#000';
+        header.style.color='#000';
+    }
+}
+
+function adjustWordSpacing(amount){
+    let current = parseFloat(localStorage.getItem('wordSpacing')||'0');
+    current += amount;
+    document.body.style.wordSpacing = current + 'em';
+    localStorage.setItem('wordSpacing', current);
+}
+
+function adjustFontSize(amount){
+    let current = parseFloat(localStorage.getItem('fontSize')||'16');
+    current += amount;
+    document.body.style.fontSize = current + 'px';
+    localStorage.setItem('fontSize', current);
+}
+
+function runFormValidation(event) {
+    event.preventDefault();
+    
+    const elUsername = document.getElementById('username');
+    const elPin = document.getElementById('pin');
+    const elYear = document.getElementById('yearGroup');
+    const elSeat = document.getElementById('seatCode');
+    const elHouse = document.getElementById('house');
+    const radioWrapper = document.getElementById('statusRadioWrapper');
+    const statusBox = document.getElementById('statusBox');
+    
+    elUsername.classList.remove('invalid-input');
+    elPin.classList.remove('invalid-input');
+    elYear.classList.remove('invalid-input');
+    elSeat.classList.remove('invalid-input');
+    elHouse.classList.remove('invalid-input');
+    radioWrapper.classList.remove('invalid-radio-container');
+    
+    let failures = [];
+
+    // 1. Presence Validation
+    if (elUsername.value.trim() === "") {
+        elUsername.classList.add('invalid-input');
+        failures.push("Username");
+    }
+
+    // 2. Length Validation
+    if (elPin.value.trim().length !== 4) {
+        elPin.classList.add('invalid-input');
+        failures.push("Security PIN");
+    }
+
+    // 3. Range Validation
+    const yNum = parseInt(elYear.value.trim(), 10);
+    if (isNaN(yNum) || yNum < 7 || yNum > 11) {
+        elYear.classList.add('invalid-input');
+        failures.push("Year Group");
+    }
+
+    // 4. Data Types / Format Structure Validation
+    const formatReg = /^[A-Z]{1}[0-9]{3}$/i;
+    if (!formatReg.test(elSeat.value.trim())) {
+        elSeat.classList.add('invalid-input');
+        failures.push("Desk Reference ID");
+    }
+
+    // 5. Lookup Validation
+    if (elHouse.value === "") {
+        elHouse.classList.add('invalid-input');
+        failures.push("House Assignment");
+    }
+
+    // 6. Radio Selection Validation
+    const selectedRadio = document.querySelector('input[name="accountStatus"]:checked');
+    if (!selectedRadio) {
+        radioWrapper.classList.add('invalid-radio-container');
+        failures.push("Account Status");
+    }
+
+    if (failures.length > 0) {
+        statusBox.className = "status-box error";
+        statusBox.textContent = "Error: Registration failed. Correct the missing or broken values highlighted below.";
+    } else {
+        statusBox.className = "status-box success";
+        statusBox.textContent = "Success: Account registered securely at www.MxBrooke.co.uk.";
+    }
+    
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    return false;
+}
+
+window.onload=function(){
+    const saved=localStorage.getItem('bgColor')||'white';
+    setBackground(saved);
+
+    const ws = parseFloat(localStorage.getItem('wordSpacing')||'0');
+    const fs = parseFloat(localStorage.getItem('fontSize')||'16');
+    document.body.style.wordSpacing = ws+'em';
+    document.body.style.fontSize = fs+'px';
+
+    generateAZ();
+};
+
+function generateAZ(){
+    const nav=document.getElementById('azNav');
+    nav.innerHTML = ''; 
+    const targets = [
+        { id: 'formContainer', label: 'S' },
+        { id: 'infoContainer', label: 'R' }
+    ];
+
+    targets.forEach(t => {
+        const btn=document.createElement('button');
+        btn.textContent=t.label;
+        btn.onclick=()=>{
+            document.getElementById(t.id).scrollIntoView({behavior:'smooth'});
+        };
+        nav.appendChild(btn);
+    });
+}
+
+window.addEventListener('click', function(e){
+    const panel = document.getElementById('accessPanel');
+    if (!panel.contains(e.target) && !e.target.closest('.accessibility-toggle')) {
+        panel.classList.remove('open');
+    }
+});
+</script>
+
+</body>
+</html>
