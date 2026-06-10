@@ -124,6 +124,44 @@ input[type="text"], input[type="password"], select {
     transition: all 0.3s ease;
 }
 
+/* RADIO STYLING BOXES */
+.radio-group {
+    padding: 10px;
+    border: 2px solid transparent;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.radio-option input {
+    margin-right: 10px;
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+/* INPUT ENTRY FIELD TEXT LABELS */
+.rule-desc {
+    display: block;
+    font-size: 0.9em;
+    margin-top: 8px;
+    line-height: 1.4em;
+    color: #444;
+    border-top: 1px solid #eee;
+    padding-top: 8px;
+}
+
+body.access-dark .rule-desc {
+    color: #ccc;
+    border-top-color: #333;
+}
+
 /* RED GLOW COMPONENT FOR FAILED VALIDATION */
 .invalid-input {
     border-color: #ff3333 !important;
@@ -131,8 +169,16 @@ input[type="text"], input[type="password"], select {
     box-shadow: 0 0 10px #ff3333 !important;
 }
 
+/* SPECIAL RULE FOR RADIO CONTAINER HIGHLIGHT */
+.invalid-radio-container {
+    border-color: #ff3333 !important;
+    background-color: #ffe6e6 !important;
+    box-shadow: 0 0 10px #ff3333 !important;
+}
+
 /* DARK MODE OVERRIDES FOR INVALID STATE */
-body.access-dark .invalid-input {
+body.access-dark .invalid-input,
+body.access-dark .invalid-radio-container {
     background-color: #551111 !important;
     border-color: #ff5555 !important;
     box-shadow: 0 0 10px #ff5555 !important;
@@ -272,6 +318,7 @@ body.access-dark .card { background: #222; color:#fff; }
 
 <div class="main-wrapper">
 
+    <!-- LEFT COLUMN: LIVE SIGN UP MODULE -->
     <div id="formContainer" data-letter="S">
         <h2 class="column-title">www.MxBrooke.co.uk - Sign Up</h2>
         
@@ -284,31 +331,50 @@ body.access-dark .card { background: #222; color:#fff; }
             <div class="card">
                 <label for="username">Username:</label>
                 <input type="text" id="username" placeholder="Enter username...">
+                <span class="rule-desc"><strong>Data Rule:</strong> This entry is mandatory. Leaving this text property entirely empty or skipping it is forbidden by the registration network.</span>
             </div>
 
             <div class="card">
                 <label for="pin">Security PIN:</label>
                 <input type="password" id="pin" placeholder="Enter PIN..." maxlength="10">
+                <span class="rule-desc"><strong>Data Rule:</strong> Your personal identification code must measure exactly 4 total alphanumeric elements. Shorter or longer combinations break the entry profile.</span>
             </div>
 
             <div class="card">
                 <label for="yearGroup">School Year Group:</label>
                 <input type="text" id="yearGroup" placeholder="Enter year group...">
+                <span class="rule-desc"><strong>Data Rule:</strong> This value accepts secondary school codes running consecutively between 7 up to 11. Upper or lower boundaries outside this tier will trigger an interface warning.</span>
             </div>
 
             <div class="card">
                 <label for="seatCode">Allocated Desk Reference ID:</label>
                 <input type="text" id="seatCode" placeholder="Enter desk code...">
+                <span class="rule-desc"><strong>Data Rule:</strong> Entries must rigidly look like a single letter prefix followed immediately by exactly three numerical digits (e.g., B042). Unstructured tracking codes are dropped.</span>
             </div>
 
             <div class="card">
                 <label for="house">School House Assignment:</label>
                 <select id="house">
                     <option value="">-- Select Option --</option>
-                    <option value="Turing">Turing House</option>
-                    <option value="Lovelace">Lovelace House</option>
-                    <option value="Hopper">Hopper House</option>
+                    <option value="Malala">Malala House</option>
+                    <option value="Rashford">Rashford House</option>
+                    <option value="Amika">Amika House</option>
+                    <option value="Stephenson">Stephenson House</option>
                 </select>
+                <span class="rule-desc"><strong>Data Rule:</strong> Free text input typing is blocked. You must pick an exact item match indexed inside the preset school database.</span>
+            </div>
+
+            <div class="card">
+                <label>Account Status Type:</label>
+                <div class="radio-group" id="statusRadioWrapper">
+                    <label class="radio-option">
+                        <input type="radio" name="accountStatus" value="Student"> Student Account
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="accountStatus" value="Staff"> Staff / Administrator
+                    </label>
+                </div>
+                <span class="rule-desc"><strong>Data Rule:</strong> System permissions profiles require a state selection. A submission missing an activated radio option switch will be blocked.</span>
             </div>
 
             <div class="submit-container">
@@ -317,6 +383,7 @@ body.access-dark .card { background: #222; color:#fff; }
         </form>
     </div>
 
+    <!-- RIGHT COLUMN: OCR J836 REFERENCE DESK -->
     <div id="infoContainer" data-letter="R">
         <h2 class="column-title">OCR J836 Reference Desk</h2>
         
@@ -419,6 +486,7 @@ function runFormValidation(event) {
     const elYear = document.getElementById('yearGroup');
     const elSeat = document.getElementById('seatCode');
     const elHouse = document.getElementById('house');
+    const radioWrapper = document.getElementById('statusRadioWrapper');
     const statusBox = document.getElementById('statusBox');
     
     elUsername.classList.remove('invalid-input');
@@ -426,39 +494,47 @@ function runFormValidation(event) {
     elYear.classList.remove('invalid-input');
     elSeat.classList.remove('invalid-input');
     elHouse.classList.remove('invalid-input');
+    radioWrapper.classList.remove('invalid-radio-container');
     
     let failures = [];
 
-    // 1. Presence Validation
+    // 1. Mandatory Input validation logic
     if (elUsername.value.trim() === "") {
         elUsername.classList.add('invalid-input');
         failures.push("Username");
     }
 
-    // 2. Length Validation
+    // 2. Character Array Size validation logic
     if (elPin.value.trim().length !== 4) {
         elPin.classList.add('invalid-input');
         failures.push("Security PIN");
     }
 
-    // 3. Range Validation
+    // 3. Bound Value Limits validation logic
     const yNum = parseInt(elYear.value.trim(), 10);
     if (isNaN(yNum) || yNum < 7 || yNum > 11) {
         elYear.classList.add('invalid-input');
         failures.push("Year Group");
     }
 
-    // 4. Format Validation (1 alphabet prefix + 3 suffix numeric coordinates)
+    // 4. Expression Layout Mask validation logic
     const formatReg = /^[A-Z]{1}[0-9]{3}$/i;
     if (!formatReg.test(elSeat.value.trim())) {
         elSeat.classList.add('invalid-input');
         failures.push("Desk Reference ID");
     }
 
-    // 5. Lookup Validation
+    // 5. Explicit Data Set verification logic
     if (elHouse.value === "") {
         elHouse.classList.add('invalid-input');
         failures.push("House Assignment");
+    }
+
+    // 6. Selection Requirement verification logic
+    const selectedRadio = document.querySelector('input[name="accountStatus"]:checked');
+    if (!selectedRadio) {
+        radioWrapper.classList.add('invalid-radio-container');
+        failures.push("Account Status");
     }
 
     if (failures.length > 0) {
