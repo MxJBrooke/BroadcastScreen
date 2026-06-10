@@ -124,28 +124,6 @@ input[type="text"], input[type="password"], select {
     transition: all 0.3s ease;
 }
 
-/* RADIO STYLING BOXES */
-.radio-group {
-    padding: 10px;
-    border: 2px solid transparent;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-}
-
-.radio-option {
-    display: flex;
-    align-items: center;
-    margin: 8px 0;
-    cursor: pointer;
-    font-weight: normal;
-}
-
-.radio-option input {
-    margin-right: 10px;
-    transform: scale(1.2);
-    cursor: pointer;
-}
-
 /* RED GLOW COMPONENT FOR FAILED VALIDATION */
 .invalid-input {
     border-color: #ff3333 !important;
@@ -153,16 +131,8 @@ input[type="text"], input[type="password"], select {
     box-shadow: 0 0 10px #ff3333 !important;
 }
 
-/* SPECIAL RULE FOR RADIO CONTAINER HIGHLIGHT */
-.invalid-radio-container {
-    border-color: #ff3333 !important;
-    background-color: #ffe6e6 !important;
-    box-shadow: 0 0 10px #ff3333 !important;
-}
-
 /* DARK MODE OVERRIDES FOR INVALID STATE */
-body.access-dark .invalid-input,
-body.access-dark .invalid-radio-container {
+body.access-dark .invalid-input {
     background-color: #551111 !important;
     border-color: #ff5555 !important;
     box-shadow: 0 0 10px #ff5555 !important;
@@ -302,7 +272,6 @@ body.access-dark .card { background: #222; color:#fff; }
 
 <div class="main-wrapper">
 
-    <!-- LEFT COLUMN: LIVE SIGN UP MODULE -->
     <div id="formContainer" data-letter="S">
         <h2 class="column-title">www.MxBrooke.co.uk - Sign Up</h2>
         
@@ -336,24 +305,10 @@ body.access-dark .card { background: #222; color:#fff; }
                 <label for="house">School House Assignment:</label>
                 <select id="house">
                     <option value="">-- Select Option --</option>
-                    <option value="Malala">Malala House</option>
-                    <option value="Rashford">Rashford House</option>
-                    <option value="Amika">Amika House</option>
-                    <option value="Stephenson">Stephenson House</option>
+                    <option value="Turing">Turing House</option>
+                    <option value="Lovelace">Lovelace House</option>
+                    <option value="Hopper">Hopper House</option>
                 </select>
-            </div>
-
-            <!-- J836 SPECIFIC ADDITION: RADIO INPUTS -->
-            <div class="card">
-                <label>Account Status Type:</label>
-                <div class="radio-group" id="statusRadioWrapper">
-                    <label class="radio-option">
-                        <input type="radio" name="accountStatus" value="Student"> Student Account
-                    </label>
-                    <label class="radio-option">
-                        <input type="radio" name="accountStatus" value="Staff"> Staff / Administrator
-                    </label>
-                </div>
             </div>
 
             <div class="submit-container">
@@ -362,13 +317,12 @@ body.access-dark .card { background: #222; color:#fff; }
         </form>
     </div>
 
-    <!-- RIGHT COLUMN: REVISED OCR J836 REFERENCE DESK (DATA PROPERTIES) -->
     <div id="infoContainer" data-letter="R">
         <h2 class="column-title">OCR J836 Reference Desk</h2>
         
         <div class="card">
-            <h3>Data Types check</h3>
-            <p><strong>Definition:</strong> Checks that the value entered is of the required data type (e.g., checking that an alphanumeric text string does not contain integers, or that a numerical field accepts only numbers).</p>
+            <h3>Format Check</h3>
+            <p><strong>Definition:</strong> Confirms that data fits a strict, predefined layout configuration template. The layout must match clear sequences of characters, numerical values, or symbol configurations in exact positions (e.g., Postcodes or structured ID codes).</p>
         </div>
 
         <div class="card">
@@ -465,7 +419,6 @@ function runFormValidation(event) {
     const elYear = document.getElementById('yearGroup');
     const elSeat = document.getElementById('seatCode');
     const elHouse = document.getElementById('house');
-    const radioWrapper = document.getElementById('statusRadioWrapper');
     const statusBox = document.getElementById('statusBox');
     
     elUsername.classList.remove('invalid-input');
@@ -473,7 +426,6 @@ function runFormValidation(event) {
     elYear.classList.remove('invalid-input');
     elSeat.classList.remove('invalid-input');
     elHouse.classList.remove('invalid-input');
-    radioWrapper.classList.remove('invalid-radio-container');
     
     let failures = [];
 
@@ -496,7 +448,7 @@ function runFormValidation(event) {
         failures.push("Year Group");
     }
 
-    // 4. Data Types / Format Structure Validation
+    // 4. Format Validation (1 alphabet prefix + 3 suffix numeric coordinates)
     const formatReg = /^[A-Z]{1}[0-9]{3}$/i;
     if (!formatReg.test(elSeat.value.trim())) {
         elSeat.classList.add('invalid-input');
@@ -507,13 +459,6 @@ function runFormValidation(event) {
     if (elHouse.value === "") {
         elHouse.classList.add('invalid-input');
         failures.push("House Assignment");
-    }
-
-    // 6. Radio Selection Validation
-    const selectedRadio = document.querySelector('input[name="accountStatus"]:checked');
-    if (!selectedRadio) {
-        radioWrapper.classList.add('invalid-radio-container');
-        failures.push("Account Status");
     }
 
     if (failures.length > 0) {
