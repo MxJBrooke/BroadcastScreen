@@ -295,6 +295,8 @@ body {
 .leaderboard-name { flex: 1; font-size: 18px; }
 .leaderboard-pts { font-size: 18px; font-family: monospace; }
 
+.wheel-view-wrap { width: 100%; max-width: 600px; margin: 30px auto; padding: 20px; background: white; border: 2px solid var(--border); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; gap: 20px; }
+
 @media (max-width: 1024px) {
   .main { flex-direction: column; overflow-y: auto; }
   .left, .flyout { width: 100%; flex: none; border: none; border-bottom: 2px solid var(--border); }
@@ -312,6 +314,7 @@ body {
     <button id="btn-teach-present" onclick="setView('teach-present')">Teacher Present</button>
     <button id="btn-stud-present" onclick="setView('stud-present')">Student Present</button>
     <button id="btn-leaderboard" onclick="setView('leaderboard')">Leaderboard</button>
+    <button id="btn-wheel" onclick="setView('wheel')">Random Wheel</button>
   </div>
 </div>
 
@@ -388,6 +391,9 @@ let view = 'setup';
 let zoomScale = 1.0;
 let swapSelectedSeatId = null;
 
+let wheelAngle = 0;
+let isWheelSpinning = false;
+
 let activeDeckKey = "Default Project";
 let projectDecks = {
   "Default Project": {
@@ -427,7 +433,7 @@ function setView(v) {
   const targetBtn = document.getElementById(`btn-${v}`);
   if (targetBtn) targetBtn.classList.add('active-view');
   
-  document.getElementById('zoomControls').style.display = (v === 'leaderboard') ? 'none' : 'flex';
+  document.getElementById('zoomControls').style.display = (v === 'leaderboard' || v === 'wheel') ? 'none' : 'flex';
   document.getElementById('togglePointsWrapper').style.display = (v === 'stud-present') ? 'flex' : 'none';
   document.getElementById('sidebar').style.display = (v === 'setup') ? 'flex' : 'none';
   document.getElementById('studentFlyout').style.display = (v === 'setup') ? 'flex' : 'none';
@@ -795,8 +801,132 @@ function switchDeck(key) {
   renderStudentList();
 }
 
+function getWheelStudents() {
+  let deskNames = seats.filter(s => s.type === 'seat' && s.name).map(s => s.name);
+  return deskNames.length > 0 ? deskNames : studentPool;
+}
+
+function drawWheel(names) {
+  const canvas = document.getElementById('wheelCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const r = canvas.width / 2 - 12;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (names.length === 0) {
+    ctx.fillStyle = 'var(--text-dark)';
+    ctx.font = 'bold 16px Consolas, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('No students placed or in pool.', cx, cy);
+    return;
+  }
+
+  const arc = (Math.PI * 2) / names.length;
+  const colors = ['#03a4bd', '#00C38A', '#6003ac', '#c90101', '#FFA500', '#FFD700', '#d4016a'];
+
+  names.forEach((name, i) => {
+    const angle = wheelAngle + (i * arc);
+    ctx.fillStyle = colors[i % colors.length];
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, angle, angle + arc);
+    ctx.lineTo(cx, cy);
+    ctx.fill();
+    ctx.strokeStyle = '#FBF9F7';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.save();
+    if (['#00C38A', '#FFD700', '#FFA500'].includes(colors[i % colors.length])) {
+      ctx.fillStyle = '#000000';
+    } else {
+      ctx.fillStyle = '#ffffff';
+    }
+    ctx.font = 'bold 15px Consolas, monospace';
+    ctx.translate(cx, cy);
+    ctx.rotate(angle + arc / 2);
+    ctx.textAlign = 'right';
+    
+    let truncatedName = name.length > 14 ? name.substring(0, 12) + '..' : name;
+    ctx.fillText(truncatedName, r - 25, 5);
+    ctx.restore();
+  });
+
+  ctx.beginPath();
+  ctx.arc(cx, cy, 25, 0, Math.PI * 2);
+  ctx.fillStyle = 'var(--primary)';
+  ctx.fill();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+}
+
+function spinWheel() {
+  if (isWheelSpinning) return;
+  const names = getWheelStudents();
+  if (names.length === 0) return;
+
+  isWheelSpinning = true;
+  document.getElementById('wheelWinner').textContent = "";
+  const spinBtn = document.getElementById('spinBtn');
+  if (spinBtn) spinBtn.disabled = true;
+
+  let startTime = null;
+  const duration = 4000; 
+  const startAngle = wheelAngle;
+  const totalRotation = (Math.random() * 4 + 5) * Math.PI * 2; 
+
+  function animateWheel(timestamp) {
+    if (!startTime) startTime = timestamp;
+    const elapsed = timestamp - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    const easeOutCubic = 1 - Math.pow(1 - progress, 3);
+    wheelAngle = startAngle + (totalRotation * easeOutCubic);
+
+    drawWheel(names);
+
+    if (progress < 1) {
+      requestAnimationFrame(animateWheel);
+    } else {
+      isWheelSpinning = false;
+      if (spinBtn) spinBtn.disabled = false;
+
+      const arc = (Math.PI * 2) / names.length;
+      let targetAngle = ((3 * Math.PI / 2) - wheelAngle) % (Math.PI * 2);
+      if (targetAngle < 0) targetAngle += Math.PI * 2;
+
+      const winnerIndex = Math.floor(targetAngle / arc) % names.length;
+      document.getElementById('wheelWinner').textContent = `🎉 ${names[winnerIndex]} 🎉`;
+    }
+  }
+  requestAnimationFrame(animateWheel);
+}
+
 function render() {
   const app = document.getElementById('app'); app.innerHTML = '';
+
+  if (view === 'wheel') {
+    const names = getWheelStudents();
+    const wrap = document.createElement('div');
+    wrap.className = 'wheel-view-wrap';
+    wrap.innerHTML = `
+      <h2 style="margin:0; text-transform:uppercase; letter-spacing:1px; text-align:center;">Random Name Picker</h2>
+      <div style="position:relative; width:440px; height:440px;">
+        <div style="position:absolute; top:-10px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-top:22px solid var(--color-red); z-index:10;"></div>
+        <canvas id="wheelCanvas" width="440" height="440" style="border-radius:50%; box-shadow:0 6px 14px rgba(0,0,0,0.1); background:#fff;"></canvas>
+      </div>
+      <button class="sidebar-btn" id="spinBtn" style="max-width:240px; background:var(--color-green); color:white; font-size:16px;" onclick="spinWheel()">SPIN WHEEL</button>
+      <h1 id="wheelWinner" style="margin:5px 0 0 0; min-height:45px; color:var(--color-purple); font-size:30px; text-align:center;"></h1>
+    `;
+    app.appendChild(wrap);
+    drawWheel(names);
+    return;
+  }
 
   if (view === 'leaderboard') {
     let activeStudents = seats.filter(s => s.type === 'seat' && s.name);
