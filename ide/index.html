@@ -17,18 +17,29 @@
     <style>
         /* --- Core Theme Variables & Inherited Styling Structure --- */
         :root {
-            --c1: rgba(255, 118, 117, 0.22);
-            --c2: rgba(253, 203, 110, 0.25);
-            --c3: rgba(85, 239, 196, 0.25);
-            --c4: rgba(116, 185, 255, 0.22);
-            --c5: rgba(162, 155, 254, 0.22);
+            --c1: rgba(255, 118, 117, 0.25);
+            --c2: rgba(253, 203, 110, 0.28);
+            --c3: rgba(85, 239, 196, 0.28);
+            --c4: rgba(116, 185, 255, 0.25);
+            --c5: rgba(162, 155, 254, 0.25);
             
+            --g1: rgba(46, 204, 113, 0.45);
+            --g2: rgba(46, 204, 113, 0.35);
+            --g3: rgba(46, 204, 113, 0.25);
+            --g4: rgba(46, 204, 113, 0.18);
+            --g5: rgba(46, 204, 113, 0.10);
+
             --editor-fs: 16px;
             --editor-ls: normal;
+            --guide-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body.access-dark {
+            --guide-color: rgba(255, 255, 255, 0.08);
         }
 
         body {
-            font-family: Consolas, monospace;
+            font-family: 'Courier New', Consolas, monospace;
             margin: 0;
             transition: background 0.3s ease, color 0.3s ease, word-spacing 0.3s ease, font-size 0.3s ease;
             word-spacing: normal;
@@ -112,6 +123,7 @@
             background: #fff;
             border-right: 1px solid #ccc;
             box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
         }
 
         .accessibility-panel.open {
@@ -137,10 +149,25 @@
             display: inline-block;
         }
 
+        /* Icon UI for Indent Selection */
+        .style-btn {
+            width: 44px; height: 44px; font-size: 22px;
+            border-radius: 8px; border: 2px solid transparent; cursor: pointer;
+            background: #f1f2f6; display: inline-flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease; margin-right: 5px; margin-bottom: 5px;
+        }
+        .style-btn:hover { background: #dfe4ea; }
+        .style-btn.active { border-color: #2f3640; background: #ced6e0; box-shadow: inset 0 0 5px rgba(0,0,0,0.2); }
+        
+        body.access-dark .style-btn { background: #2f3640; border-color: transparent; }
+        body.access-dark .style-btn:hover { background: #353b48; }
+        body.access-dark .style-btn.active { border-color: #f5f6fa; background: #57606f; }
+
         .accessibility-control {
             margin: 10px 0;
             display: flex;
             gap: 5px;
+            flex-wrap: wrap;
         }
 
         /* --- Main App Layout Architecture --- */
@@ -198,7 +225,7 @@
             position: absolute;
             top: 44px; left: 0; right: 0; bottom: 0;
             height: calc(100% - 44px) !important;
-            font-family: Consolas, monospace;
+            font-family: 'Courier New', Consolas, monospace !important;
             background: inherit;
             color: inherit;
             font-size: var(--editor-fs) !important;
@@ -208,6 +235,15 @@
         .CodeMirror-lines, .CodeMirror-code, #output {
             font-size: var(--editor-fs) !important;
             letter-spacing: var(--editor-ls) !important;
+        }
+
+        .CodeMirror-lines {
+            padding: 10px 0 !important;
+        }
+
+        .CodeMirror-code .CodeMirror-line {
+            padding: 0 4px !important; /* The 4px offset we must correct for */
+            line-height: 24px !important;
         }
 
         .CodeMirror-gutters { 
@@ -238,7 +274,7 @@
             background-color: inherit;
             color: inherit;
             padding: 15px;
-            font-family: Consolas, monospace;
+            font-family: 'Courier New', Consolas, monospace;
             flex: 1;
             overflow-x: auto;
             overflow-y: auto;
@@ -262,12 +298,6 @@
         }
         body.access-dark .terminal-input {
             border-bottom: 2px dashed rgba(255, 255, 255, 0.4);
-        }
-
-        /* Custom Error Track and Tab warnings */
-        .rb-bg-invalid { 
-            background-color: rgba(0, 0, 0, 0.07) !important; 
-            box-shadow: inset 5px 0 0 0 #d63031 !important;
         }
 
         .error-line-highlight {
@@ -320,7 +350,7 @@
             border: 1px solid #ced6e0;
             padding: 8px;
             border-radius: 4px;
-            font-family: Consolas, monospace;
+            font-family: 'Courier New', Consolas, monospace;
             font-size: 14px;
             margin-top: 5px;
             color: #000;
@@ -357,11 +387,14 @@
     <button class="color-spot" style="background:#fce4ec" onclick="setBackground('pink')"></button>
     <button class="color-spot" style="background:#121212" onclick="setBackground('dark')"></button>
 
-    <h3>Word Spacing / Kerning</h3>
+    <h3>Indent Style</h3>
     <div class="accessibility-control">
-        <button class="accessibility-scale" onclick="adjustWordSpacing(0.1)">Increase</button>
-        <button class="accessibility-scale" onclick="adjustWordSpacing(-0.1)">Decrease</button>
+        <button class="style-btn" id="btn-greenpink" onclick="changeIndentStyle('greenpink')" title="Green / Pink Guide">🟩</button>
+        <button class="style-btn" id="btn-rainbow" onclick="changeIndentStyle('rainbow')" title="Rainbow Tracks">🌈</button>
+        <button class="style-btn" id="btn-snakes" onclick="changeIndentStyle('snakes')" title="Python Snakes">🐍</button>
     </div>
+
+    
 
     <h3>Font Size</h3>
     <div class="accessibility-control">
@@ -371,7 +404,6 @@
 </div>
 
 <div class="main-wrapper">
-
     <div class="ide-container">
         <div class="editor-container" id="editorContainer">
             <div class="ide-toolbar" id="editorToolbar">
@@ -391,7 +423,6 @@
             <pre id="output">Terminal ready...</pre>
         </div>
     </div>
-
 </div>
 
 <script>
@@ -420,43 +451,137 @@ const editor = CodeMirror.fromTextArea(document.getElementById("code"), {
     }
 });
 
-// --- 2. Infinite Repeating Rainbow Track Renderer Engine ---
+// Generates mathematical sine wave snakes adapted to pixel-perfect tab widths
+function createSnakeSVG(totalIndents, charWidth, isDead) {
+    const tabWidth = 4 * charWidth;
+    const totalPx = totalIndents * tabWidth;
+    const headX = Math.max(10, totalPx - 8);
+    const snakeColor = isDead ? "#95a5a6" : "#2ecc71";
+    
+    let pathD = `M 0,12 `;
+    
+    if (isDead) {
+        // Flatline if the indent spacing is completely wrong
+        pathD += `L ${headX},12`;
+    } else {
+        // Construct standard sine-wave per 4-space tab block 
+        for(let i = 0; i < totalIndents; i++) {
+            let startX = i * tabWidth;
+            let qX = startX + tabWidth / 4;
+            let mX = startX + tabWidth / 2;
+            let endX = startX + tabWidth;
+            if (i === totalIndents - 1) endX = headX;
+            
+            // Q = control point curve up, T = mirror control point curve down
+            pathD += `Q ${qX},4 ${mX},12 T ${endX},12 `;
+        }
+    }
+
+    const eyeX = headX + 1;
+    const eyes = isDead 
+        ? `<text x="${eyeX - 4}" y="16" font-family="sans-serif" font-size="10" fill="black" font-weight="bold">x</text>`
+        : `<circle cx="${eyeX}" cy="9" r="1.5" fill="black"/><circle cx="${eyeX}" cy="15" r="1.5" fill="black"/><path d="M${headX+4},12 L${headX+10},10 M${headX+4},12 L${headX+10},14" stroke="red" stroke-width="1.5" fill="none"/>`;
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalPx}" height="24">
+        <path d="${pathD}" stroke="${snakeColor}" fill="none" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="${headX}" cy="12" r="6" fill="${snakeColor}"/>
+        ${eyes}
+    </svg>`;
+    
+    return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+}
+
+// --- 2. Dynamic Adaptive Indentation Render Engine (Pixel Perfect) ---
 editor.on("renderLine", function(cm, lineHandle, el) {
     const text = lineHandle.text;
     const match = text.match(/^([ \t]+)/);
     
     el.style.backgroundImage = "none";
+    el.style.backgroundRepeat = "no-repeat";
+    el.style.backgroundColor = "transparent";
 
-    if (!match) return;
+    const currentStyle = localStorage.getItem('indentStyle') || 'greenpink';
+
+    if (!match || match[0].length === 0) return;
 
     const whitespace = match[0];
     const isInvalid = whitespace.includes('\t') || (whitespace.length % 4 !== 0);
+    
+    const charWidth = cm.defaultCharWidth();
+    const totalPx = whitespace.length * charWidth;
+    const pad = 4; // Crucial fix: compensates for CodeMirror's inherent left text padding
 
-    if (isInvalid) return;
+    // --- Snake Rendering ---
+    if (currentStyle === 'snakes') {
+        const totalIndents = whitespace.length / 4;
+        const svgUri = createSnakeSVG(totalIndents, charWidth, isInvalid);
+        el.style.backgroundImage = `url("${svgUri}")`;
+        el.style.backgroundPosition = `${pad}px center`; // Start specifically after CodeMirror padding
+        el.style.backgroundSize = `${totalPx}px 100%`;
+        if (isInvalid) el.style.backgroundColor = "rgba(0,0,0,0.05)";
+        return;
+    }
+
+    // --- Standard Block Invalid Handling ---
+    if (isInvalid) {
+        el.style.backgroundImage = `linear-gradient(to right, rgba(232, 67, 147, 0.45) ${pad}px, rgba(232, 67, 147, 0.45) ${pad + totalPx}px, transparent ${pad + totalPx}px)`;
+        el.style.backgroundSize = "100% 100%";
+        return;
+    }
 
     const totalIndents = whitespace.length / 4;
     let gradientParts = [];
-    const colorTokens = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)'];
     
-    for (let step = 0; step < totalIndents; step++) {
-        const activeColor = colorTokens[step % 5]; 
-        const startCh = step * 4;
-        const endCh = (step + 1) * 4;
-        
-        gradientParts.push(`${activeColor} ${startCh}ch`);
-        gradientParts.push(`${activeColor} ${endCh}ch`);
+    if (currentStyle === 'greenpink') {
+        const greenTokens = ['var(--g1)', 'var(--g2)', 'var(--g3)', 'var(--g4)', 'var(--g5)'];
+        for (let step = 0; step < totalIndents; step++) {
+            const activeColor = greenTokens[step % 5];
+            const startPx = pad + (step * 4 * charWidth);
+            const endPx = pad + ((step + 1) * 4 * charWidth);
+            
+            gradientParts.push(`${activeColor} ${startPx}px`);
+            gradientParts.push(`${activeColor} ${endPx}px`);
+        }
+    } else {
+        const colorTokens = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)'];
+        for (let step = 0; step < totalIndents; step++) {
+            const activeColor = colorTokens[step % 5]; 
+            const startPx = pad + (step * 4 * charWidth);
+            const endPx = pad + ((step + 1) * 4 * charWidth);
+            
+            gradientParts.push(`${activeColor} ${startPx}px`);
+            gradientParts.push(`${activeColor} ${endPx}px`);
+        }
     }
     
-    const maxCh = totalIndents * 4;
-    gradientParts.push(`transparent ${maxCh}ch`);
+    let linesOverlayGradients = [];
+    for (let step = 0; step <= totalIndents; step++) {
+        const linePx = pad + (step * 4 * charWidth);
+        linesOverlayGradients.push(`transparent ${linePx}px`);
+        linesOverlayGradients.push(`var(--guide-color) ${linePx}px`);
+        linesOverlayGradients.push(`var(--guide-color) ${linePx + 1}px`);
+        linesOverlayGradients.push(`transparent ${linePx + 1}px`);
+    }
+
+    gradientParts.push(`transparent ${pad + totalPx}px`);
+    linesOverlayGradients.push(`transparent ${pad + totalPx}px`);
     
-    el.style.backgroundImage = `linear-gradient(to right, ${gradientParts.join(', ')})`;
-    el.style.backgroundRepeat = "no-repeat";
+    el.style.backgroundImage = `linear-gradient(to right, ${gradientParts.join(', ')}), linear-gradient(to right, ${linesOverlayGradients.join(', ')})`;
     el.style.backgroundSize = "100% 100%";
 });
 
 function fixEditorLayout() {
     editor.setSize("100%", "100%");
+    editor.refresh();
+}
+
+function changeIndentStyle(styleName) {
+    localStorage.setItem('indentStyle', styleName);
+    
+    document.querySelectorAll('.style-btn').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById('btn-' + styleName);
+    if (activeBtn) activeBtn.classList.add('active');
+    
     editor.refresh();
 }
 
@@ -468,11 +593,6 @@ editor.on("change", function(cm) {
 // --- 3. External Local File I/O Storage Pipeline Drivers ---
 function triggerImport() {
     document.getElementById('fileInput').click();
-}
-
-// --- 4. Accessibility Controls Management System ---
-function toggleAccessibility() {
-    document.getElementById('accessPanel').classList.toggle('open');
 }
 
 function importFile(event) {
@@ -487,8 +607,12 @@ function importFile(event) {
         setTimeout(fixEditorLayout, 50);
         input.value = '';
     };
-    
     reader.readAsText(file);
+}
+
+// --- 4. Accessibility Controls Management System ---
+function toggleAccessibility() {
+    document.getElementById('accessPanel').classList.toggle('open');
 }
 
 function darkenColor(hex, percent) {
@@ -542,17 +666,27 @@ function setBackground(color) {
     outToolbar.style.borderColor = borderHex;
 
     if (color === 'dark') {
-        document.documentElement.style.setProperty('--c1', 'rgba(255, 118, 117, 0.12)');
-        document.documentElement.style.setProperty('--c2', 'rgba(253, 203, 110, 0.12)');
-        document.documentElement.style.setProperty('--c3', 'rgba(85, 239, 196, 0.12)');
-        document.documentElement.style.setProperty('--c4', 'rgba(116, 185, 255, 0.12)');
-        document.documentElement.style.setProperty('--c5', 'rgba(162, 155, 254, 0.12)');
+        document.documentElement.style.setProperty('--c1', 'rgba(255, 118, 117, 0.15)');
+        document.documentElement.style.setProperty('--c2', 'rgba(253, 203, 110, 0.15)');
+        document.documentElement.style.setProperty('--c3', 'rgba(85, 239, 196, 0.15)');
+        document.documentElement.style.setProperty('--c4', 'rgba(116, 185, 255, 0.15)');
+        document.documentElement.style.setProperty('--c5', 'rgba(162, 155, 254, 0.15)');
+        document.documentElement.style.setProperty('--g1', 'rgba(46, 204, 113, 0.25)');
+        document.documentElement.style.setProperty('--g2', 'rgba(46, 204, 113, 0.20)');
+        document.documentElement.style.setProperty('--g3', 'rgba(46, 204, 113, 0.15)');
+        document.documentElement.style.setProperty('--g4', 'rgba(46, 204, 113, 0.10)');
+        document.documentElement.style.setProperty('--g5', 'rgba(46, 204, 113, 0.05)');
     } else {
-        document.documentElement.style.setProperty('--c1', 'rgba(255, 118, 117, 0.22)');
-        document.documentElement.style.setProperty('--c2', 'rgba(253, 203, 110, 0.25)');
-        document.documentElement.style.setProperty('--c3', 'rgba(85, 239, 196, 0.25)');
-        document.documentElement.style.setProperty('--c4', 'rgba(116, 185, 255, 0.22)');
-        document.documentElement.style.setProperty('--c5', 'rgba(162, 155, 254, 0.22)');
+        document.documentElement.style.setProperty('--c1', 'rgba(255, 118, 117, 0.25)');
+        document.documentElement.style.setProperty('--c2', 'rgba(253, 203, 110, 0.28)');
+        document.documentElement.style.setProperty('--c3', 'rgba(85, 239, 196, 0.28)');
+        document.documentElement.style.setProperty('--c4', 'rgba(116, 185, 255, 0.25)');
+        document.documentElement.style.setProperty('--c5', 'rgba(162, 155, 254, 0.25)');
+        document.documentElement.style.setProperty('--g1', 'rgba(46, 204, 113, 0.45)');
+        document.documentElement.style.setProperty('--g2', 'rgba(46, 204, 113, 0.35)');
+        document.documentElement.style.setProperty('--g3', 'rgba(46, 204, 113, 0.25)');
+        document.documentElement.style.setProperty('--g4', 'rgba(46, 204, 113, 0.18)');
+        document.documentElement.style.setProperty('--g5', 'rgba(46, 204, 113, 0.10)');
     }
 
     const textColors = color === 'dark' ? '#ffffff' : '#000000';
@@ -563,12 +697,10 @@ function setBackground(color) {
     edToolbar.style.color = textColors;
     outToolbar.style.color = textColors;
 
-    document.querySelectorAll('button, input[type="button"]').forEach(btn => {
-        if (!btn.classList.contains('color-spot') && !btn.classList.contains('close-panel-btn')) {
-            btn.style.background = btnBgColors;
-            btn.style.color = textColors;
-            btn.style.borderColor = borderHex;
-        }
+    document.querySelectorAll('button:not(.color-spot):not(.close-panel-btn):not(.style-btn)').forEach(btn => {
+        btn.style.background = btnBgColors;
+        btn.style.color = textColors;
+        btn.style.borderColor = borderHex;
     });
 
     setTimeout(() => { editor.refresh(); }, 50);
@@ -582,7 +714,7 @@ function adjustWordSpacing(amount){
     document.documentElement.style.setProperty('--editor-ls', (current * 0.4) + 'em');
     
     localStorage.setItem('wordSpacing', current);
-    setTimeout(() => { editor.refresh(); }, 30);
+    setTimeout(() => { editor.refresh(); }, 50);
 }
 
 function adjustFontSize(amount){
@@ -593,10 +725,10 @@ function adjustFontSize(amount){
     document.documentElement.style.setProperty('--editor-fs', current + 'px');
     
     localStorage.setItem('fontSize', current);
-    setTimeout(() => { editor.refresh(); }, 30);
+    setTimeout(() => { editor.refresh(); }, 50);
 }
 
-// --- 5. Guided Error Parser Framework featuring Byte the Robot (Year 8 Friendly) ---
+// --- 5. Guided Error Parser Framework featuring Byte the Robot ---
 function generateRobotError(errorObj, fullCode) {
     const rawMessage = errorObj.toString();
     let lineNum = null;
@@ -620,7 +752,6 @@ function generateRobotError(errorObj, fullCode) {
     if (rawMessage.includes("SyntaxError") || rawMessage.includes("ParseError")) {
         let linesToScan = [targetLineNum];
         
-        // Scan backward logic up to 2 lines to properly handle block evaluation jumps
         if (targetLineNum > 1) linesToScan.push(targetLineNum - 1);
         if (targetLineNum > 2) linesToScan.push(targetLineNum - 2);
 
@@ -637,12 +768,11 @@ function generateRobotError(errorObj, fullCode) {
             let doubleQuotesCount = (txt.match(/"/g) || []).length;
             let singleQuotesCount = (txt.match(/'/g) || []).length;
 
-            // Updated regex to catch keywords both with and without parenthesis boundaries safely
             if (/^(if\b|def\b|for\b|while\b|elif\b|else\b)/.test(trimmed)) {
                 if (!trimmed.endsWith(":")) {
                     missingSymbol = "Colon (:)";
                     targetLineNum = lNum;
-                    friendlyExplanation = "<strong>Missing a colon!</strong><br><ul class='guide-list'><li>Your block instruction (like <code>if</code> or <code>else</code>) needs a colon <code>:</code> right at the end of the line before moving inward!</li></ul>";
+                    friendlyExplanation = "<strong>Missing a colon!</strong><br><ul class='guide-list'><li>Your block instruction needs a colon <code>:</code> right at the end of the line!</li></ul>";
                     break;
                 }
             }
@@ -650,30 +780,30 @@ function generateRobotError(errorObj, fullCode) {
             if (openPars > closePars) {
                 missingSymbol = "Bracket )";
                 targetLineNum = lNum;
-                friendlyExplanation = "<strong>Missing a closing bracket!</strong><br><ul class='guide-list'><li>You opened a bracket <code>(</code> on this line but forgot to finish it with a matching <code>)</code>. Ensure every opening bracket has a closing partner!</li></ul>";
+                friendlyExplanation = "<strong>Missing a closing bracket!</strong><br><ul class='guide-list'><li>Ensure every opening bracket has a closing partner!</li></ul>";
                 break;
             } 
             else if (closePars > openPars) {
                 missingSymbol = "Bracket (";
                 targetLineNum = lNum;
-                friendlyExplanation = "<strong>Too many closing brackets!</strong><br><ul class='guide-list'><li>You have a closing bracket <code>)</code> on this line that doesn't have an opening bracket <code>(</code> to balance it.</li></ul>";
+                friendlyExplanation = "<strong>Too many closing brackets!</strong><br><ul class='guide-list'><li>You have a closing bracket <code>)</code> on this line that doesn't have an opening partner.</li></ul>";
                 break;
             } 
             else if (openSq > closeSq) {
                 missingSymbol = "Bracket ]";
                 targetLineNum = lNum;
-                friendlyExplanation = "<strong>Missing a square bracket!</strong><br><ul class='guide-list'><li>Make sure your collections or lists are securely closed with a <code>]</code> before the end of the line.</li></ul>";
+                friendlyExplanation = "<strong>Missing a square bracket!</strong><br><ul class='guide-list'><li>Make sure your collections or lists are closed with a <code>]</code>.</li></ul>";
                 break;
             } 
             else if (doubleQuotesCount % 2 !== 0) {
                 missingSymbol = 'Speech Mark "';
                 targetLineNum = lNum;
-                friendlyExplanation = "<strong>Unfinished double speech marks!</strong><br><ul class='guide-list'><li>You opened a double speech mark <code>\"</code> but forgot to close it. Make sure they always come in pairs on the same line!</li></ul>";
+                friendlyExplanation = "<strong>Unfinished double speech marks!</strong><br><ul class='guide-list'><li>Make sure they always come in pairs on the same line!</li></ul>";
                 break;
             } else if (singleQuotesCount % 2 !== 0) {
                 missingSymbol = "Speech Mark '";
                 targetLineNum = lNum;
-                friendlyExplanation = "<strong>Unfinished single speech marks!</strong><br><ul class='guide-list'><li>You opened a single speech mark <code>'</code> but forgot to close it. Make sure they always come in pairs on the same line!</li></ul>";
+                friendlyExplanation = "<strong>Unfinished single speech marks!</strong><br><ul class='guide-list'><li>Make sure they always come in pairs on the same line!</li></ul>";
                 break;
             }
         }
@@ -682,7 +812,7 @@ function generateRobotError(errorObj, fullCode) {
     } else if (rawMessage.includes("NameError")) {
         const varMatch = rawMessage.match(/name '([^']+)' is not defined/);
         const varName = varMatch ? varMatch[1] : "word";
-        friendlyExplanation = `<strong>Spelling mistake or missing variable!</strong><br><ul class='guide-list'><li>Python doesn't know what <code>${varName}</code> means. Did you make a typo, or did you forget to assign it first? Remember that spelling and capitals matter!</li></ul>`;
+        friendlyExplanation = `<strong>Spelling mistake or missing variable!</strong><br><ul class='guide-list'><li>Python doesn't know what <code>${varName}</code> means. Remember that spelling and capitals matter!</li></ul>`;
     }
 
     if (targetLineNum) {
@@ -738,15 +868,10 @@ function builtinRead(x) {
     return Sk.builtinFiles["files"][x];
 }
 
-// Asynchronous Inline Terminal Input Handler Engine
 function terminalInputHandler(promptText) {
-    if (promptText) {
-        outf(promptText);
-    }
-
+    if (promptText) { outf(promptText); }
     return new Promise((resolve) => {
         const outBox = document.getElementById("output");
-        
         const inputEl = document.createElement("input");
         inputEl.type = "text";
         inputEl.className = "terminal-input";
@@ -761,10 +886,8 @@ function terminalInputHandler(promptText) {
             if (e.key === "Enter") {
                 const resultValue = inputEl.value;
                 inputEl.removeEventListener("keydown", handleEnter);
-                
                 inputEl.remove();
                 outBox.innerHTML += escapeHtml(resultValue) + "\n";
-                
                 resolve(resultValue);
             }
         });
@@ -820,9 +943,15 @@ function exportFile() {
 
 // --- 7. Initialisation Lifecycles ---
 window.onload = function(){
-    const saved = localStorage.getItem('bgColor')||'white';
+    // 1. Initialize persistent background
+    const saved = localStorage.getItem('bgColor') || 'white';
     setBackground(saved);
 
+    // 2. Initialize persistent indent styles
+    const savedIndentStyle = localStorage.getItem('indentStyle') || 'greenpink';
+    changeIndentStyle(savedIndentStyle);
+
+    // 3. Initialize persistent font typography adjustments
     const ws = parseFloat(localStorage.getItem('wordSpacing')||'0');
     const fs = parseFloat(localStorage.getItem('fontSize')||'16');
     
