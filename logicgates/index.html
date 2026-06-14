@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Physics Circuit Lab: Logic Gates</title>
+    <style>
+        :root {
+            --bg-color: #1a1a24;
+            --panel-color: #242430;
+            --accent-color: #4f46e5;
+            --text-color: #f3f4f6;
+            --wire-hot: #f59e0b; 
+            --wire-cold: #4b5563; 
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--panel-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #374151;
+        }
+
+        h1 { font-size: 1.4rem; color: #fff; }
+
+        .challenge-box {
+            background: #2563eb;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            max-width: 50%;
+            text-align: center;
+        }
+
+        .challenge-buttons button {
+            background: #4b5563;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            margin-left: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .challenge-buttons button.active { background: var(--accent-color); }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar Diagram Guide Palette */
+        .sidebar {
+            width: 300px;
+            background-color: var(--panel-color);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border-right: 2px solid #374151;
+            overflow-y: auto;
+        }
+
+        .sidebar h3 { font-size: 1.1rem; color: #a1a1aa; margin-bottom: 5px; border-bottom: 1px solid #3f3f46; padding-bottom: 5px;}
+
+        .diagram-container {
+            background: #111827;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .diagram-container p {
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #9ca3af;
+        }
+        svg {
+            background: #1e293b;
+            border-radius: 4px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .hint-text {
+            font-size: 0.8rem;
+            color: #a1a1aa;
+            line-height: 1.4;
+            background: #111827;
+            padding: 10px;
+            border-radius: 6px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        /* Canvas Workspace */
+        .workspace-container {
+            flex: 1;
+            position: relative;
+            background: #0f172a;
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-size: 25px 25px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Right Panel: Tables and Status */
+        .right-panel {
+            width: 320px;
+            background-color: var(--panel-color);
+            border-left: 2px solid #374151;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .table-container {
+            background: #111827;
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #374151;
+        }
+
+        th { background-color: #1f2937; color: #9ca3af; }
+        
+        .row-active { background-color: rgba(79, 70, 229, 0.35); font-weight: bold; }
+
+        #validation-result {
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Logic Circuit Physics Lab</h1>
+        <div class="challenge-box" id="challenge-desc">
+            Challenge: Connect the components in SERIES so the bulb lights up only when BOTH Switch A AND Switch B are closed.
+        </div>
+        <div class="challenge-buttons">
+            <button id="btn-and" class="active" onclick="switchChallenge('AND')">AND (Series)</button>
+            <button id="btn-or" onclick="switchChallenge('OR')">OR (Parallel)</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <h3>Wiring Reference Guide</h3>
+            
+            <div class="diagram-container">
+                <p>AND Gate Layout (Series Circuit)</p>
+                <svg width="250" height="110">
+                    <rect x="10" y="40" width="35" height="25" fill="#ef4444" rx="3"/>
+                    <text x="27" y="56" fill="white" font-size="10" font-weight="bold" text-anchor="middle">BAT</text>
+                    <rect x="75" y="20" width="45" height="20" fill="#10b981" rx="3"/>
+                    <text x="97" y="33" fill="white" font-size="9" text-anchor="middle">Switch A</text>
+                    <rect x="140" y="20" width="45" height="20" fill="#10b981" rx="3"/>
+                    <text x="162" y="33" fill="white" font-size="9" text-anchor="middle">Switch B</text>
+                    <circle cx="215" cy="52" r="12" fill="#facc15" stroke="#eab308" stroke-width="2"/>
+                    <text x="215" y="55" fill="#1e293b" font-size="9" font-weight="bold" text-anchor="middle">BULB</text>
+                    <path d="M 45 45 L 75 30" stroke="#f59e0b" stroke-width="2" fill="none"/>
+                    <path d="M 120 30 L 140 30" stroke="#f59e0b" stroke-width="2" fill="none"/>
+                    <path d="M 185 30 L 203 52" stroke="#f59e0b" stroke-width="2" fill="none"/>
+                    <path d="M 215 64 L 215 85 L 27 85 L 27 65" stroke="#f59e0b" stroke-width="2" fill="none"/>
+                </svg>
+            </div>
+
+            <div class="diagram-container">
+                <p>OR Gate Layout (Parallel Circuit)</p>
+                <svg width="250" height="110">
+                    <rect x="10" y="40" width="35" height="25" fill="#ef4444" rx="3"/>
+                    <text x="27" y="56" fill="white" font-size="10" font-weight="bold" text-anchor="middle">BAT</text>
+                    <rect x="90" y="15" width="45" height="20" fill="#10b981" rx="3"/>
+                    <text x="112" y="28" fill="white" font-size="9" text-anchor="middle">Switch A</text>
+                    <rect x="90" y="55" width="45" height="20" fill="#10b981" rx="3"/>
+                    <text x="112" y="68" fill="white" font-size="9" text-anchor="middle">Switch B</text>
+                    <circle cx="215" cy="52" r="12" fill="#facc15" stroke="#eab308" stroke-width="2"/>
+                    <text x="215" y="55" fill="#1e293b" font-size="9" font-weight="bold" text-anchor="middle">BULB</text>
+                    <path d="M 45 45 L 65 45 L 65 25 L 90 25" stroke="#f59e0b" stroke-width="2" fill="none"/>
+                    <path d="M 65 45 L 65 65 L 90 65" stroke="#f59e0b" stroke-width="2" fill="none"/>
+                    <path d="M 135 25 L 165 25 L 165 45 L 203 45" stroke="#f59e0b" stroke-width="2" fill="none"/>
+                    <path d="M 135 65 L 165 65 L 165 45" stroke="#f59e0b" stroke-width="2" fill="none"/>
+                    <path d="M 215 64 L 215 90 L 27 90 L 27 65" stroke="#f59e0b" stroke-width="2" fill="none"/>
+                </svg>
+            </div>
+
+            <div class="hint-text">
+                💡 <strong>Tips:</strong><br>
+                • Left-click terminals & drag to connect wires.<br>
+                • <strong>Right-click a wire to delete it!</strong><br>
+                • Progress is saved automatically when shifting tabs.
+            </div>
+        </div>
+
+        <div class="workspace-container" id="canvasArea">
+            <canvas id="circuitCanvas"></canvas>
+        </div>
+
+        <div class="right-panel">
+            <h3>Dynamic Truth Table</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Switch A</th>
+                            <th>Switch B</th>
+                            <th>Bulb Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="truth-table-body">
+                        <tr id="row-00"><td>OFF</td><td>OFF</td><td id="cell-00">-</td></tr>
+                        <tr id="row-01"><td>OFF</td><td>ON</td><td id="cell-01">-</td></tr>
+                        <tr id="row-10"><td>ON</td><td>OFF</td><td id="cell-10">-</td></tr>
+                        <tr id="row-11"><td>ON</td><td>ON</td><td id="cell-11">-</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="validation-result">
+                Analyzing layout logic...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('circuitCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let components = [];
+        let connections = []; 
+        let currentChallenge = 'AND';
+        
+        // Progress Memory Cache
+        let challengeProgress = {
+            'AND': { components: [], connections: [] },
+            'OR': { components: [], connections: [] }
+        };
+        
+        // Interaction Trackers
+        let activeTerminal = null;
+        let mousePos = { x: 0, y: 0 };
+        let draggingComp = null;
+        let dragOffset = { x: 0, y: 0 };
+        let animationOffset = 0;
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        class Component {
+            constructor(id, type, label, x, y, width, height) {
+                this.id = id;
+                this.type = type;
+                this.label = label;
+                this.x = x;
+                this.y = y;
+                this.width = width;
+                this.height = height;
+                this.swState = false; 
+                this.terminals = [];
+
+                if (type === 'battery') {
+                    this.terminals.push({ id: 'pos', label: '+', x: this.width, y: 25, parent: this, color: '#ef4444' });
+                    this.terminals.push({ id: 'neg', label: '-', x: this.width, y: 55, parent: this, color: '#3b82f6' });
+                } else if (type === 'switch') {
+                    this.terminals.push({ id: 't1', label: 'T1', x: 0, y: this.height / 2, parent: this, color: '#10b981' });
+                    this.terminals.push({ id: 't2', label: 'T2', x: this.width, y: this.height / 2, parent: this, color: '#10b981' });
+                } else if (type === 'bulb') {
+                    this.terminals.push({ id: 't1', label: 'In1', x: 0, y: this.height / 2, parent: this, color: '#a855f7' });
+                    this.terminals.push({ id: 't2', label: 'In2', x: this.width, y: this.height / 2, parent: this, color: '#a855f7' });
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = '#1e293b';
+                ctx.strokeStyle = '#475569';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.roundRect(this.x, this.y, this.width, this.height, 8);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 13px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.label, this.x + this.width / 2, this.y + 25);
+
+                if (this.type === 'switch') {
+                    ctx.strokeStyle = '#94a3b8';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(this.x + 25, this.y + 45, 3, 0, Math.PI*2);
+                    ctx.arc(this.x + this.width - 25, this.y + 45, 3, 0, Math.PI*2);
+                    ctx.fillStyle = '#64748b';
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.moveTo(this.x + 25, this.y + 45);
+                    if (this.swState) {
+                        ctx.lineTo(this.x + this.width - 25, this.y + 45);
+                    } else {
+                        ctx.lineTo(this.x + this.width - 30, this.y + 25);
+                    }
+                    ctx.strokeStyle = '#f8fafc';
+                    ctx.stroke();
+
+                } else if (this.type === 'bulb') {
+                    let isGlowing = checkBulbLitState();
+                    ctx.fillStyle = isGlowing ? '#fef08a' : '#334155';
+                    ctx.strokeStyle = isGlowing ? '#facc15' : '#475569';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(this.x + this.width / 2, this.y + 50, 16, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.strokeStyle = isGlowing ? '#eab308' : '#64748b';
+                    ctx.beginPath();
+                    ctx.moveTo(this.x + this.width/2 - 7, this.y + 55);
+                    ctx.lineTo(this.x + this.width/2, this.y + 42);
+                    ctx.lineTo(this.x + this.width/2 + 7, this.y + 55);
+                    ctx.stroke();
+
+                } else if (this.type === 'battery') {
+                    ctx.fillStyle = '#3b82f6';
+                    ctx.fillRect(this.x + 10, this.y + 45, this.width - 20, 25);
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fillRect(this.x + 10, this.y + 15, this.width - 20, 30);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '11px Arial';
+                    ctx.fillText("BATTERY", this.x + this.width/2, this.y + 44);
+                }
+
+                this.terminals.forEach(t => {
+                    ctx.fillStyle = t.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x + t.x, this.y + t.y, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = '9px Arial';
+                    ctx.textAlign = t.x === 0 ? 'left' : 'right';
+                    ctx.fillText(t.label, this.x + t.x + (t.x === 0 ? 10 : -10), this.y + t.y + 3);
+                });
+            }
+
+            getTerminalAt(mx, my) {
+                for (let t of this.terminals) {
+                    if (Math.hypot(mx - (this.x + t.x), my - (this.y + t.y)) < 12) return t;
+                }
+                return null;
+            }
+        }
+
+        // Initialize default clean states for both challenges
+        function generateFreshLayout() {
+            return [
+                new Component('bat', 'battery', '12V Power Supply', 40, 160, 120, 80),
+                new Component('swA', 'switch', 'Switch A', 220, 60, 130, 80),
+                new Component('swB', 'switch', 'Switch B', 220, 260, 130, 80),
+                new Component('bulb', 'bulb', 'Light Bulb', 440, 160, 120, 80)
+            ];
+        }
+
+        function setupEnvironment() {
+            resizeCanvas();
+            // Pre-populate cache layers
+            challengeProgress['AND'].components = generateFreshLayout();
+            challengeProgress['OR'].components = generateFreshLayout();
+            
+            // Load starting challenge (AND)
+            loadChallengeState('AND');
+            updateSimulationLoop();
+        }
+
+        // Saves current workspace variables to state memory cache
+        function saveChallengeState(challenge) {
+            challengeProgress[challenge].components = components;
+            challengeProgress[challenge].connections = connections;
+        }
+
+        // Pulls configuration variables out of cache data trees
+        function loadChallengeState(challenge) {
+            components = challengeProgress[challenge].components;
+            connections = challengeProgress[challenge].connections;
+            verifyCircuitAutomatically();
+        }
+
+        function switchChallenge(type) {
+            if (currentChallenge === type) return;
+
+            // 1. Cache current configuration before wipe
+            saveChallengeState(currentChallenge);
+
+            // 2. Adjust active structural properties
+            currentChallenge = type;
+            document.getElementById('btn-and').classList.toggle('active', type === 'AND');
+            document.getElementById('btn-or').classList.toggle('active', type === 'OR');
+            document.getElementById('challenge-desc').innerText = type === 'AND' 
+                ? "Challenge: Connect the components in SERIES so the bulb lights up only when BOTH Switch A AND Switch B are closed."
+                : "Challenge: Connect the components in PARALLEL so the bulb lights up if EITHER Switch A OR Switch B is closed.";
+            
+            // 3. Load next dataset variables back online
+            loadChallengeState(type);
+        }
+
+        // Logic Loop Graph Traverser Mapping Engine
+        function checkBulbLitState() {
+            let batPos = components.find(c => c.id === 'bat').terminals.find(t => t.id === 'pos');
+            let batNeg = components.find(c => c.id === 'bat').terminals.find(t => t.id === 'neg');
+            let bulb = components.find(c => c.id === 'bulb');
+
+            let visited = new Set();
+            
+            function trace(terminal) {
+                if (!terminal || visited.has(terminal)) return;
+                visited.add(terminal);
+
+                let comp = terminal.parent;
+                if (comp.type === 'switch' && comp.swState) {
+                    trace(comp.terminals.find(t => t !== terminal));
+                } else if (comp.type === 'bulb') {
+                    trace(comp.terminals.find(t => t !== terminal));
+                }
+
+                connections.forEach(wire => {
+                    if (wire.t1 === terminal) trace(wire.t2);
+                    if (wire.t2 === terminal) trace(wire.t1);
+                });
+            }
+
+            trace(batPos);
+            return ((visited.has(bulb.terminals[0]) || visited.has(bulb.terminals[1])) && visited.has(batNeg));
+        }
+
+        function verifyCircuitAutomatically() {
+            let swA = components.find(c => c.id === 'swA');
+            let swB = components.find(c => c.id === 'swB');
+            let statusBox = document.getElementById('validation-result');
+
+            let initialA = swA.swState;
+            let initialB = swB.swState;
+            let completelyMatches = true;
+
+            const matrix = [[false, false], [false, true], [true, false], [true, true]];
+            
+            matrix.forEach(([a, b]) => {
+                swA.swState = a;
+                swB.swState = b;
+                let outcome = checkBulbLitState();
+                let requirements = currentChallenge === 'AND' ? (a && b) : (a || b);
+                if (outcome !== requirements) completelyMatches = false;
+            });
+
+            swA.swState = initialA;
+            swB.swState = initialB;
+
+            if (completelyMatches) {
+                statusBox.innerText = `🎉 Perfect! Your live circuit built the matching ${currentChallenge} gate layout!`;
+                statusBox.style.background = "#065f46";
+                statusBox.style.color = "#d1fae5";
+            } else {
+                statusBox.innerText = `❌ Incomplete Logic. Re-arrange wires to match the ${currentChallenge} reference pattern.`;
+                statusBox.style.background = "#991b1b";
+                statusBox.style.color = "#fee2e2";
+            }
+        }
+
+        // Live Render Animation Loop Frame
+        function updateSimulationLoop() {
+            animationOffset = (animationOffset + 1) % 100;
+
+            let swA = components.find(c => c.id === 'swA');
+            let swB = components.find(c => c.id === 'swB');
+
+            let initialA = swA.swState;
+            let initialB = swB.swState;
+
+            const combinations = [[false, false], [false, true], [true, false], [true, true]];
+            combinations.forEach(([stateA, stateB]) => {
+                swA.swState = stateA;
+                swB.swState = stateB;
+
+                let lit = checkBulbLitState();
+                let cellId = `cell-${stateA ? 1 : 0}${stateB ? 1 : 0}`;
+                let rowId = `row-${stateA ? 1 : 0}${stateB ? 1 : 0}`;
+
+                let targetCell = document.getElementById(cellId);
+                let targetRow = document.getElementById(rowId);
+
+                if (targetCell) {
+                    targetCell.innerText = lit ? "💡 ON" : "❌ OFF";
+                    targetCell.style.color = lit ? "#f59e0b" : "#6b7280";
+                }
+                if (targetRow) {
+                    targetRow.className = (initialA === stateA && initialB === stateB) ? "row-active" : "";
+                }
+            });
+
+            swA.swState = initialA;
+            swB.swState = initialB;
+
+            drawWorkspace();
+            requestAnimationFrame(updateSimulationLoop);
+        }
+
+        function drawWorkspace() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            let batPos = components.find(c => c.id === 'bat').terminals.find(t => t.id === 'pos');
+            let liveTerminals = new Set();
+            
+            function traceLivePower(term) {
+                if(!term || liveTerminals.has(term)) return;
+                liveTerminals.add(term);
+                let comp = term.parent;
+                if(comp.type === 'switch' && comp.swState) traceLivePower(comp.terminals.find(t => t !== term));
+                else if (comp.type === 'bulb') traceLivePower(comp.terminals.find(t => t !== term));
+
+                connections.forEach(w => {
+                    if(w.t1 === term) traceLivePower(w.t2);
+                    if(w.t2 === term) traceLivePower(w.t1);
+                });
+            }
+            traceLivePower(batPos);
+
+            let circuitIsComplete = checkBulbLitState();
+
+            // Render Wires and Electron Flow Particles
+            connections.forEach(wire => {
+                let x1 = wire.t1.parent.x + wire.t1.x;
+                let y1 = wire.t1.parent.y + wire.t1.y;
+                let x2 = wire.t2.parent.x + wire.t2.x;
+                let y2 = wire.t2.parent.y + wire.t2.y;
+
+                let isHot = liveTerminals.has(wire.t1) && liveTerminals.has(wire.t2);
+                ctx.strokeStyle = isHot ? 'var(--wire-hot)' : 'var(--wire-cold)';
+                ctx.lineWidth = isHot ? 4 : 3;
+                
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                let ctrl = Math.abs(x2 - x1) * 0.4;
+                ctx.bezierCurveTo(x1 + ctrl, y1, x2 - ctrl, y2, x2, y2);
+                ctx.stroke();
+
+                // Electron Injection Loop 
+                if (isHot && circuitIsComplete) {
+                    ctx.fillStyle = "#ffffff";
+                    for (let j = 0; j < 3; j++) {
+                        let t = ((animationOffset / 100) + (j / 3)) % 1.0;
+                        let pt = getBezierPoint(x1, y1, x1 + ctrl, y1, x2 - ctrl, y2, x2, y2, t);
+                        ctx.beginPath();
+                        ctx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            });
+
+            if (activeTerminal) {
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(activeTerminal.parent.x + activeTerminal.x, activeTerminal.parent.y + activeTerminal.y);
+                ctx.lineTo(mousePos.x, mousePos.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            components.forEach(c => c.draw());
+        }
+
+        // Helper Bezier math utility function to track curve paths for dots
+        function getBezierPoint(x1, y1, cp1x, cp1y, cp2x, cp2y, x2, y2, t) {
+            let cx = 3 * (cp1x - x1);
+            let bx = 3 * (cp2x - cp1x) - cx;
+            let ax = x2 - x1 - cx - bx;
+            let cy = 3 * (cp1y - y1);
+            let by = 3 * (cp2y - cp1y) - cy;
+            let ay = y2 - y1 - cy - by;
+            let x = ((ax * t + bx) * t + cx) * t + x1;
+            let y = ((ay * t + by) * t + cy) * t + y1;
+            return { x: x, y: y };
+        }
+
+        // Distance utility function to detect clicks near a curved wire path
+        function getDistanceToWire(mx, my, wire) {
+            let x1 = wire.t1.parent.x + wire.t1.x;
+            let y1 = wire.t1.parent.y + wire.t1.y;
+            let x2 = wire.t2.parent.x + wire.t2.x;
+            let y2 = wire.t2.parent.y + wire.t2.y;
+            let ctrl = Math.abs(x2 - x1) * 0.4;
+
+            let minCDist = Infinity;
+            for(let i=0; i<=10; i++) {
+                let pt = getBezierPoint(x1, y1, x1 + ctrl, y1, x2 - ctrl, y2, x2, y2, i/10);
+                let d = Math.hypot(mx - pt.x, my - pt.y);
+                if (d < minCDist) minCDist = d;
+            }
+            return minCDist;
+        }
+
+        // Interfacing Listeners Engine
+        canvas.addEventListener('mousedown', (e) => {
+            let rect = canvas.getBoundingClientRect();
+            let mx = e.clientX - rect.left;
+            let my = e.clientY - rect.top;
+
+            // Handle Right-Clicks to Delete Wires
+            if (e.button === 2) {
+                e.preventDefault();
+                for (let i = connections.length - 1; i >= 0; i--) {
+                    if (getDistanceToWire(mx, my, connections[i]) < 15) {
+                        connections.splice(i, 1);
+                        verifyCircuitAutomatically();
+                        return;
+                    }
+                }
+                return;
+            }
+
+            for (let c of components) {
+                let term = c.getTerminalAt(mx, my);
+                if (term) {
+                    activeTerminal = term;
+                    return;
+                }
+            }
+
+            for (let c of components) {
+                if (mx >= c.x && mx <= c.x + c.width && my >= c.y && my <= c.y + c.height) {
+                    if (c.type === 'switch' && my > c.y + 35) {
+                        c.swState = !c.swState;
+                        verifyCircuitAutomatically();
+                        return;
+                    }
+                    draggingComp = c;
+                    dragOffset.x = mx - c.x;
+                    dragOffset.y = my - c.y;
+                    return;
+                }
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            let rect = canvas.getBoundingClientRect();
+            mousePos.x = e.clientX - rect.left;
+            mousePos.y = e.clientY - rect.top;
+
+            if (draggingComp) {
+                draggingComp.x = mousePos.x - dragOffset.x;
+                draggingComp.y = mousePos.y - dragOffset.y;
+            }
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            if (activeTerminal && e.button !== 2) {
+                let rect = canvas.getBoundingClientRect();
+                let mx = e.clientX - rect.left;
+                let my = e.clientY - rect.top;
+
+                for (let c of components) {
+                    let destTerminal = c.getTerminalAt(mx, my);
+                    if (destTerminal && destTerminal !== activeTerminal && destTerminal.parent !== activeTerminal.parent) {
+                        connections = connections.filter(w => !((w.t1 === activeTerminal && w.t2 === destTerminal) || (w.t1 === destTerminal && w.t2 === activeTerminal)));
+                        connections.push({ t1: activeTerminal, t2: destTerminal });
+                        break;
+                    }
+                }
+                activeTerminal = null;
+                verifyCircuitAutomatically();
+            }
+            draggingComp = null;
+        });
+
+        canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+        setupEnvironment();
+    </script>
+</body>
+</html>
