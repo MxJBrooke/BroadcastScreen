@@ -242,7 +242,7 @@
         }
 
         .CodeMirror-code .CodeMirror-line {
-            padding: 0 4px !important; /* The 4px offset we must correct for */
+            padding: 0 4px !important;
             line-height: 24px !important;
         }
 
@@ -394,8 +394,6 @@
         <button class="style-btn" id="btn-snakes" onclick="changeIndentStyle('snakes')" title="Python Snakes">🐍</button>
     </div>
 
-    
-
     <h3>Font Size</h3>
     <div class="accessibility-control">
         <button class="accessibility-scale" onclick="adjustFontSize(1)">Increase</button>
@@ -451,7 +449,6 @@ const editor = CodeMirror.fromTextArea(document.getElementById("code"), {
     }
 });
 
-// Generates mathematical sine wave snakes adapted to pixel-perfect tab widths
 function createSnakeSVG(totalIndents, charWidth, isDead) {
     const tabWidth = 4 * charWidth;
     const totalPx = totalIndents * tabWidth;
@@ -461,18 +458,14 @@ function createSnakeSVG(totalIndents, charWidth, isDead) {
     let pathD = `M 0,12 `;
     
     if (isDead) {
-        // Flatline if the indent spacing is completely wrong
         pathD += `L ${headX},12`;
     } else {
-        // Construct standard sine-wave per 4-space tab block 
         for(let i = 0; i < totalIndents; i++) {
             let startX = i * tabWidth;
             let qX = startX + tabWidth / 4;
             let mX = startX + tabWidth / 2;
             let endX = startX + tabWidth;
             if (i === totalIndents - 1) endX = headX;
-            
-            // Q = control point curve up, T = mirror control point curve down
             pathD += `Q ${qX},4 ${mX},12 T ${endX},12 `;
         }
     }
@@ -509,20 +502,18 @@ editor.on("renderLine", function(cm, lineHandle, el) {
     
     const charWidth = cm.defaultCharWidth();
     const totalPx = whitespace.length * charWidth;
-    const pad = 4; // Crucial fix: compensates for CodeMirror's inherent left text padding
+    const pad = 4;
 
-    // --- Snake Rendering ---
     if (currentStyle === 'snakes') {
         const totalIndents = whitespace.length / 4;
         const svgUri = createSnakeSVG(totalIndents, charWidth, isInvalid);
         el.style.backgroundImage = `url("${svgUri}")`;
-        el.style.backgroundPosition = `${pad}px center`; // Start specifically after CodeMirror padding
+        el.style.backgroundPosition = `${pad}px center`;
         el.style.backgroundSize = `${totalPx}px 100%`;
         if (isInvalid) el.style.backgroundColor = "rgba(0,0,0,0.05)";
         return;
     }
 
-    // --- Standard Block Invalid Handling ---
     if (isInvalid) {
         el.style.backgroundImage = `linear-gradient(to right, rgba(232, 67, 147, 0.45) ${pad}px, rgba(232, 67, 147, 0.45) ${pad + totalPx}px, transparent ${pad + totalPx}px)`;
         el.style.backgroundSize = "100% 100%";
@@ -590,7 +581,7 @@ editor.on("change", function(cm) {
     if (promptBox) promptBox.style.display = "none";
 });
 
-// --- 3. External Local File I/O Storage Pipeline Drivers ---
+// --- 3. External File I/O Drivers ---
 function triggerImport() {
     document.getElementById('fileInput').click();
 }
@@ -610,7 +601,7 @@ function importFile(event) {
     reader.readAsText(file);
 }
 
-// --- 4. Accessibility Controls Management System ---
+// --- 4. Accessibility Control System ---
 function toggleAccessibility() {
     document.getElementById('accessPanel').classList.toggle('open');
 }
@@ -703,17 +694,6 @@ function setBackground(color) {
         btn.style.borderColor = borderHex;
     });
 
-    setTimeout(() => { editor.refresh(); }, 50);
-}
-
-function adjustWordSpacing(amount){
-    let current = parseFloat(localStorage.getItem('wordSpacing')||'0');
-    current += amount;
-    
-    document.body.style.wordSpacing = current + 'em';
-    document.documentElement.style.setProperty('--editor-ls', (current * 0.4) + 'em');
-    
-    localStorage.setItem('wordSpacing', current);
     setTimeout(() => { editor.refresh(); }, 50);
 }
 
@@ -813,6 +793,9 @@ function generateRobotError(errorObj, fullCode) {
         const varMatch = rawMessage.match(/name '([^']+)' is not defined/);
         const varName = varMatch ? varMatch[1] : "word";
         friendlyExplanation = `<strong>Spelling mistake or missing variable!</strong><br><ul class='guide-list'><li>Python doesn't know what <code>${varName}</code> means. Remember that spelling and capitals matter!</li></ul>`;
+    } else if (rawMessage.includes("TypeError")) {
+        // Explicit support branch for dynamic TypeError messages passed from Skulpt execution pipelines
+        friendlyExplanation = `<strong>Data Type Mistake (TypeError)!</strong><br><ul class='guide-list'><li>You are matching data types that do not mix well together. For example, trying to add numbers and strings, or passing the wrong data structure type to a function. Check your values!</li></ul>`;
     }
 
     if (targetLineNum) {
@@ -859,7 +842,7 @@ function escapeHtml(text) {
 
 function outf(text) { 
     const outBox = document.getElementById("output");
-    if (text !== "\\n") { outBox.innerHTML += escapeHtml(text); }
+    if (text !== "\n") { outBox.innerHTML += escapeHtml(text); }
 }
 
 function builtinRead(x) {
@@ -923,6 +906,7 @@ function runPython() {
     myPromise.then(function() {
         // Success
     }, function(err) {
+        // Any thrown TypeError exceptions pass seamlessly here down into the renderer below
         outputBox.innerHTML += generateRobotError(err, code);
     });
 }
@@ -943,15 +927,12 @@ function exportFile() {
 
 // --- 7. Initialisation Lifecycles ---
 window.onload = function(){
-    // 1. Initialize persistent background
     const saved = localStorage.getItem('bgColor') || 'white';
     setBackground(saved);
 
-    // 2. Initialize persistent indent styles
     const savedIndentStyle = localStorage.getItem('indentStyle') || 'greenpink';
     changeIndentStyle(savedIndentStyle);
 
-    // 3. Initialize persistent font typography adjustments
     const ws = parseFloat(localStorage.getItem('wordSpacing')||'0');
     const fs = parseFloat(localStorage.getItem('fontSize')||'16');
     
