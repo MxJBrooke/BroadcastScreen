@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Python IDE</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
+
+    <style>
+        /* --- Core Theme Variables & Inherited Styling Structure --- */
+        :root {
+            --c1: rgba(255, 118, 117, 0.25);
+            --c2: rgba(253, 203, 110, 0.28);
+            --c3: rgba(85, 239, 196, 0.28);
+            --c4: rgba(116, 185, 255, 0.25);
+            --c5: rgba(162, 155, 254, 0.25);
+            
+            --g1: rgba(46, 204, 113, 0.45);
+            --g2: rgba(46, 204, 113, 0.35);
+            --g3: rgba(46, 204, 113, 0.25);
+            --g4: rgba(46, 204, 113, 0.18);
+            --g5: rgba(46, 204, 113, 0.10);
+
+            --editor-fs: 16px;
+            --editor-ls: normal;
+            --guide-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body.access-dark {
+            --guide-color: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            font-family: 'Courier New', Consolas, monospace;
+            margin: 0;
+            transition: background 0.3s ease, color 0.3s ease, word-spacing 0.3s ease, font-size 0.3s ease;
+            word-spacing: normal;
+            font-size: 16px;
+            background-color: #f5f5f5;
+        }
+
+        /* --- Header Configuration --- */
+        .header {
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            color: #000;
+            transition: all 0.3s ease;
+            background: #b2bec3;
+        }
+
+        .header h1 {
+            color: #fff;
+            margin: 0;
+        }
+
+        /* --- Unified Action Control Button Styles --- */
+        .accessibility-toggle, .accessibility-scale, .ide-btn, .btn-run, .btn-file, .tab-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid #aaa;
+            background: #fff;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            height: 28px;
+        }
+        
+        .accessibility-toggle:hover, .accessibility-scale:hover, .ide-btn:hover, .btn-run:hover, .btn-file:hover, .tab-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .accessibility-toggle {
+            position: absolute;
+            left: 20px;
+            height: auto;
+        }
+
+        /* --- Header File Action Stack --- */
+        .header-file-stack {
+            position: absolute;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .header-file-stack .btn-file {
+            padding: 6px 12px;
+            font-size: 13px;
+            height: auto;
+        }
+
+        #fileInput { display: none; }
+
+        /* --- Accessibility Floating Side Overlay --- */
+        .accessibility-panel {
+            position: fixed;
+            top: 0;
+            left: -260px;
+            width: 250px;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: left 0.3s ease, background 0.3s ease;
+            z-index: 1000;
+            background: #fff;
+            border-right: 1px solid #ccc;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+
+        .accessibility-panel.open {
+            left: 0;
+        }
+
+        .accessibility-panel button.close-panel-btn {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .color-spot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin: 5px;
+            cursor: pointer;
+            border: 1px solid #777;
+            display: inline-block;
+        }
+
+        /* Icon UI for Indent Selection */
+        .style-btn {
+            width: 44px; height: 44px; font-size: 22px;
+            border-radius: 8px; border: 2px solid transparent; cursor: pointer;
+            background: #f1f2f6; display: inline-flex; align-items: center; justify-content: center;
+            transition: all 0.2s ease; margin-right: 5px; margin-bottom: 5px;
+        }
+        .style-btn:hover { background: #dfe4ea; }
+        .style-btn.active { border-color: #2f3640; background: #ced6e0; box-shadow: inset 0 0 5px rgba(0,0,0,0.2); }
+        
+        body.access-dark .style-btn { background: #2f3640; border-color: transparent; }
+        body.access-dark .style-btn:hover { background: #353b48; }
+        body.access-dark .style-btn.active { border-color: #f5f6fa; background: #57606f; }
+
+        .accessibility-control {
+            margin: 10px 0;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        /* --- Main App Layout Architecture --- */
+        .main-wrapper {
+            max-width: 90%;
+            margin: 40px auto;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        /* --- Python IDE Workspace Container Split --- */
+        .ide-container {
+            display: flex;
+            gap: 20px;
+            height: 600px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .editor-container, .output-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background: white;
+            position: relative;
+            transition: border-color 0.3s ease;
+        }
+
+        .ide-toolbar {
+            background: #f1f2f6;
+            padding: 0 12px;
+            height: 44px;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #000;
+            transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+
+        .ide-toolbar-buttons {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* --- Tabs Styling --- */
+        .execution-tabs {
+            display: flex;
+            gap: 4px;
+        }
+        .tab-btn {
+            height: 32px;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            border-bottom: none;
+            opacity: 0.6;
+        }
+        .tab-btn.active {
+            opacity: 1;
+            background: #fff;
+            border-color: #ccc #ccc transparent #ccc;
+        }
+        body.access-dark .tab-btn.active {
+            background: #121212;
+        }
+
+        /* --- Tab Viewpanes --- */
+        .tab-content {
+            display: none;
+            flex: 1;
+            position: absolute;
+            top: 44px; left: 0; right: 0; bottom: 0;
+            overflow: auto;
+            background-color: inherit;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* --- CodeMirror Component Adaptations --- */
+        .CodeMirror {
+            position: absolute;
+            top: 44px; left: 0; right: 0; bottom: 0;
+            height: calc(100% - 44px) !important;
+            font-family: 'Courier New', Consolas, monospace !important;
+            background: inherit;
+            color: inherit;
+            font-size: var(--editor-fs) !important;
+            letter-spacing: var(--editor-ls) !important;
+        }
+        
+        .CodeMirror-lines, .CodeMirror-code, #output {
+            font-size: var(--editor-fs) !important;
+            letter-spacing: var(--editor-ls) !important;
+        }
+
+        .CodeMirror-lines {
+            padding: 10px 0 !important;
+        }
+
+        .CodeMirror-code .CodeMirror-line {
+            padding: 0 4px !important;
+            line-height: 24px !important;
+        }
+
+        .CodeMirror-gutters { 
+            background: rgba(0, 0, 0, 0.05); 
+            border-right: 1px solid rgba(0, 0, 0, 0.15); 
+            z-index: 4; 
+        }
+        .CodeMirror-selected { background: #b4d5fe !important; }
+
+        /* Classic Python IDLE Palette Tokens */
+        .cm-s-default .cm-keyword { color: #ff7700; font-weight: bold; }
+        .cm-s-default .cm-builtin { color: #900090; }
+        .cm-s-default .cm-string { color: #00aa00; }
+        .cm-s-default .cm-comment { color: #dd0000; font-style: italic; }
+        .cm-s-default .cm-number { color: #000000; }
+        .cm-s-default .cm-def { color: #0000ff; font-weight: bold; }
+
+        /* Custom Theme Overrides for Syntax Tokens in Dark Mode */
+        body.access-dark .cm-s-default .cm-keyword { color: #ff9f43; }
+        body.access-dark .cm-s-default .cm-builtin { color: #a55eea; }
+        body.access-dark .cm-s-default .cm-string { color: #1dd1a1; }
+        body.access-dark .cm-s-default .cm-comment { color: #ff6b6b; }
+        body.access-dark .cm-s-default .cm-number { color: #f5f6fa; }
+        body.access-dark .cm-s-default .cm-def { color: #54a0ff; }
+        body.access-dark .CodeMirror-selected { background: #341f97 !important; }
+
+        #output {
+            padding: 15px;
+            font-family: 'Courier New', Consolas, monospace;
+            white-space: pre;
+            margin: 0;
+            box-sizing: border-box;
+            width: 100%;
+            height: 100%;
+        }
+
+        #turtleCanvas {
+            background-color: #ffffff;
+            min-width: 100%;
+            min-height: 100%;
+            display: block;
+        }
+
+        .terminal-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: inherit;
+            font-family: inherit;
+            font-size: inherit;
+            letter-spacing: inherit;
+            padding: 0;
+            margin: 0;
+            width: auto;
+            display: inline;
+            border-bottom: 2px dashed rgba(0, 0, 0, 0.3);
+        }
+        body.access-dark .terminal-input {
+            border-bottom: 2px dashed rgba(255, 255, 255, 0.4);
+        }
+
+        .error-line-highlight {
+            background-color: rgba(214, 48, 49, 0.25) !important; 
+            box-shadow: inset 6px 0 0 0 #d63031 !important; 
+        }
+
+        /* --- Contextual Warning Engine Overlays --- */
+        @keyframes inline-token-pulse {
+            0% { background-color: #ff7675; box-shadow: 0 0 4px #ff7675; }
+            50% { background-color: #b33939; box-shadow: 0 0 10px #b33939; }
+            100% { background-color: #ff7675; box-shadow: 0 0 4px #ff7675; }
+        }
+        
+        .floating-line-prompt {
+            position: absolute;
+            z-index: 100;
+            padding: 2px 8px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            color: white !important;
+            border-radius: 4px;
+            animation: inline-token-pulse 1.8s infinite ease-in-out;
+            user-select: none;
+            border: 1px solid rgba(0,0,0,0.15);
+            white-space: nowrap;
+            pointer-events: none; 
+            display: none;
+        }
+
+        .robot-error-box {
+            background: #ffeaa7;
+            border: 2px solid #f1c40f;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            color: #2d3436;
+            display: flex;
+            gap: 15px;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            white-space: normal;
+            word-break: break-word;
+        }
+        .robot-mascot { font-size: 40px; display: flex; align-items: center; }
+        .error-details h4 { margin: 0 0 5px 0; color: #d63031; font-size: 18px; }
+        .error-details p { margin: 0 0 10px 0; font-size: 15px; line-height: 1.5; }
+        .error-pointer {
+            background: #ffffff;
+            border: 1px solid #ced6e0;
+            padding: 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 14px;
+            margin-top: 5px;
+            color: #000;
+            white-space: normal;
+            word-break: break-word;
+        }
+        .highlight-line { background: #2d3436; color: white; padding: 2px 4px; border-radius: 3px; font-weight: bold; }
+        ul.guide-list { margin: 5px 0; padding-left: 20px; font-size: 14px; }
+    </style>
+</head>
+<body>
+
+<div class="header" id="header">
+    <button class="accessibility-toggle" onclick="toggleAccessibility()">Accessibility</button>
+    <h1>Classroom Python IDE</h1>
+    
+    <div class="header-file-stack">
+        <button class="btn-file" onclick="triggerImport()">Import .py</button>
+        <button class="btn-file" onclick="exportFile()">Export .py</button>
+        <input type="file" id="fileInput" accept=".py" onchange="importFile(event)">
+    </div>
+</div>
+
+<div class="accessibility-panel" id="accessPanel">
+    <button class="close-panel-btn" onclick="toggleAccessibility()">X</button>
+    <h3>Colours</h3>
+    <button class="color-spot" style="background:#f5f5f5" onclick="setBackground('white')"></button>
+    <button class="color-spot" style="background:#ffcccc" onclick="setBackground('red')"></button>
+    <button class="color-spot" style="background:#ffe5cc" onclick="setBackground('orange')"></button>
+    <button class="color-spot" style="background:#fff9c4" onclick="setBackground('yellow')"></button>
+    <button class="color-spot" style="background:#e8f5e9" onclick="setBackground('green')"></button>
+    <button class="color-spot" style="background:#e3f2fd" onclick="setBackground('blue')"></button>
+    <button class="color-spot" style="background:#e6e0f8" onclick="setBackground('purple')"></button>
+    <button class="color-spot" style="background:#fce4ec" onclick="setBackground('pink')"></button>
+    <button class="color-spot" style="background:#121212" onclick="setBackground('dark')"></button>
+
+    <h3>Indent Style</h3>
+    <div class="accessibility-control">
+        <button class="style-btn" id="btn-greenpink" onclick="changeIndentStyle('greenpink')" title="Green / Pink Guide">🟩🌸</button>
+        <button class="style-btn" id="btn-rainbow" onclick="changeIndentStyle('rainbow')" title="Rainbow Tracks">🌈🛤️</button>
+        <button class="style-btn" id="btn-snakes" onclick="changeIndentStyle('snakes')" title="Python Snakes">🐍🐍</button>
+    </div>
+
+    <h3>Font Size</h3>
+    <div class="accessibility-control">
+        <button class="accessibility-scale" onclick="adjustFontSize(1)">Increase</button>
+        <button class="accessibility-scale" onclick="adjustFontSize(-1)">Decrease</button>
+    </div>
+</div>
+
+<div class="main-wrapper">
+    <div class="ide-container">
+        <div class="editor-container" id="editorContainer">
+            <div class="ide-toolbar" id="editorToolbar">
+                <span>Python Workspace</span>
+                <div class="ide-toolbar-buttons">
+                    <button class="ide-btn" id="btnUndo" onclick="editor.undo()">Undo</button>
+                    <button class="ide-btn" id="btnRedo" onclick="editor.redo()">Redo</button>
+                </div>
+            </div>
+            <textarea id="code"></textarea>
+        </div>
+        <div class="output-container" id="outputContainer">
+            <div class="ide-toolbar" id="outputToolbar">
+                <div class="execution-tabs">
+                    <button class="tab-btn active" id="tabConsoleBtn" onclick="switchTab('console')">Console Output</button>
+                    <button class="tab-btn" id="tabTurtleBtn" onclick="switchTab('turtle')">Turtle Canvas</button>
+                </div>
+                <button class="btn-run" onclick="runPython()">Run Code</button>
+            </div>
+            
+            <div id="tabConsole" class="tab-content active">
+                <pre id="output">Terminal ready...</pre>
+            </div>
+            <div id="tabTurtle" class="tab-content">
+                <div id="turtleCanvas"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentErrorLineHandle = null;
+
+// --- 1. CodeMirror Workspace Core Initialization & Custom Key Bindings ---
+const editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+    mode: {name: "python", version: 3},
+    lineNumbers: true,
+    lineWrapping: false,
+    indentUnit: 4,
+    tabSize: 4,
+    matchBrackets: true,
+    autofocus: true,
+    extraKeys: {
+        "Tab": function(cm) {
+            if (cm.somethingSelected()) {
+                cm.indentSelection("add");
+            } else {
+                cm.replaceSelection("    ", "end");
+            }
+        },
+        "Shift-Tab": function(cm) {
+            cm.indentSelection("subtract");
+        }
+    }
+});
+
+function createSnakeSVG(totalIndents, charWidth, isDead) {
+    const tabWidth = 4 * charWidth;
+    const totalPx = totalIndents * tabWidth;
+    const headX = Math.max(10, totalPx - 8);
+    const snakeColor = isDead ? "#95a5a6" : "#2ecc71";
+    
+    let pathD = `M 0,12 `;
+    
+    if (isDead) {
+        pathD += `L ${headX},12`;
+    } else {
+        for(let i = 0; i < totalIndents; i++) {
+            let startX = i * tabWidth;
+            let qX = startX + tabWidth / 4;
+            let mX = startX + tabWidth / 2;
+            let endX = startX + tabWidth;
+            if (i === totalIndents - 1) endX = headX;
+            pathD += `Q ${qX},4 ${mX},12 T ${endX},12 `;
+        }
+    }
+
+    const eyeX = headX + 1;
+    const eyes = isDead 
+        ? `<text x="${eyeX - 4}" y="16" font-family="sans-serif" font-size="10" fill="black" font-weight="bold">x</text>`
+        : `<circle cx="${eyeX}" cy="9" r="1.5" fill="black"/><circle cx="${eyeX}" cy="15" r="1.5" fill="black"/><path d="M${headX+4},12 L${headX+10},10 M${headX+4},12 L${headX+10},14" stroke="red" stroke-width="1.5" fill="none"/>`;
+
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalPx}" height="24">
+        <path d="${pathD}" stroke="${snakeColor}" fill="none" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="${headX}" cy="12" r="6" fill="${snakeColor}"/>
+        ${eyes}
+    </svg>`;
+    
+    return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+}
+
+// --- 2. Dynamic Adaptive Indentation Render Engine (Pixel Perfect) ---
+editor.on("renderLine", function(cm, lineHandle, el) {
+    const text = lineHandle.text;
+    const match = text.match(/^([ \t]+)/);
+    
+    el.style.backgroundImage = "none";
+    el.style.backgroundRepeat = "no-repeat";
+    el.style.backgroundColor = "transparent";
+
+    const currentStyle = localStorage.getItem('indentStyle') || 'greenpink';
+
+    if (!match || match[0].length === 0) return;
+
+    const whitespace = match[0];
+    const isInvalid = whitespace.includes('\t') || (whitespace.length % 4 !== 0);
+    
+    const charWidth = cm.defaultCharWidth();
+    const totalPx = whitespace.length * charWidth;
+    const pad = 4;
+
+    if (currentStyle === 'snakes') {
+        const totalIndents = whitespace.length / 4;
+        const svgUri = createSnakeSVG(totalIndents, charWidth, isInvalid);
+        el.style.backgroundImage = `url("${svgUri}")`;
+        el.style.backgroundPosition = `${pad}px center`;
+        el.style.backgroundSize = `${totalPx}px 100%`;
+        if (isInvalid) el.style.backgroundColor = "rgba(0,0,0,0.05)";
+        return;
+    }
+
+    if (isInvalid) {
+        el.style.backgroundImage = `linear-gradient(to right, rgba(232, 67, 147, 0.45) ${pad}px, rgba(232, 67, 147, 0.45) ${pad + totalPx}px, transparent ${pad + totalPx}px)`;
+        el.style.backgroundSize = "100% 100%";
+        return;
+    }
+
+    const totalIndents = whitespace.length / 4;
+    let gradientParts = [];
+    
+    if (currentStyle === 'greenpink') {
+        const greenTokens = ['var(--g1)', 'var(--g2)', 'var(--g3)', 'var(--g4)', 'var(--g5)'];
+        for (let step = 0; step < totalIndents; step++) {
+            const activeColor = greenTokens[step % 5];
+            const startPx = pad + (step * 4 * charWidth);
+            const endPx = pad + ((step + 1) * 4 * charWidth);
+            
+            gradientParts.push(`${activeColor} ${startPx}px`);
+            gradientParts.push(`${activeColor} ${endPx}px`);
+        }
+    } else {
+        const colorTokens = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)'];
+        for (let step = 0; step < totalIndents; step++) {
+            const activeColor = colorTokens[step % 5]; 
+            const startPx = pad + (step * 4 * charWidth);
+            const endPx = pad + ((step + 1) * 4 * charWidth);
+            
+            gradientParts.push(`${activeColor} ${startPx}px`);
+            gradientParts.push(`${activeColor} ${endPx}px`);
+        }
+    }
+    
+    let linesOverlayGradients = [];
+    for (let step = 0; step <= totalIndents; step++) {
+        const linePx = pad + (step * 4 * charWidth);
+        linesOverlayGradients.push(`transparent ${linePx}px`);
+        linesOverlayGradients.push(`var(--guide-color) ${linePx}px`);
+        linesOverlayGradients.push(`var(--guide-color) ${linePx + 1}px`);
+        linesOverlayGradients.push(`transparent ${linePx + 1}px`);
+    }
+
+    gradientParts.push(`transparent ${pad + totalPx}px`);
+    linesOverlayGradients.push(`transparent ${pad + totalPx}px`);
+    
+    el.style.backgroundImage = `linear-gradient(to right, ${gradientParts.join(', ')}), linear-gradient(to right, ${linesOverlayGradients.join(', ')})`;
+    el.style.backgroundSize = "100% 100%";
+});
+
+function fixEditorLayout() {
+    editor.setSize("100%", "100%");
+    editor.refresh();
+}
+
+function changeIndentStyle(styleName) {
+    localStorage.setItem('indentStyle', styleName);
+    
+    document.querySelectorAll('.style-btn').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById('btn-' + styleName);
+    if (activeBtn) activeBtn.classList.add('active');
+    
+    editor.refresh();
+}
+
+editor.on("change", function(cm) {
+    const promptBox = document.getElementById("floatingLinePrompt");
+    if (promptBox) promptBox.style.display = "none";
+});
+
+// --- 3. External File I/O Drivers ---
+function triggerImport() {
+    document.getElementById('fileInput').click();
+}
+
+function importFile(event) {
+    const input = event.target;
+    if (!input.files || input.files.length === 0) return;
+    
+    const file = input.files[0];
+    const reader = new FileReader();
+    
+    reader.onload = function() {
+        editor.setValue(reader.result);
+        setTimeout(fixEditorLayout, 50);
+        input.value = '';
+    };
+    reader.readAsText(file);
+}
+
+// --- 3b. Remote File Processing Engine via Hash Target ---
+function loadRemoteFileFromHash() {
+    const hash = window.location.hash.substring(1);
+    if (!hash) return;
+
+    // Convert standard GitHub URLs to Raw Content Endpoints to prevent CORS blocks
+    let targetUrl = hash;
+    if (targetUrl.includes("github.com") && !targetUrl.includes("raw.githubusercontent.com")) {
+        targetUrl = targetUrl
+            .replace("github.com", "raw.githubusercontent.com")
+            .replace("/blob/", "/");
+    }
+
+    editor.setValue("# Fetching remote script file...");
+
+    fetch(targetUrl)
+        .then(response => {
+            if (!response.ok) throw new Error("Network interface rejected file source request.");
+            return response.text();
+        })
+        .then(content => {
+            editor.setValue(content);
+            setTimeout(fixEditorLayout, 50);
+        })
+        .catch(err => {
+            editor.setValue(`# Error loading file:\n# Could not pull code from:\n# ${hash}\n# Check that the URL is public and CORS permissions allow access.`);
+            setTimeout(fixEditorLayout, 50);
+        });
+}
+
+// Listen for dynamic changes if they change the hash without reloading
+window.addEventListener("hashchange", loadRemoteFileFromHash);
+
+// --- 4. Accessibility Control System ---
+function toggleAccessibility() {
+    document.getElementById('accessPanel').classList.toggle('open');
+}
+
+function darkenColor(hex, percent) {
+    hex = hex.replace('#','');
+    let r=parseInt(hex.substring(0,2),16);
+    let g=parseInt(hex.substring(2,4),16);
+    let b=parseInt(hex.substring(4,6),16);
+    r=Math.floor(r*(1-percent/100));
+    g=Math.floor(g*(1-percent/100));
+    b=Math.floor(b*(1-percent/100));
+    return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
+
+function setBackground(color) {
+    localStorage.setItem('bgColor', color);
+
+    document.body.className='';
+    document.body.classList.add('access-'+color);
+
+    const map={
+        white:'#f5f5f5', red:'#ffcccc', orange:'#ffe5cc',
+        yellow:'#fff9c4', green:'#e8f5e9', blue:'#e3f2fd',
+        purple:'#e6e0f8', pink:'#fce4ec', dark:'#121212'
+    };
+
+    const targetBg = map[color];
+    document.body.style.background = targetBg;
+
+    const header = document.getElementById('header');
+    const panel = document.getElementById('accessPanel');
+    const edContainer = document.getElementById('editorContainer');
+    const outContainer = document.getElementById('outputContainer');
+    const edToolbar = document.getElementById('editorToolbar');
+    const outToolbar = document.getElementById('outputToolbar');
+
+    const darkHex = color === 'dark' ? '#000000' : darkenColor(targetBg, 40);
+    const toolbarBg = color === 'dark' ? '#1e1e1e' : darkenColor(targetBg, 8);
+    const borderHex = color === 'dark' ? '#2d2d2d' : darkenColor(targetBg, 25);
+
+    header.style.background = darkHex;
+    panel.style.background = targetBg;
+
+    edContainer.style.backgroundColor = targetBg;
+    outContainer.style.backgroundColor = targetBg;
+    edContainer.style.borderColor = borderHex;
+    outContainer.style.borderColor = borderHex;
+    
+    edToolbar.style.backgroundColor = toolbarBg;
+    outToolbar.style.backgroundColor = toolbarBg;
+    edToolbar.style.borderColor = borderHex;
+    outToolbar.style.borderColor = borderHex;
+
+    if (color === 'dark') {
+        document.documentElement.style.setProperty('--c1', 'rgba(255, 118, 117, 0.15)');
+        document.documentElement.style.setProperty('--c2', 'rgba(253, 203, 110, 0.15)');
+        document.documentElement.style.setProperty('--c3', 'rgba(85, 239, 196, 0.15)');
+        document.documentElement.style.setProperty('--c4', 'rgba(116, 185, 255, 0.15)');
+        document.documentElement.style.setProperty('--c5', 'rgba(162, 155, 254, 0.15)');
+        document.documentElement.style.setProperty('--g1', 'rgba(46, 204, 113, 0.25)');
+        document.documentElement.style.setProperty('--g2', 'rgba(46, 204, 113, 0.20)');
+        document.documentElement.style.setProperty('--g3', 'rgba(46, 204, 113, 0.15)');
+        document.documentElement.style.setProperty('--g4', 'rgba(46, 204, 113, 0.10)');
+        document.documentElement.style.setProperty('--g5', 'rgba(46, 204, 113, 0.05)');
+    } else {
+        document.documentElement.style.setProperty('--c1', 'rgba(255, 118, 117, 0.25)');
+        document.documentElement.style.setProperty('--c2', 'rgba(253, 203, 110, 0.28)');
+        document.documentElement.style.setProperty('--c3', 'rgba(85, 239, 196, 0.28)');
+        document.documentElement.style.setProperty('--c4', 'rgba(116, 185, 255, 0.25)');
+        document.documentElement.style.setProperty('--c5', 'rgba(162, 155, 254, 0.25)');
+        document.documentElement.style.setProperty('--g1', 'rgba(46, 204, 113, 0.45)');
+        document.documentElement.style.setProperty('--g2', 'rgba(46, 204, 113, 0.35)');
+        document.documentElement.style.setProperty('--g3', 'rgba(46, 204, 113, 0.25)');
+        document.documentElement.style.setProperty('--g4', 'rgba(46, 204, 113, 0.18)');
+        document.documentElement.style.setProperty('--g5', 'rgba(46, 204, 113, 0.10)');
+    }
+
+    const textColors = color === 'dark' ? '#ffffff' : '#000000';
+    const btnBgColors = color === 'dark' ? '#2d2d2d' : '#ffffff';
+    
+    document.body.style.color = textColors;
+    header.style.color = (color === 'dark') ? '#ffffff' : '#000000';
+    edToolbar.style.color = textColors;
+    outToolbar.style.color = textColors;
+
+    document.querySelectorAll('button:not(.color-spot):not(.close-panel-btn):not(.style-btn)').forEach(btn => {
+        btn.style.background = btnBgColors;
+        btn.style.color = textColors;
+        btn.style.borderColor = borderHex;
+    });
+
+    setTimeout(() => { editor.refresh(); }, 50);
+}
+
+function adjustFontSize(amount){
+    let current = parseFloat(localStorage.getItem('fontSize')||'16');
+    current += amount;
+    
+    document.body.style.fontSize = current + 'px';
+    document.documentElement.style.setProperty('--editor-fs', current + 'px');
+    
+    localStorage.setItem('fontSize', current);
+    setTimeout(() => { editor.refresh(); }, 50);
+}
+
+// --- Tab Controller Execution Switcher ---
+function switchTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+
+    if (tabName === 'console') {
+        document.getElementById('tabConsole').classList.add('active');
+        document.getElementById('tabConsoleBtn').classList.add('active');
+    } else if (tabName === 'turtle') {
+        document.getElementById('tabTurtle').classList.add('active');
+        document.getElementById('tabTurtleBtn').classList.add('active');
+    }
+}
+
+// --- 5. Guided Error Parser Framework featuring Byte the Robot ---
+function generateRobotError(errorObj, fullCode) {
+    const rawMessage = errorObj.toString();
+    let lineNum = null;
+    
+    if (errorObj.traceback && errorObj.traceback.length > 0) {
+        lineNum = errorObj.traceback[0].lineno;
+    } else if (errorObj.lineno) {
+        lineNum = errorObj.lineno;
+    }
+
+    if (!lineNum) {
+        const lineMatch = rawMessage.match(/on line (\d+)/i);
+        if (lineMatch) lineNum = parseInt(lineMatch[1]);
+    }
+
+    let friendlyExplanation = "Take a close look at this line to see if something is missing or typed wrong!";
+    let missingSymbol = null;
+    let targetLineNum = lineNum || 1;
+    const lines = fullCode.split('\n');
+
+    if (rawMessage.includes("SyntaxError") || rawMessage.includes("ParseError")) {
+        let linesToScan = [targetLineNum];
+        
+        if (targetLineNum > 1) linesToScan.push(targetLineNum - 1);
+        if (targetLineNum > 2) linesToScan.push(targetLineNum - 2);
+
+        for (let lNum of linesToScan) {
+            let txt = lines[lNum - 1] || "";
+            let trimmed = txt.trim();
+            
+            if (trimmed === "" || trimmed.startsWith("#")) continue;
+
+            let openPars = (txt.match(/\(/g) || []).length;
+            let closePars = (txt.match(/\)/g) || []).length;
+            let openSq = (txt.match(/\[/g) || []).length;
+            let closeSq = (txt.match(/\]/g) || []).length;
+            let doubleQuotesCount = (txt.match(/"/g) || []).length;
+            let singleQuotesCount = (txt.match(/'/g) || []).length;
+
+            if (/^(if\b|def\b|for\b|while\b|elif\b|else\b)/.test(trimmed)) {
+                if (!trimmed.endsWith(":")) {
+                    missingSymbol = "Colon (:)";
+                    targetLineNum = lNum;
+                    friendlyExplanation = "<strong>Missing a colon!</strong><br><ul class='guide-list'><li>Your block instruction needs a colon <code>:</code> right at the end of the line!</li></ul>";
+                    break;
+                }
+            }
+
+            if (openPars > closePars) {
+                missingSymbol = "Bracket )";
+                targetLineNum = lNum;
+                friendlyExplanation = "<strong>Missing a closing bracket!</strong><br><ul class='guide-list'><li>Ensure every opening bracket has a closing partner!</li></ul>";
+                break;
+            } 
+            else if (closePars > openPars) {
+                missingSymbol = "Bracket (";
+                targetLineNum = lNum;
+                friendlyExplanation = "<strong>Too many closing brackets!</strong><br><ul class='guide-list'><li>You have a closing bracket <code>)</code> on this line that doesn't have an opening partner.</li></ul>";
+                break;
+            } 
+            else if (openSq > closeSq) {
+                missingSymbol = "Bracket ]";
+                targetLineNum = lNum;
+                friendlyExplanation = "<strong>Missing a square bracket!</strong><br><ul class='guide-list'><li>Make sure your collections or lists are closed with a <code>]</code>.</li></ul>";
+                break;
+            } 
+            else if (doubleQuotesCount % 2 !== 0) {
+                missingSymbol = 'Speech Mark "';
+                targetLineNum = lNum;
+                friendlyExplanation = "<strong>Unfinished double speech marks!</strong><br><ul class='guide-list'><li>Make sure they always come in pairs on the same line!</li></ul>";
+                break;
+            } else if (singleQuotesCount % 2 !== 0) {
+                missingSymbol = "Speech Mark '";
+                targetLineNum = lNum;
+                friendlyExplanation = "<strong>Unfinished single speech marks!</strong><br><ul class='guide-list'><li>Make sure they always come in pairs on the same line!</li></ul>";
+                break;
+            }
+        }
+    } else if (rawMessage.includes("IndentationError")) {
+        friendlyExplanation = "<strong>Spacing or Tab mistake!</strong><br><ul class='guide-list'><li>The code under your loop or function block needs to be pushed forward uniformly. Check your spaces!</li></ul>";
+    } else if (rawMessage.includes("NameError")) {
+        const varMatch = rawMessage.match(/name '([^']+)' is not defined/);
+        const varName = varMatch ? varMatch[1] : "word";
+        friendlyExplanation = `<strong>Spelling mistake or missing variable!</strong><br><ul class='guide-list'><li>Python doesn't know what <code>${varName}</code> means. Remember that spelling and capitals matter!</li></ul>`;
+    } else if (rawMessage.includes("TypeError")) {
+        friendlyExplanation = `<strong>Data Type Mistake (TypeError)!</strong><br><ul class='guide-list'><li>You are matching data types that do not mix well together. For example, trying to add numbers and strings, or passing the wrong data structure type to a function. Check your values!</li></ul>`;
+    }
+
+    if (targetLineNum) {
+        currentErrorLineHandle = editor.addLineClass(targetLineNum - 1, "background", "error-line-highlight");
+    }
+
+    let brokenLineText = lines[targetLineNum - 1] || "";
+
+    if (targetLineNum && missingSymbol) {
+        let promptBox = document.getElementById("floatingLinePrompt");
+        if (!promptBox) {
+            promptBox = document.createElement("div");
+            promptBox.id = "floatingLinePrompt";
+            promptBox.className = "floating-line-prompt";
+            editor.getWrapperElement().querySelector('.CodeMirror-lines').appendChild(promptBox);
+        }
+        
+        const coord = editor.charCoords({line: targetLineNum - 1, ch: brokenLineText.length}, "local");
+        promptBox.innerHTML = `Fix ${missingSymbol}`;
+        promptBox.style.left = (coord.left + 40) + "px"; 
+        promptBox.style.top = coord.top + "px";
+        promptBox.style.display = "block";
+    }
+
+    let codeSnippetHtml = "";
+    if (targetLineNum && brokenLineText) {
+        codeSnippetHtml = `<div class="error-pointer">Line ${targetLineNum}: <span class="highlight-line">${escapeHtml(brokenLineText)}</span></div>`;
+    }
+
+    return `
+        <div class="robot-error-box">
+            <div class="robot-mascot">🤖</div>
+            <div class="error-details">
+                <h4>Error Message</h4>
+                <p>Oops! I found an issue on <strong>Line ${targetLineNum}</strong>.<br><br>${friendlyExplanation}</p>
+                ${codeSnippetHtml}
+            </div>
+        </div>`;
+}
+
+function escapeHtml(text) {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function outf(text) { 
+    const outBox = document.getElementById("output");
+    if (text !== "\n") { outBox.innerHTML += escapeHtml(text); }
+}
+
+function builtinRead(x) {
+    if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
+        throw "File not found: '" + x + "'";
+    return Sk.builtinFiles["files"][x];
+}
+
+function terminalInputHandler(promptText) {
+    if (promptText) { outf(promptText); }
+    return new Promise((resolve) => {
+        const outBox = document.getElementById("output");
+        const inputEl = document.createElement("input");
+        inputEl.type = "text";
+        inputEl.className = "terminal-input";
+        outBox.appendChild(inputEl);
+        inputEl.focus();
+
+        inputEl.addEventListener("input", () => {
+            inputEl.style.width = Math.max(inputEl.value.length + 1, 2) + "ch";
+        });
+
+        inputEl.addEventListener("keydown", function handleEnter(e) {
+            if (e.key === "Enter") {
+                const resultValue = inputEl.value;
+                inputEl.removeEventListener("keydown", handleEnter);
+                inputEl.remove();
+                outBox.innerHTML += escapeHtml(resultValue) + "\n";
+                resolve(resultValue);
+            }
+        });
+    });
+}
+
+// --- 6. Code Execution Pipeline Engine ---
+function runPython() {
+    if (currentErrorLineHandle) {
+        editor.removeLineClass(currentErrorLineHandle, "background", "error-line-highlight");
+        currentErrorLineHandle = null;
+    }
+    const promptBox = document.getElementById("floatingLinePrompt");
+    if (promptBox) promptBox.style.display = "none";
+
+    const code = editor.getValue();
+    const outputBox = document.getElementById("output");
+    
+    outputBox.innerHTML = ""; 
+    
+    // Clear and reset Turtle Target injection node
+    const turtleContainer = document.getElementById("turtleCanvas");
+    turtleContainer.innerHTML = "";
+    
+    Sk.pre = "output";
+    
+    // Auto-switch pane visibility if script targets turtle graphics
+    if (code.includes("import turtle") || code.includes("from turtle import")) {
+        switchTab('turtle');
+    } else {
+        switchTab('console');
+    }
+    
+    Sk.configure({ 
+        output: outf, 
+        read: builtinRead,
+        inputfun: terminalInputHandler,
+        __future__: Sk.python3 
+    }); 
+
+    // Point Skulpt's turtle graphics module to our canvas div container
+    (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = 'turtleCanvas';
+
+    const myPromise = Sk.misceval.asyncToPromise(function() {
+        return Sk.importMainWithBody("<stdin>", false, code, true);
+    });
+
+    myPromise.then(function() {
+        // Success
+    }, function(err) {
+        // Fallback interface routing error reports back to the text log console
+        switchTab('console');
+        outputBox.innerHTML += generateRobotError(err, code);
+    });
+}
+
+function exportFile() {
+    const codeContent = editor.getValue();
+    const blob = new Blob([codeContent], { type: "text/plain;charset=utf-8" });
+    const virtualLink = document.createElement("a");
+    
+    virtualLink.download = "my_script.py";
+    virtualLink.href = window.URL.createObjectURL(blob);
+    virtualLink.style.display = "none";
+    
+    document.body.appendChild(virtualLink);
+    virtualLink.click();
+    document.body.removeChild(virtualLink);
+}
+
+// --- 7. Initialisation Lifecycles ---
+window.onload = function(){
+    const saved = localStorage.getItem('bgColor') || 'white';
+    setBackground(saved);
+
+    const savedIndentStyle = localStorage.getItem('indentStyle') || 'greenpink';
+    changeIndentStyle(savedIndentStyle);
+
+    const ws = parseFloat(localStorage.getItem('wordSpacing')||'0');
+    const fs = parseFloat(localStorage.getItem('fontSize')||'16');
+    
+    document.body.style.wordSpacing = ws + 'em';
+    document.documentElement.style.setProperty('--editor-ls', (ws * 0.4) + 'em');
+    
+    document.body.style.fontSize = fs + 'px';
+    document.documentElement.style.setProperty('--editor-fs', fs + 'px');
+
+    // Run remote file checker interface
+    loadRemoteFileFromHash();
+
+    setTimeout(fixEditorLayout, 200);
+};
+
+window.addEventListener('resize', () => { setTimeout(fixEditorLayout, 50); });
+
+window.addEventListener('click', function(e){
+    const panel = document.getElementById('accessPanel');
+    if (!panel.contains(e.target) && !e.target.closest('.accessibility-toggle')) {
+        panel.classList.remove('open');
+    }
+});
+</script>
+
+</body>
+</html>
