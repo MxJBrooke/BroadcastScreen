@@ -3,353 +3,1246 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Teleprompter</title>
+<title>Enhanced Easy Reader</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 
 <style>
-/* ----------------- Global ----------------- */
+/* ----------------- Global Styles ----------------- */
 body {
-    font-family: Consolas, monospace;
     margin: 0;
     background-color: #f5f5f5;
     color: #000;
     overflow: hidden;
+    transition: background-color 0.3s ease;
 }
 
 /* ----------------- Header ----------------- */
 .header {
-    width: 100%;
-    height: 80px;
-    background-color: #333;
-    border-bottom: 2px solid #222;
+    height: 100px;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
     position: fixed;
     top: 0;
-    z-index: 20;
-}
-
-.header img {
-    height: 60px;
-    cursor: pointer;
-}
-
-/* ----------------- Sidebar ----------------- */
-#panel {
-    position: fixed;
-    top: 80px;
     left: 0;
-    width: 280px;
-    height: calc(100vh - 80px);
-    background: #222;
-    border-right: 2px solid #555;
-    padding: 20px;
-    box-sizing: border-box;
-    overflow-y: auto;
-    transition: transform .3s ease;
-    color: #fff;
-    z-index: 10;
-}
-
-#panel.collapsed {
-    transform: translateX(-100%);
-}
-
-#panel label {
-    margin-top: 15px;
-    display: block;
-    font-weight: bold;
-}
-
-#panel input,
-#panel select,
-#panel button {
     width: 100%;
-    margin-top: 5px;
-    margin-bottom: 10px;
-    padding: 6px;
-    background-color: #333;
-    color: #fff;
-    border: 1px solid #555;
-    font-family: Consolas, monospace;
+    color: #000;
+    transition: all 0.3s ease;
+    background: #333;
+    z-index: 20;
+    padding: 0 20px;
     box-sizing: border-box;
 }
 
-/* Toggle Button */
-#togglePanel {
-    position: fixed;
-    left: 0;
-    bottom: 110px;
-    z-index: 25;
-    background: grey;
+.header h1 {
     color: #fff;
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.header-right-actions {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.header-btn {
+    padding: 10px 16px;
+    background: #A81769;
+    color: white;
     border: none;
-    padding: 10px 15px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.header-btn:hover {
+    background: #871253;
+}
+
+/* ----------------- Accessibility Panel ----------------- */
+.accessibility-toggle {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+}
+
+.accessibility-scale {
+    padding: 6px 16px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    background: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    margin-right: 4px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+}
+
+.accessibility-scale:disabled {
+    background-color: #e0e0e0 !important;
+    color: #a0a0a0 !important;
+    border-color: #ccc !important;
+    cursor: not-allowed !important;
+    opacity: 0.5;
+}
+
+.accessibility-panel {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    width: 290px;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: left 0.3s ease;
+    z-index: 1000;
+    background: #fff;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+    color: #000;
+    overflow-y: auto;
+    
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-size: 14px !important;
+    word-spacing: normal !important;
+    letter-spacing: normal !important;
+}
+
+.accessibility-panel.open {
+    left: 0;
+}
+
+.accessibility-panel h3 {
+    margin-top: 20px;
+    margin-bottom: 8px;
+    font-size: 15px !important;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 4px;
+}
+
+.color-spot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    margin: 4px;
+    cursor: pointer;
+    border: 1px solid #777;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.custom-picker-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    margin: 4px;
+    vertical-align: middle;
+    cursor: pointer;
+    background: linear-gradient(to right, red, orange, yellow, green, blue, violet);
+    border: 1px solid #777;
+    overflow: hidden;
+}
+
+.custom-picker-wrapper input[type="color"] {
+    position: absolute;
+    top: -5px;
+    left: -5px;
+    width: 40px;
+    height: 40px;
+    opacity: 0;
     cursor: pointer;
 }
 
-/* ----------------- Main ----------------- */
-#main {
-    margin-top: 80px;
-    margin-left: 280px;
-    height: calc(100vh - 80px);
+.tool-input, .tool-select {
+    width: 100%;
+    padding: 8px;
+    margin-top: 4px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    box-sizing: border-box;
+    font-family: inherit !important;
+    font-size: 13px !important;
+}
+
+.tool-btn {
+    width: 100%;
+    padding: 10px;
+    background: #A81769;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    font-family: inherit !important;
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+}
+
+.switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #ccc;
+    transition: .3s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px; width: 16px;
+    left: 4px; bottom: 4px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: #A81769;
+}
+
+input:checked + .slider:before {
+    transform: translateX(22px);
+}
+
+/* ----------------- Layout & Workspace ----------------- */
+.main-layout {
+    display: flex;
+    height: calc(100vh - 100px);
+    margin-top: 100px;
+}
+
+.display-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
     padding: 20px;
     box-sizing: border-box;
-    transition: margin-left .3s ease;
 }
 
 #display {
     height: 100%;
     background: #fff;
-    border: 2px solid #ccc;
+    border: 1px solid #aaa;
     border-radius: 8px;
-    padding: 20px;
+    padding: 40px 20px;
     overflow-y: auto;
-    font-size: 1.6em;
-    line-height: 2em;
+    box-sizing: border-box;
+    font-family: Consolas, monospace;
+    font-size: 18px;
+    letter-spacing: normal;
 }
 
-.line {
-    margin-bottom: 12px;
+/* ----------------- Empty Stage Welcome Box ----------------- */
+.empty-state-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #555;
+    padding: 20px;
 }
 
-.active {
+.empty-state-card {
+    background: #fdfdfd;
+    border: 2px dashed #bbb;
+    border-radius: 12px;
+    padding: 40px 30px;
+    max-width: 500px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+
+.empty-state-card h2 {
+    margin-top: 0;
+    color: #333;
+}
+
+.empty-state-card p {
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 25px;
+    color: #666;
+}
+
+.file-stub-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    background: #A81769;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.file-stub-btn:hover {
+    background: #871253;
+}
+
+/* ----------------- Visual Wrapping Flow Layout Engine ----------------- */
+.script-flow-container {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    text-align: left;
+}
+
+.dynamic-visual-row {
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 6px;
+    padding: 2px 12px;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+    color: #888888;
+}
+
+.dynamic-visual-row:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+.dynamic-visual-row.active {
+    color: #000000 !important;
+    font-weight: bold;
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.line-number-inline {
+    color: #aaa;
+    font-size: 55%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-weight: normal;
+    margin-right: 15px;
+    user-select: none;
+    min-width: 30px;
+    display: inline-block;
+    padding-bottom: 2px;
+}
+
+.dynamic-visual-row.active .line-number-inline {
+    color: #A81769;
     font-weight: bold;
 }
 
-/* Dark Mode */
-body.dark-mode {
-    background-color: #121212;
-    color: #fff;
+.row-words-content {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    flex: 1;
 }
 
-body.dark-mode #display {
-    background-color: #222;
-    border-color: #333;
+/* ----------------- Strict Text Stack Tracking Engine ----------------- */
+.word-stack {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    vertical-align: bottom;
+    position: relative;
+    box-sizing: border-box;
+    border-radius: 4px;
+    transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.word-body {
+    line-height: 1.1em; 
+    white-space: pre;
+    display: inline-block;
+}
+
+/* Karaoke Highlight Styles */
+.word-stack.karaoke-active {
+    background-color: #f1c40f !important;
+    color: #000000 !important;
+}
+body.access-dark .word-stack.karaoke-active {
+    background-color: #f39c12 !important;
+    color: #000000 !important;
+}
+
+/* ----------------- Sound Mark SVG Vector Maps ----------------- */
+.phonics-svg-container {
+    display: block;
+    width: 100%;
+    height: 24px; 
+    margin-bottom: 2px;
+    user-select: none;
+    overflow: visible;
+}
+
+.phonics-mark {
+    fill: #A81769;
+    stroke: #A81769;
+    stroke-width: 0px;
+}
+
+.phonics-line {
+    stroke: #A81769;
+    stroke-width: 2.5px;
+    stroke-linecap: round;
+}
+
+.phonics-arc {
+    fill: none;
+    stroke: #A81769;
+    stroke-width: 2px;
+    stroke-linecap: round;
+}
+
+body.access-dark .phonics-mark { fill: #ff66b2; stroke: #ff66b2; }
+body.access-dark .phonics-line { stroke: #ff66b2; }
+body.access-dark .phonics-arc { stroke: #ff66b2; }
+
+body:not(.mode-phonics) .phonics-svg-container {
+    display: none !important;
+}
+
+/* ----------------- Tricky Words ----------------- */
+.tricky-word-container {
+    position: relative;
+    display: inline-block;
+}
+
+.tricky-word {
+    text-decoration: underline dotted #A81769;
+    cursor: help;
+}
+
+.hover-card {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    background: #ffffff;
+    color: #333333;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 12px;
+    width: 220px;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+    z-index: 100;
+    font-family: sans-serif !important;
+    font-size: 14px !important;
+    font-weight: normal;
+    word-spacing: normal !important;
+    letter-spacing: normal !important;
+}
+
+.tricky-word-container:hover .hover-card {
+    display: block;
+}
+
+/* ----------------- Access Themes overrides ----------------- */
+body.access-dark .dynamic-visual-row { color: #888888; }
+body.access-dark .dynamic-visual-row.active { color: #ffffff !important; background-color: rgba(255,255,255,0.05); }
+body.access-dark .dynamic-visual-row.active .line-number-inline { color: #ff66b2; }
+body.access-dark .hover-card { background: #333; color: #fff; }
+body.access-dark .empty-state-card { background: #1e1e1e; border-color: #444; color: #bbb;}
+body.access-dark .empty-state-card h2 { color: #fff; }
+body.access-dark .empty-state-card p { color: #aaa; }
+
+/* ----------------- Print Engine ----------------- */
+@media print {
+    body, .main-layout, .display-container, #display {
+        background: transparent !important;
+        color: #000000 !important;
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+    }
+    
+    .header, .accessibility-panel, .accessibility-toggle, .empty-state-container {
+        display: none !important;
+    }
+
+    .main-layout {
+        margin-top: 0 !important;
+    }
+
+    #display {
+        display: block !important;
+    }
+
+    .dynamic-visual-row {
+        color: #000000 !important;
+        font-weight: bold !important;
+        page-break-inside: avoid;
+        background: transparent !important;
+        opacity: 1 !important;
+        padding: 4px 0 !important;
+    }
+
+    .line-number-inline {
+        color: #000000 !important;
+        font-weight: bold !important;
+        font-size: 55% !important;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-    <img src="https://clf.uk/wp-content/uploads/CLF-Logo-Transparent-White-Text.png"
-         alt="CLF Logo"
-         onclick="toggleTheme()">
+<div class="header" id="header">
+    <button class="accessibility-toggle" onclick="toggleAccessibility()">
+        ⚙️ Settings & Accessibility
+    </button>
+    <h1>Easy Reader</h1>
+    <div class="header-right-actions">
+        <button id="speechToggleBtn" class="header-btn" style="background:#2b7a78;" onclick="toggleSpeech()">▶ Play Voice</button>
+        <button class="header-btn" onclick="window.print()">🖨️ Print Script</button>
+        <button class="header-btn" style="background:#555;" onclick="window.location.reload()">📄 New Script</button>
+    </div>
 </div>
 
-<div id="panel">
-<h2>Settings</h2>
+<div class="accessibility-panel" id="accessPanel">
+    <button onclick="toggleAccessibility()" style="float:right; cursor:pointer; background:none; border:none; font-size:16px;">✖</button>
+    
+    <h3>Global Format Profile</h3>
+    <button id="resetLayoutBtn" class="tool-btn" style="background: #333; margin-top: 0; margin-bottom: 10px;" onclick="resetToFactoryDefaults()">🔄 Reset Formatting</button>
 
-<label>Choose File</label>
-<input type="file" id="fileInput" accept=".txt">
+    <input type="file" id="fileInput" style="display:none;" accept=".txt,.docx,.pdf" onchange="handleFileSwitch(this)">
+    <button class="tool-btn" style="background:#A81769; margin-bottom:15px;" onclick="triggerFileSelectionStub()">📁 Choose File Script</button>
 
-<label>Search Text</label>
-<input type="text" id="searchBox" placeholder="Type text to find...">
-<button id="searchBtn">Go</button>
+    <h3>Color Themes</h3>
+    <div style="margin-bottom: 10px; display: flex; flex-wrap: wrap; align-items: center;">
+        <button class="color-spot" style="background:#f5f5f5" onclick="setBackground('#f5f5f5', 'white')"></button>
+        <button class="color-spot" style="background:#ffcccc" onclick="setBackground('#ffcccc', 'red')"></button>
+        <button class="color-spot" style="background:#ffe5cc" onclick="setBackground('#ffe5cc', 'orange')"></button>
+        <button class="color-spot" style="background:#fff9c4" onclick="setBackground('#fff9c4', 'yellow')"></button>
+        <button class="color-spot" style="background:#e8f5e9" onclick="setBackground('#e8f5e9', 'green')"></button>
+        <button class="color-spot" style="background:#e3f2fd" onclick="setBackground('#e3f2fd', 'blue')"></button>
+        <button class="color-spot" style="background:#e6e0f8" onclick="setBackground('#e6e0f8', 'purple')"></button>
+        <button class="color-spot" style="background:#fce4ec" onclick="setBackground('#fce4ec', 'pink')"></button>
+        <button class="color-spot" style="background:#121212" onclick="setBackground('#121212', 'dark')"></button>
+        
+        <div class="custom-picker-wrapper" title="Choose custom color">
+            <input type="color" id="customColorPicker" oninput="setBackground(this.value, 'custom')">
+        </div>
+    </div>
 
-<label>Font Family</label>
-<select id="fontFamily">
-  <option value="Consolas">Consolas</option>
-  <option value="Arial">Arial</option>
-  <option value="Helvetica">Helvetica</option>
-</select>
+    <h3>Assists Mode</h3>
+    <div class="toggle-container">
+        <span>Enable Sound Marks</span>
+        <label class="switch">
+            <input type="checkbox" id="phonicsToggle" onchange="togglePhonicsMode(this.checked)">
+            <span class="slider"></span>
+        </label>
+    </div>
 
-<label>Font Size</label>
-<input type="range" id="fontSize" min="1" max="10" step="0.1" value="1.6">
+    <h3>Font Style</h3>
+    <select id="fontSelector" class="tool-select" onchange="adjustFontFamily(this.value)">
+        <option value="Consolas, monospace">Consolas Monospace</option>
+        <option value="Arial, sans-serif">Arial Sans-Serif</option>
+        <option value="'Times New Roman', serif">Times New Roman</option>
+        <option value="'Courier New', monospace">Courier New</option>
+        <option value="Georgia, serif">Georgia</option>
+        <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+    </select>
 
-<label>Line Height</label>
-<input type="range" id="lineHeight" min="1" max="10" step="0.1" value="2">
+    <h3>Line Spacing (Row Gap)</h3>
+    <div style="margin-top:5px;">
+        <button id="btnLineHeightPlus" class="accessibility-scale" onclick="adjustLineHeight(5)">+</button>
+        <button id="btnLineHeightMinus" class="accessibility-scale" onclick="adjustLineHeight(-5)">-</button>
+    </div>
 
-<label>Letter Spacing</label>
-<input type="range" id="kerning" min="0" max="10" step="0.5" value="0">
+    <h3>Kerning (Letter Spacing)</h3>
+    <div style="margin-top:5px;">
+        <button id="btnKerningPlus" class="accessibility-scale" onclick="adjustKerning(0.05)">+</button>
+        <button id="btnKerningMinus" class="accessibility-scale" onclick="adjustKerning(-0.05)">-</button>
+    </div>
 
-<label>Active Color</label>
-<input type="color" id="textColor" value="#A81769">
+    <h3>Word Spacing</h3>
+    <div style="margin-top:5px;">
+        <button id="btnWordSpacingPlus" class="accessibility-scale" onclick="adjustWordSpacing(0.05)">+</button>
+        <button id="btnWordSpacingMinus" class="accessibility-scale" onclick="adjustWordSpacing(-0.05)">-</button>
+    </div>
 
-<label>Defocus Color</label>
-<input type="color" id="defocusColor" value="#b0b0b0">
-
-<label>Background Color</label>
-<input type="color" id="bgColor" value="#ffffff">
-
-<label>Scroll Speed</label>
-<input type="range" id="scrollSpeed" min="1" max="20" value="10">
+    <h3>Font Size</h3>
+    <div style="margin-top:5px;">
+        <button id="btnFontSizePlus" class="accessibility-scale" onclick="adjustFontSize(2)">+</button>
+        <button id="btnFontSizeMinus" class="accessibility-scale" onclick="adjustFontSize(-2)">-</button>
+    </div>
 </div>
 
-<button id="togglePanel">☰</button>
-
-<div id="main">
-  <div id="display"></div>
+<div class="main-layout">
+    <div class="display-container">
+        <div id="display"></div>
+    </div>
 </div>
-
-<audio id="clickSound">
-  <source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg">
-</audio>
 
 <script>
-function toggleTheme() {
-    document.body.classList.toggle('dark-mode');
-}
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-//ELEMENTS
 const display = document.getElementById("display");
 const fileInput = document.getElementById("fileInput");
-const searchBox = document.getElementById("searchBox");
-const searchBtn = document.getElementById("searchBtn");
-const toggleBtn = document.getElementById("togglePanel");
-const panel = document.getElementById("panel");
-const main = document.getElementById("main");
 
-//SETTINGS
-const fontFamilyInput=document.getElementById('fontFamily');
-const fontSizeInput=document.getElementById('fontSize');
-const lineHeightInput=document.getElementById('lineHeight');
-const kerningInput=document.getElementById('kerning');
-const bgColorInput=document.getElementById('bgColor');
-const textColorInput=document.getElementById('textColor');
-const defocusColorInput=document.getElementById('defocusColor');
-const scrollSpeedInput=document.getElementById('scrollSpeed');
-const clickSound=document.getElementById('clickSound');
+let structuredParagraphTokens = [];
+let currentIndex = 0; 
+let currentLineMargin = 10; 
 
-let lines = [];
-let currentIndex = 0;
-let scrollFactor = parseInt(scrollSpeedInput.value);
+// Tracker arrays for the visual layout mapping
+let rawRowsTextMapping = [];
+let rawRowsWordsMeta = [];
 
-let fileObj=null, reader=null;
-let fileOffset=0, fileSize=0;
-const chunkSize = 50000;
+let isVoiceReading = false;
+let currentUtterance = null;
 
-function playClick(){
-  clickSound.currentTime=0;
-  clickSound.play().catch(()=>{});
-}
+const TRICKY_WORDS = {
+    "teleprompter": "An electronic device that displays scrolling text for a speaker.",
+    "progressive": "Happening or developing gradually or in stages."
+};
 
-function splitSentences(t){
-  return t.replace(/\n+/g," ").split(/(?<=[.!?])\s+/).filter(x=>x.trim());
-}
+const TRIGRAPHS = ["igh", "ear", "air", "ure"];
+const DIGRAPHS = ["ch", "sh", "th", "ph", "gh", "wh", "ee", "oo", "ou", "ai", "ay", "ea", "ie", "oa", "oi", "oy", "au", "aw", "ck", "ng", "qu", "kn", "wr", "ar", "or", "er", "ir", "ur"];
+const VOWELS = ["a", "e", "i", "o", "u"];
 
-function loadNextChunk(cb){
-  if(fileOffset >= fileSize){
-    if(cb) cb();
-    return;
-  }
+function buildPhonicsGraphemeSVG(rawWord) {
+    if (!rawWord.trim()) return "";
 
-  const blob = fileObj.slice(fileOffset, fileOffset + chunkSize);
-  reader = new FileReader();
-  reader.onload = e=>{
-    const newLines = splitSentences(e.target.result || "");
-    if(newLines.length > 0) lines = lines.concat(newLines);
-    fileOffset += chunkSize;
-    render();
-    if(cb) cb();
-  };
-  reader.readAsText(blob);
-}
+    let canvas = buildPhonicsGraphemeSVG.canvas || (buildPhonicsGraphemeSVG.canvas = document.createElement("canvas"));
+    let context = canvas.getContext("2d");
+    let computedStyle = window.getComputedStyle(display);
+    
+    context.font = `${computedStyle.fontSize} ${computedStyle.fontFamily}`;
 
-function render(){
-  const baseSize = parseFloat(fontSizeInput.value);
-  display.innerHTML = "";
+    let letterWidths = [];
+    let cumulativeWidths = [0];
+    for (let idx = 0; idx < rawWord.length; idx++) {
+        let w = context.measureText(rawWord[idx]).width;
+        letterWidths.push(w);
+        cumulativeWidths.push(cumulativeWidths[idx] + w);
+    }
+    
+    let totalWidth = cumulativeWidths[cumulativeWidths.length - 1];
+    let lower = rawWord.toLowerCase();
+    let visited = new Array(rawWord.length).fill(false);
+    let splitConsonants = new Array(rawWord.length).fill(false);
+    let elementsSVG = "";
 
-  lines.forEach((text,i)=>{
-    const div = document.createElement("div");
-    div.classList.add("line");
-    div.textContent = (i+1) + ". " + text;
-
-    if(i === currentIndex){
-      div.classList.add("active");
-      div.style.color = textColorInput.value;
-    } else {
-      div.style.color = defocusColorInput.value;
+    for (let i = 0; i < lower.length - 2; i++) {
+        if (/[a-z]/i.test(lower[i]) && VOWELS.includes(lower[i]) && !visited[i]) {
+            if (VOWELS.includes(lower[i+2]) && !VOWELS.includes(lower[i+1]) && /[a-z]/i.test(lower[i+1]) && /[a-z]/i.test(lower[i+2])) {
+                let isWordBoundary = (i + 3 === lower.length || !/[a-z]/i.test(lower[i+3]));
+                if (isWordBoundary) {
+                    let startX = cumulativeWidths[i] + (letterWidths[i] / 2);
+                    let endX = cumulativeWidths[i+2] + (letterWidths[i+2] / 2);
+                    
+                    elementsSVG += `<path d="M ${startX} 20 A ${(endX - startX)/1.4} ${(endX - startX)/3} 0 0 1 ${endX} 20" class="phonics-arc" />`;
+                    visited[i] = true;
+                    visited[i+2] = true; 
+                    splitConsonants[i+1] = true; 
+                    i += 2;
+                }
+            }
+        }
     }
 
-    div.style.fontSize = baseSize + "em";
-    display.appendChild(div);
-  });
-}
+    let pos = 0;
+    while (pos < lower.length) {
+        if (visited[pos] || !/[a-z]/i.test(lower[pos])) { 
+            pos++; 
+            continue; 
+        }
 
-function updateScroll(){
-  const active = document.querySelector(".active");
-  if(active){
-    const target = active.offsetTop - display.clientHeight/2 + active.clientHeight/2;
-    const dist = target - display.scrollTop;
-    const t = (20 - scrollFactor + 1)/20;
-    const ease = t*t*t;
-    display.scrollTop += dist * ease;
-  }
-  requestAnimationFrame(updateScroll);
-}
-updateScroll();
+        if (pos <= lower.length - 3) {
+            let trio = lower.substr(pos, 3);
+            if (TRIGRAPHS.includes(trio) && !visited[pos+1] && !visited[pos+2]) {
+                let xStart = cumulativeWidths[pos] + 1;
+                let xEnd = cumulativeWidths[pos+3] - 1;
+                elementsSVG += `<line x1="${xStart}" y1="16" x2="${xEnd}" y2="16" class="phonics-line" />`;
+                visited[pos] = visited[pos+1] = visited[pos+2] = true;
+                pos += 3;
+                continue;
+            }
+        }
 
-document.addEventListener("keydown",e=>{
-  if(e.key==="ArrowDown"){
-    if(currentIndex < lines.length-1){
-      currentIndex++;
-      render();
-    } else {
-      loadNextChunk(()=>{ currentIndex++; render(); });
+        if (pos <= lower.length - 2) {
+            let duo = lower.substr(pos, 2);
+            if (DIGRAPHS.includes(duo) && !visited[pos+1]) {
+                let xStart = cumulativeWidths[pos] + 1;
+                let xEnd = cumulativeWidths[pos+2] - 1;
+                elementsSVG += `<line x1="${xStart}" y1="16" x2="${xEnd}" y2="16" class="phonics-line" />`;
+                visited[pos] = visited[pos+1] = true;
+                pos += 2;
+                continue;
+            }
+        }
+
+        pos++;
     }
-  }
-  if(e.key==="ArrowUp" && currentIndex>0){
-    currentIndex--;
-    render();
-  }
-});
 
-function jumpToMatch(q){
-  q=q.toLowerCase();
-  const idx=lines.findIndex(l=>l.toLowerCase().includes(q));
-  if(idx!==-1){
-    currentIndex=idx;
-    render();
-    return true;
-  }
-  return false;
-}
-
-function progressiveSearch(q){
-  function attempt(){
-    if(jumpToMatch(q)) return;
-    if(fileOffset < fileSize){
-      loadNextChunk(attempt);
-    } else {
-      alert("Not found.");
+    for (let k = 0; k < lower.length; k++) {
+        if (lower[k].trim() !== "" && /[a-z]/i.test(lower[k])) {
+            let xCenter = cumulativeWidths[k] + (letterWidths[k] / 2);
+            
+            if (splitConsonants[k]) {
+                elementsSVG += `<circle cx="${xCenter}" cy="4" r="2.5" class="phonics-mark" />`;
+            } else if (!visited[k]) {
+                elementsSVG += `<circle cx="${xCenter}" cy="16" r="2.5" class="phonics-mark" />`;
+            }
+        }
     }
-  }
-  attempt();
+
+    return `
+        <svg class="phonics-svg-container" style="width: ${totalWidth}px;" viewBox="0 0 ${totalWidth} 26">
+            ${elementsSVG}
+        </svg>`;
 }
 
-searchBtn.addEventListener("click",()=>{
-  const q=searchBox.value.trim();
-  if(q.length>0) progressiveSearch(q);
-});
+function toggleAccessibility() {
+    document.getElementById('accessPanel').classList.toggle('open');
+}
 
-fileInput.addEventListener("change",()=>{
-  fileObj=fileInput.files[0];
-  if(!fileObj) return;
-  fileSize=fileObj.size;
-  fileOffset=0;
-  lines=[];
-  currentIndex=0;
-  loadNextChunk();
-});
+function darkenColor(hex, percent) {
+    hex = hex.replace('#','');
+    if(hex.length === 3) {
+        hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+    }
+    let r = parseInt(hex.substring(0,2),16);
+    let g = parseInt(hex.substring(2,4),16);
+    let b = parseInt(hex.substring(4,6),16);
+    r = Math.floor(r*(1-percent/100));
+    g = Math.floor(g*(1-percent/100));
+    b = Math.floor(b*(1-percent/100));
+    return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+}
 
-[fontFamilyInput,fontSizeInput,lineHeightInput,kerningInput,bgColorInput,textColorInput,defocusColorInput,scrollSpeedInput]
-.forEach(el=>{
-  el.addEventListener("input",()=>{
-    playClick();
-    display.style.fontFamily=fontFamilyInput.value;
-    display.style.lineHeight=lineHeightInput.value+"em";
-    display.style.letterSpacing=kerningInput.value+"px";
-    display.style.backgroundColor=bgColorInput.value;
-    scrollFactor=parseInt(scrollSpeedInput.value);
+function setBackground(colorValue, themeName) {
+    localStorage.setItem('tele_bgColorValue', colorValue);
+    localStorage.setItem('tele_themeName', themeName);
+
+    document.body.style.background = colorValue;
+    display.style.background = colorValue;
+    
+    if (themeName === 'dark') {
+        document.body.className = document.body.className.replace(/\baccess-\S+/g, '') + ' access-dark';
+        document.getElementById('header').style.background = '#000000';
+    } else {
+        document.body.className = document.body.className.replace(/\baccess-\S+/g, '') + ' access-' + themeName;
+        document.getElementById('header').style.background = darkenColor(colorValue, 35);
+    }
+}
+
+function togglePhonicsMode(isEnabled) {
+    if (isEnabled) {
+        document.body.classList.add('mode-phonics');
+        localStorage.setItem('tele_kerning', '0');
+        display.style.letterSpacing = '0em';
+    } else {
+        document.body.classList.remove('mode-phonics');
+        let savedKerning = localStorage.getItem('tele_kerning') || '0';
+        display.style.letterSpacing = savedKerning + 'em';
+    }
+    localStorage.setItem('tele_phonicsEnabled', isEnabled);
+    document.getElementById('phonicsToggle').checked = isEnabled;
     render();
-  });
+}
+
+function adjustFontFamily(value) {
+    display.style.fontFamily = value;
+    document.getElementById('fontSelector').value = value;
+    localStorage.setItem('tele_fontFamily', value);
+    render();
+}
+
+function evaluateScaleButtonConstraints() {
+    let phonicsActive = localStorage.getItem('tele_phonicsEnabled') === 'true';
+
+    let lh = parseInt(localStorage.getItem('tele_lineMargin') || '10');
+    document.getElementById('btnLineHeightMinus').disabled = (lh <= 0);
+    document.getElementById('btnLineHeightPlus').disabled = (lh >= 150);
+
+    if (phonicsActive) {
+        document.getElementById('btnKerningMinus').disabled = true;
+        document.getElementById('btnKerningPlus').disabled = true;
+    } else {
+        let krn = parseFloat(localStorage.getItem('tele_kerning') || '0');
+        document.getElementById('btnKerningMinus').disabled = (krn <= -0.1);
+        document.getElementById('btnKerningPlus').disabled = (krn >= 1.0);
+    }
+
+    let wsp = parseFloat(localStorage.getItem('tele_wordSpacingCustom') || '0.25');
+    document.getElementById('btnWordSpacingMinus').disabled = (wsp <= 0.05);
+    document.getElementById('btnWordSpacingPlus').disabled = (wsp >= 2.0);
+
+    let fsz = parseFloat(localStorage.getItem('tele_fontSize') || '18');
+    document.getElementById('btnFontSizeMinus').disabled = (fsz <= 12);
+    document.getElementById('btnFontSizePlus').disabled = (fsz >= 72);
+}
+
+function adjustLineHeight(amount) {
+    currentLineMargin = Math.max(0, Math.min(150, currentLineMargin + amount));
+    localStorage.setItem('tele_lineMargin', currentLineMargin);
+    render();
+}
+
+function adjustKerning(amount) {
+    if (localStorage.getItem('tele_phonicsEnabled') === 'true') return;
+
+    let current = parseFloat(localStorage.getItem('tele_kerning') || '0') + amount;
+    current = Math.max(-0.1, Math.min(1.0, current));
+    display.style.letterSpacing = current + 'em';
+    localStorage.setItem('tele_kerning', current);
+    render();
+}
+
+function adjustWordSpacing(amount){
+    let current = parseFloat(localStorage.getItem('tele_wordSpacingCustom') || '0.25') + amount;
+    current = Math.max(0.05, Math.min(2.0, current));
+    localStorage.setItem('tele_wordSpacingCustom', current);
+    render();
+}
+
+function adjustFontSize(amount){
+    let current = parseFloat(localStorage.getItem('tele_fontSize') || '18') + amount;
+    current = Math.max(12, Math.min(72, current));
+    display.style.fontSize = current + 'px';
+    localStorage.setItem('tele_fontSize', current);
+    render();
+}
+
+function resetToFactoryDefaults() {
+    localStorage.setItem('tele_bgColorValue', '#f5f5f5');
+    localStorage.setItem('tele_themeName', 'white');
+    localStorage.setItem('tele_phonicsEnabled', 'false');
+    localStorage.setItem('tele_fontFamily', 'Consolas, monospace');
+    localStorage.setItem('tele_lineMargin', '10');
+    localStorage.setItem('tele_kerning', '0');
+    localStorage.setItem('tele_wordSpacingCustom', '0.25');
+    localStorage.setItem('tele_fontSize', '18');
+
+    document.getElementById('phonicsToggle').checked = false;
+    document.getElementById('fontSelector').value = 'Consolas, monospace';
+    display.style.fontFamily = 'Consolas, monospace';
+    display.style.fontSize = '18px';
+    display.style.letterSpacing = '0em';
+    currentLineMargin = 10;
+
+    togglePhonicsMode(false);
+    setBackground('#f5f5f5', 'white');
+}
+
+function loadSavedSettings() {
+    let bgColor = localStorage.getItem('tele_bgColorValue') || '#f5f5f5';
+    let themeName = localStorage.getItem('tele_themeName') || 'white';
+    setBackground(bgColor, themeName);
+
+    let phonics = localStorage.getItem('tele_phonicsEnabled') === 'true';
+    togglePhonicsMode(phonics);
+
+    let font = localStorage.getItem('tele_fontFamily') || 'Consolas, monospace';
+    adjustFontFamily(font);
+
+    currentLineMargin = parseInt(localStorage.getItem('tele_lineMargin') || '10');
+    
+    let kerning = localStorage.getItem('tele_kerning') || '0';
+    if (!phonics) display.style.letterSpacing = kerning + 'em';
+
+    let fontSize = localStorage.getItem('tele_fontSize') || '18';
+    display.style.fontSize = fontSize + 'px';
+}
+
+function tokenizeSingleWord(word) {
+    if (!word.trim()) return null;
+    let currentWordSpacing = localStorage.getItem('tele_wordSpacingCustom') || '0.25';
+    let clean = word.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"").trim();
+    let insideWordPayload = word;
+    
+    if (TRICKY_WORDS[clean]) {
+        insideWordPayload = `
+            <span class="tricky-word-container">
+                <span class="tricky-word">${word}</span>
+                <span class="hover-card">${TRICKY_WORDS[clean]}</span>
+            </span>`;
+    }
+
+    let assistantMarkup = buildPhonicsGraphemeSVG(word);
+    let htmlMarkup = `
+        <span class="word-stack" style="margin-right: ${currentWordSpacing}em;">
+            ${assistantMarkup}
+            <span class="word-body">${insideWordPayload}</span>
+        </span>`;
+        
+    return htmlMarkup;
+}
+
+function triggerFileSelectionStub() {
+    fileInput.click();
+}
+
+function handleFileSwitch(inputElem) {
+    const file = inputElem.files[0];
+    if (!file) return;
+    parseAndLoadFile(file);
+}
+
+async function parseAndLoadFile(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (ext === 'txt') {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            loadFlatTokensFromText(e.target.result);
+        };
+        reader.readAsText(file);
+    } else if (ext === 'docx') {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            mammoth.extractRawText({arrayBuffer: e.target.result})
+                .then(function(result) {
+                    loadFlatTokensFromText(result.value);
+                });
+        };
+        reader.readAsArrayBuffer(file);
+    } else if (ext === 'pdf') {
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const typedarray = new Uint8Array(e.target.result);
+            const pdf = await pdfjsLib.getDocument(typedarray).promise;
+            let completeText = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map(item => item.str).join(" ");
+                completeText += pageText + "\n";
+            }
+            loadFlatTokensFromText(completeText);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+}
+
+/* ----------------- Unified Karaoke-Style Voice Reader Engine ----------------- */
+function toggleSpeech() {
+    if (rawRowsTextMapping.length === 0) return;
+
+    if (isVoiceReading) {
+        window.speechSynthesis.cancel();
+        isVoiceReading = false;
+        clearAllKaraokeHighlights();
+        updateSpeechButtons();
+    } else {
+        isVoiceReading = true;
+        speakCurrentRowChain();
+    }
+}
+
+function clearAllKaraokeHighlights() {
+    const highlighted = display.querySelectorAll('.word-stack.karaoke-active');
+    highlighted.forEach(el => el.classList.remove('karaoke-active'));
+}
+
+function speakCurrentRowChain() {
+    if (!isVoiceReading || currentIndex >= rawRowsTextMapping.length) {
+        stopSpeakingDataState();
+        return;
+    }
+
+    window.speechSynthesis.cancel();
+    clearAllKaraokeHighlights();
+
+    let textToSpeak = rawRowsTextMapping[currentIndex];
+    let wordsMeta = rawRowsWordsMeta[currentIndex];
+    currentUtterance = new SpeechSynthesisUtterance(textToSpeak);
+
+    // Karaoke boundary speech-tracking handler
+    currentUtterance.onboundary = function(event) {
+        if (!isVoiceReading || event.name !== 'word') return;
+
+        let charIdx = event.charIndex;
+        
+        // Find which token word matches this index coordinate position
+        let exactWordIndex = -1;
+        for (let i = 0; i < wordsMeta.length; i++) {
+            if (charIdx >= wordsMeta[i].start && charIdx <= wordsMeta[i].end) {
+                exactWordIndex = i;
+                break;
+            }
+        }
+
+        if (exactWordIndex !== -1) {
+            clearAllKaraokeHighlights();
+            const activeRowElement = display.querySelectorAll(".dynamic-visual-row")[currentIndex];
+            if (activeRowElement) {
+                const wordStacks = activeRowElement.querySelectorAll(".word-stack");
+                if (wordStacks[exactWordIndex]) {
+                    wordStacks[exactWordIndex].classList.add("karaoke-active");
+                }
+            }
+        }
+    };
+
+    currentUtterance.onend = function() {
+        if (isVoiceReading) {
+            if (currentIndex < rawRowsTextMapping.length - 1) {
+                currentIndex++;
+                render();
+                snapScrollToActive();
+                speakCurrentRowChain();
+            } else {
+                stopSpeakingDataState();
+            }
+        }
+    };
+
+    currentUtterance.onerror = function() {
+        stopSpeakingDataState();
+    };
+
+    updateSpeechButtons();
+    window.speechSynthesis.speak(currentUtterance);
+}
+
+function stopSpeakingDataState() {
+    window.speechSynthesis.cancel();
+    isVoiceReading = false;
+    clearAllKaraokeHighlights();
+    updateSpeechButtons();
+}
+
+function updateSpeechButtons() {
+    const playBtn = document.getElementById("speechToggleBtn");
+    if (!playBtn) return;
+    
+    if (isVoiceReading) {
+        playBtn.innerHTML = "⏹ Stop Voice";
+        playBtn.style.background = "#c0392b";
+    } else {
+        playBtn.innerHTML = "▶ Play Voice";
+        playBtn.style.background = "#2b7a78";
+    }
+}
+
+function render() {
+    evaluateScaleButtonConstraints();
+
+    if (structuredParagraphTokens.length === 0) {
+        display.innerHTML = `
+            <div class="empty-state-container">
+                <div class="empty-state-card">
+                    <h2>No Script Document Active</h2>
+                    <p>Load a text script into the studio workspace below. Lines wrap naturally with clean spill-over, starting new paragraphs automatically.</p>
+                    <div class="file-stub-btn" onclick="triggerFileSelectionStub()">📁 Choose File Script</div>
+                </div>
+            </div>`;
+        return;
+    }
+    
+    display.innerHTML = "";
+    
+    const testingCanvas = document.createElement("div");
+    testingCanvas.classList.add("script-flow-container");
+    display.appendChild(testingCanvas);
+
+    let savedMargin = localStorage.getItem('tele_lineMargin') || '10';
+    let sortedRows = [];
+    let tempRowsText = [];
+    let tempRowsWordsMeta = [];
+
+    structuredParagraphTokens.forEach((paragraphData) => {
+        if (!paragraphData.rawWords || paragraphData.rawWords.length === 0) return;
+        
+        testingCanvas.innerHTML = "";
+        paragraphData.htmlTokens.forEach((wordHtml) => {
+            const span = document.createElement("span");
+            span.innerHTML = wordHtml;
+            span.style.display = "inline-block";
+            testingCanvas.appendChild(span);
+        });
+
+        let lastY = null;
+        let runningRowHtml = [];
+        let runningRowWords = [];
+        const children = testingCanvas.childNodes;
+
+        for (let i = 0; i < children.length; i++) {
+            let child = children[i];
+            let currentY = child.offsetTop;
+
+            if (lastY !== null && Math.abs(currentY - lastY) > 8) {
+                sortedRows.push(runningRowHtml);
+                
+                // Track plaintext indices for precise boundary callback highlights
+                let rowString = runningRowWords.join(" ");
+                tempRowsText.push(rowString);
+                
+                let wordsMeta = [];
+                let currentPos = 0;
+                runningRowWords.forEach(w => {
+                    wordsMeta.push({
+                        word: w,
+                        start: currentPos,
+                        end: currentPos + w.length
+                    });
+                    currentPos += w.length + 1; // +1 includes space separator offset
+                });
+                tempRowsWordsMeta.push(wordsMeta);
+
+                runningRowHtml = [];
+                runningRowWords = [];
+            }
+            runningRowHtml.push(child.innerHTML);
+            runningRowWords.push(paragraphData.rawWords[i]);
+            lastY = currentY;
+        }
+        if (runningRowHtml.length > 0) {
+            sortedRows.push(runningRowHtml);
+            let rowString = runningRowWords.join(" ");
+            tempRowsText.push(rowString);
+            
+            let wordsMeta = [];
+            let currentPos = 0;
+            runningRowWords.forEach(w => {
+                wordsMeta.push({
+                    word: w,
+                    start: currentPos,
+                    end: currentPos + w.length
+                });
+                currentPos += w.length + 1;
+            });
+            tempRowsWordsMeta.push(wordsMeta);
+        }
+    });
+
+    rawRowsTextMapping = tempRowsText;
+    rawRowsWordsMeta = tempRowsWordsMeta;
+    display.innerHTML = "";
+
+    sortedRows.forEach((rowWordsHtml, index) => {
+        const rowDiv = document.createElement("div");
+        rowDiv.classList.add("dynamic-visual-row");
+        rowDiv.style.paddingTop = (savedMargin / 2) + "px";
+        rowDiv.style.paddingBottom = (savedMargin / 2) + "px";
+        if (index === currentIndex) rowDiv.classList.add("active");
+
+        rowDiv.addEventListener('click', () => {
+            currentIndex = index;
+            render();
+            snapScrollToActive();
+            if (isVoiceReading) {
+                speakCurrentRowChain();
+            }
+        });
+
+        const numSpan = document.createElement("span");
+        numSpan.classList.add("line-number-inline");
+        numSpan.textContent = (index + 1);
+
+        const contentWrapper = document.createElement("div");
+        contentWrapper.classList.add("row-words-content");
+        contentWrapper.innerHTML = rowWordsHtml.join("");
+
+        rowDiv.appendChild(numSpan);
+        rowDiv.appendChild(contentWrapper);
+        display.appendChild(rowDiv);
+    });
+}
+
+function snapScrollToActive() {
+    const active = display.querySelector(".dynamic-visual-row.active");
+    if (active) {
+        const targetScroll = active.offsetTop - display.clientHeight / 2 + active.clientHeight / 2;
+        display.scrollTo({
+            top: targetScroll,
+            behavior: 'smooth' 
+        });
+    }
+}
+
+document.addEventListener("keydown", e => {
+    const totalRows = display.querySelectorAll(".dynamic-visual-row").length;
+    if (totalRows === 0) return;
+    
+    if (e.key === "ArrowDown" && currentIndex < totalRows - 1) {
+        e.preventDefault();
+        currentIndex++;
+        render();
+        snapScrollToActive();
+        if (isVoiceReading) speakCurrentRowChain();
+    }
+    if (e.key === "ArrowUp" && currentIndex > 0) {
+        e.preventDefault();
+        currentIndex--;
+        render();
+        snapScrollToActive();
+        if (isVoiceReading) speakCurrentRowChain();
+    }
 });
 
-toggleBtn.addEventListener("click",()=>{
-  panel.classList.toggle("collapsed");
-  main.style.marginLeft = panel.classList.contains("collapsed") ? "0" : "280px";
+window.addEventListener("resize", () => {
+    if (structuredParagraphTokens.length > 0) {
+        render();
+    }
+});
+
+function loadFlatTokensFromText(text) {
+    let rawLines = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+    
+    structuredParagraphTokens = rawLines.map(line => {
+        let rawWords = line.split(/\s+/).filter(w => w.trim().length > 0);
+        if (rawWords.length === 0) return null;
+        
+        let htmlTokens = rawWords.map(w => tokenizeSingleWord(w)).filter(t => t !== null);
+        return { 
+            rawWords: rawWords,
+            htmlTokens: htmlTokens 
+        };
+    }).filter(p => p !== null);
+
+    currentIndex = 0;
+    render();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    loadSavedSettings();
+    render();
 });
 </script>
 
