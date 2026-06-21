@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Traffic Lights Flowchart</title>
+
+<style>
+
+/* ===============================
+LAYOUT
+=============================== */
+
+body{
+  font-family: Arial, sans-serif;
+  display:grid;
+  grid-template-columns:260px 1fr 260px;
+  gap:20px;
+  padding:20px;
+  background:#eef2f5;
+}
+
+/* ===============================
+PANELS
+=============================== */
+
+.panel{
+  background:white;
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.08);
+}
+
+.panel h2{
+  margin-top:0;
+}
+
+/* ===============================
+BUTTONS
+=============================== */
+
+button{
+  width:100%;
+  margin:5px 0;
+  padding:8px;
+  cursor:pointer;
+  border:1px solid #ccc;
+  border-radius:6px;
+  background:white;
+}
+
+button:hover{
+  background:#f3f6fb;
+}
+
+/* ===============================
+FLOWCHART AREA
+=============================== */
+
+#flowchart{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+.block{
+  cursor:grab;
+  margin:6px 0;
+  position:relative;
+}
+
+.block.executing svg{
+  outline:4px solid red;
+  outline-offset:4px;
+  border-radius:8px;
+}
+
+.block.dragging{
+  opacity:0.4;
+}
+
+.drop-zone{
+  height:16px;
+  width:100%;
+}
+
+.drop-zone.active{
+  background:#dbe9f3;
+}
+
+.connector{
+  width:2px;
+  height:24px;
+  border-left:2px dashed #999;
+}
+
+/* ===============================
+SVG TEXT
+=============================== */
+
+.label{
+  font-size:14px;
+  font-weight:bold;
+  text-anchor:middle;
+  dominant-baseline:middle;
+  fill:#333;
+}
+
+/* ===============================
+DELETE BUTTON
+=============================== */
+
+.delete-btn{
+  position:absolute;
+  right:-6px;
+  top:-6px;
+  background:white;
+  border:1px solid #ccc;
+  border-radius:50%;
+  width:26px;
+  height:26px;
+  cursor:pointer;
+}
+
+/* ===============================
+WAIT TIMER CONTROL
+=============================== */
+
+.timer-control{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+}
+
+.timer-control button{
+  width:32px;
+  height:32px;
+  padding:0;
+  font-size:18px;
+}
+
+/* ===============================
+TRAFFIC LIGHT DISPLAY
+=============================== */
+
+.traffic-lights-wrapper{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  position:relative;
+}
+
+.traffic-lights{
+  width:100px;
+  background:#222;
+  padding:10px;
+  border-radius:10px;
+}
+
+.light{
+  width:60px;
+  height:60px;
+  background:#444;
+  border-radius:50%;
+  margin:10px auto;
+}
+
+.red.on{ background:red; }
+.amber.on{ background:orange; }
+.green.on{ background:green; }
+
+/* ===============================
+POST STRUCTURE (UPDATED)
+=============================== */
+
+/* Container */
+.post{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  position:relative;
+}
+
+/* Continuous pole running behind button */
+.post::before{
+  content:"";
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:20px;
+  background:linear-gradient(to right,#666,#999,#666);
+  border-radius:6px;
+  box-shadow:0 4px 8px rgba(0,0,0,0.3);
+  z-index:0;
+}
+
+/* Hide old split pole parts */
+.post-top,
+.post-bottom{
+  display:none;
+}
+
+/* Pedestrian Button */
+
+.ped-button{
+  margin:12px 0;
+  width:72px;
+  height:72px;
+  border-radius:50%;
+  border:none;
+
+  background:radial-gradient(circle at 30% 30%, #ff6666, #cc0000);
+
+  box-shadow:
+    inset -4px -6px 8px rgba(0,0,0,0.35),
+    inset 3px 3px 6px rgba(255,255,255,0.2),
+    0 6px 12px rgba(0,0,0,0.35);
+
+  cursor:pointer;
+  transition:0.1s;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  position:relative;
+  z-index:1;
+}
+
+.ped-inner{
+  width:54px;
+  height:54px;
+  border-radius:50%;
+  background:linear-gradient(to bottom,#ff8888,#cc0000);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:22px;
+  color:white;
+}
+
+.ped-button:active{
+  transform:translateY(4px) scale(0.96);
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="panel">
+
+<h2>Blocks</h2>
+
+<button onclick="runProgram()">▶ Run Flowchart</button>
+<button onclick="clearProgram()">🗑 Clear All Blocks</button>
+<hr>
+
+<button onclick="addBlock('START')">Start Block</button>
+<button onclick="addLightsBlock()">Set Lights Block</button>
+<button onclick="addWaitBlock()">Wait Block</button>
+<button onclick="addPedestrianBlock()">If Button Pressed Block</button>
+<button onclick="addBlock('STOP')">Stop Block</button>
+
+</div>
+
+<div class="panel">
+<h2>Flowchart</h2>
+<div id="flowchart"></div>
+</div>
+
+<div class="panel">
+<h2>Traffic Lights</h2>
+
+<div class="traffic-lights-wrapper">
+
+<div class="traffic-lights">
+<div id="red" class="light red"></div>
+<div id="amber" class="light amber"></div>
+<div id="green" class="light green"></div>
+</div>
+
+<div class="post">
+<div class="post-top"></div>
+
+<button class="ped-button" onclick="requestPedestrian()">
+<div class="ped-inner">🚶</div>
+</button>
+
+<div class="post-bottom"></div>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* ===============================
+STATE
+=============================== */
+
+const flowchart=[];
+let dragIndex=null;
+let running=false;
+let executingIndex=null;
+let pedestrianRequested=false;
+
+/* ===============================
+BLOCK FUNCTIONS
+=============================== */
+
+function addBlock(type){
+  flowchart.push({type});
+  render();
+}
+
+function addLightsBlock(){
+  flowchart.push({
+    type:"LIGHTS",
+    red:false,
+    amber:false,
+    green:false
+  });
+  render();
+}
+
+function addWaitBlock(){
+  flowchart.push({
+    type:"WAIT",
+    duration:1
+  });
+  render();
+}
+
+function addPedestrianBlock(){
+  flowchart.push({ type:"PED_WAIT" });
+  render();
+}
+
+function deleteBlock(index){
+  flowchart.splice(index,1);
+  render();
+}
+
+/* ===============================
+PED REQUEST
+=============================== */
+
+function requestPedestrian(){
+  pedestrianRequested=true;
+}
+
+/* ===============================
+RENDER ENGINE
+=============================== */
+
+function render(){
+
+  const div=document.getElementById('flowchart');
+  div.innerHTML='';
+
+  flowchart.forEach((step,i)=>{
+
+    div.appendChild(createDropZone(i));
+
+    const block=document.createElement('div');
+    block.className='block';
+
+    if(i===executingIndex)
+      block.classList.add('executing');
+
+    block.draggable=true;
+
+    block.ondragstart=()=>{
+      dragIndex=i;
+      block.classList.add('dragging');
+    };
+
+    block.ondragend=()=>{
+      dragIndex=null;
+      render();
+    };
+
+    block.innerHTML=getBlockHTML(step,i);
+
+    div.appendChild(block);
+
+    if(i < flowchart.length-1){
+      const arrow=document.createElement('div');
+      arrow.className='connector';
+      div.appendChild(arrow);
+    }
+
+  });
+
+  div.appendChild(createDropZone(flowchart.length));
+}
+
+/* ===============================
+DROP ZONES
+=============================== */
+
+function createDropZone(index){
+
+  const zone=document.createElement('div');
+  zone.className='drop-zone';
+
+  zone.ondragover=e=>{
+    e.preventDefault();
+    zone.classList.add('active');
+  };
+
+  zone.ondragleave=()=>zone.classList.remove('active');
+
+  zone.ondrop=()=>{
+
+    zone.classList.remove('active');
+
+    if(dragIndex===null) return;
+
+    const item=flowchart.splice(dragIndex,1)[0];
+    flowchart.splice(index,0,item);
+
+    render();
+  };
+
+  return zone;
+}
+
+/* ===============================
+BLOCK SHAPES
+=============================== */
+
+function getBlockHTML(step,index){
+
+  const deleteButton=
+  `<button class="delete-btn" onclick="deleteBlock(${index})">🗑</button>`;
+
+  if(step.type==="START" || step.type==="STOP"){
+    return `
+    <div style="position:relative">
+      ${deleteButton}
+
+      <svg width="160" height="60">
+        <rect x="5" y="5" width="150" height="50"
+          rx="25" ry="25"
+          fill="#f3e6ef"
+          stroke="#B1156E"
+          stroke-width="3"/>
+        <text x="80" y="32" class="label">${step.type}</text>
+      </svg>
+    </div>`;
+  }
+
+  if(step.type==="WAIT"){
+    return `
+    <div style="position:relative">
+      ${deleteButton}
+
+      <svg width="160" height="110">
+
+        <rect x="5" y="5" width="150" height="90"
+          fill="#fff6d6"
+          stroke="#F6CD19"
+          stroke-width="3"/>
+
+        <text x="80" y="25" class="label">
+          WAIT ${step.duration ?? 1}s
+        </text>
+
+        <foreignObject x="20" y="40" width="120" height="60">
+          <div class="timer-control">
+
+            <button onclick="changeWaitTime(${index},-1)">➖</button>
+
+            <span>${step.duration ?? 1}s</span>
+
+            <button onclick="changeWaitTime(${index},1)">➕</button>
+
+          </div>
+        </foreignObject>
+
+      </svg>
+    </div>`;
+  }
+
+  if(step.type==="LIGHTS"){
+    return `
+    <div style="position:relative">
+      ${deleteButton}
+
+      <svg width="180" height="100">
+
+        <polygon points="30,5 175,5 150,95 5,95"
+          fill="#e3f6fb"
+          stroke="#0DACDA"
+          stroke-width="3"/>
+
+        <text x="95" y="25" class="label">LIGHTS</text>
+
+        <foreignObject x="40" y="40" width="120" height="60">
+          <div style="text-align:center;font-size:12px">
+
+            <label>
+              <input type="checkbox"
+                ${step.red?"checked":""}
+                onchange="updateToggle(${index},'red',this.checked)">
+              R
+            </label>
+
+            <label>
+              <input type="checkbox"
+                ${step.amber?"checked":""}
+                onchange="updateToggle(${index},'amber',this.checked)">
+              A
+            </label>
+
+            <label>
+              <input type="checkbox"
+                ${step.green?"checked":""}
+                onchange="updateToggle(${index},'green',this.checked)">
+              G
+            </label>
+
+          </div>
+        </foreignObject>
+
+      </svg>
+    </div>`;
+  }
+
+  if(step.type==="PED_WAIT"){
+    return `
+    <div style="position:relative">
+      ${deleteButton}
+
+      <svg width="180" height="120">
+
+        <polygon points="90,5 175,60 90,115 5,60"
+          fill="#F4999E"
+          stroke="#E8323D"
+          stroke-width="3"/>
+
+        <text x="90" y="62" class="label">
+          PED WAIT
+        </text>
+
+      </svg>
+    </div>`;
+  }
+
+  return "";
+}
+
+/* ===============================
+UTILS
+=============================== */
+
+function changeWaitTime(index,delta){
+
+  if(!flowchart[index]) return;
+
+  let d = flowchart[index].duration ?? 1;
+
+  d += delta;
+  if(d < 1) d = 1;
+
+  flowchart[index].duration = d;
+
+  render();
+}
+
+function updateToggle(index,color,value){
+  flowchart[index][color]=value;
+}
+
+/* ===============================
+LIGHT CONTROL
+=============================== */
+
+function clearLights(){
+  document.querySelectorAll('.light')
+    .forEach(l=>l.classList.remove('on'));
+}
+
+function setLight(color){
+  document.getElementById(color).classList.add('on');
+}
+
+/* ===============================
+EXECUTION ENGINE
+=============================== */
+
+async function runProgram(){
+
+  if(running) return;
+  running=true;
+
+  /* ✅ Only sanitize when running */
+  if(flowchart.length > 0){
+
+    if(flowchart[0].type !== "START"){
+      flowchart.unshift({ type:"START" });
+    }
+
+    if(flowchart[flowchart.length-1].type !== "STOP"){
+      flowchart.push({ type:"STOP" });
+    }
+
+  }
+
+  clearLights();
+
+  let i=0;
+
+  while(i < flowchart.length && running){
+
+    executingIndex=i;
+    render();
+
+    const step=flowchart[i];
+
+    if(step.type==="LIGHTS"){
+      clearLights();
+
+      if(step.red) setLight("red");
+      if(step.amber) setLight("amber");
+      if(step.green) setLight("green");
+    }
+
+    else if(step.type==="WAIT"){
+      await sleep((step.duration ?? 1)*1000);
+    }
+
+    else if(step.type==="PED_WAIT"){
+
+      pedestrianRequested=false;
+
+      while(!pedestrianRequested && running){
+        await sleep(200);
+      }
+
+    }
+
+    else if(step.type==="STOP"){
+      break;
+    }
+
+    await sleep(300);
+    i++;
+  }
+
+  executingIndex=null;
+  render();
+  running=false;
+}
+
+/* ===============================
+CLEAR PROGRAM
+=============================== */
+
+function clearProgram(){
+  flowchart.length=0;
+  executingIndex=null;
+  render();
+  clearLights();
+}
+
+/* ===============================
+HELPERS
+=============================== */
+
+function sleep(ms){
+  return new Promise(r=>setTimeout(r,ms));
+}
+
+render();
+
+</script>
+
+</body>
+</html>

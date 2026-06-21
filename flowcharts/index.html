@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mx Brooke's Education Resources</title>
+
+<style>
+/* ----------------- Global ----------------- */
+body {
+    font-family: Consolas, monospace;
+    margin: 0;
+    background-color: #f5f5f5;
+    color: #000;
+    overflow-x: hidden;
+}
+
+/* ----------------- Header (Same as your project) ----------------- */
+.header {
+    width: 100%;
+    height: 80px;
+    background-color: #333;
+    border-bottom: 2px solid #222;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    z-index: 20;
+}
+
+.header img {
+    height: 60px;
+    cursor: pointer;
+}
+
+/* ----------------- Main ----------------- */
+#mainContainer {
+    margin-top: 120px;
+    min-height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 40px;
+}
+
+/* ----------------- Button Grid ----------------- */
+.buttonGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 30px;
+    width: 80%;
+    max-width: 90%;
+    margin-bottom: 20px;
+}
+
+.projectButton {
+    color: #fff;
+    border: none;
+    padding: 40px 20px;
+    font-size: 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.projectButton:hover {
+    transform: translateY(-5px);
+    background-color: #000; /* Fallback hover color */
+}
+
+/* ----------------- Group Color Settings (Light Mode) ----------------- */
+
+/* Student Links - Pinkish Magenta */
+.student-group .projectButton { background-color: #A81769; }
+.student-group .projectButton:hover { background-color: #c42480; }
+
+/* Year 11 Revision Links - Dark Blue */
+.revision-group .projectButton { background-color: #1a5276; }
+.revision-group .projectButton:hover { background-color: #2471a3; }
+
+/* Teacher Links - Teal/Cyan */
+.teacher-group .projectButton { background-color: #08B1DB; }
+.teacher-group .projectButton:hover { background-color: #0bc5f2; }
+
+/* Computing Teacher - Purple */
+.computing-group .projectButton { background-color: #6c3483; }
+.computing-group .projectButton:hover { background-color: #884ea0; }
+
+
+/* ----------------- Dark Mode ----------------- */
+body.dark-mode {
+    background-color: #121212;
+    color: #fff;
+}
+
+/* Student Links (Dark Mode) */
+body.dark-mode .student-group .projectButton { background-color: #b82379; }
+body.dark-mode .student-group .projectButton:hover { background-color: #F5CC1B; color: #000; }
+
+/* Year 11 Revision Links (Dark Mode) */
+body.dark-mode .revision-group .projectButton { background-color: #2980b9; }
+body.dark-mode .revision-group .projectButton:hover { background-color: #F5CC1B; color: #000; }
+
+/* Teacher Links (Dark Mode) */
+body.dark-mode .teacher-group .projectButton { background-color: #069bb2; }
+body.dark-mode .teacher-group .projectButton:hover { background-color: #F5CC1B; color: #000; }
+
+/* Computing Teacher (Dark Mode) */
+body.dark-mode .computing-group .projectButton { background-color: #af7ac5; }
+body.dark-mode .computing-group .projectButton:hover { background-color: #F5CC1B; color: #000; }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <img src="https://clf.uk/wp-content/uploads/CLF-Logo-Transparent-White-Text.png"
+         alt="CLF Logo"
+         onclick="toggleTheme()">
+</div>
+
+<div id="mainContainer">
+    <h3>flowcharts</h3>
+    <div class="buttonGrid student-group">
+        <button class="projectButton" onclick="location.href='sequence/'">
+            Sequence (Traffic Lights)
+        </button>
+        <button class="projectButton" onclick="location.href='selection/'">
+            Selection (Rollercoaster)
+        </button>
+    </div>
+</div>
+
+<script>
+function toggleTheme() {
+    document.body.classList.toggle('dark-mode');
+}
+</script>
+
+</body>
+</html>

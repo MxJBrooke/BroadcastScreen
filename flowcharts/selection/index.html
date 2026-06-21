@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rollercoaster Gate Logic (Fixed Animation Sequence)</title>
+
+<style>
+
+/* ===============================
+LAYOUT
+============================== */
+
+body{
+  font-family: Arial, sans-serif;
+  display:grid;
+  grid-template-columns:300px 1fr 320px;
+  gap:20px;
+  padding:20px;
+  background:#f0f4f8;
+}
+
+/* ===============================
+PANELS
+============================== */
+
+.panel{
+  background:white;
+  padding:15px;
+  border-radius:12px;
+  box-shadow:0 2px 4px rgba(0,0,0,0.06);
+}
+
+.panel h2{
+  margin-top:0;
+  color: #1e293b;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+/* ===============================
+BUTTONS
+=============================== */
+
+button{
+  width:100%;
+  margin:5px 0;
+  padding:8px;
+  cursor:pointer;
+  border:1px solid #ccc;
+  border-radius:6px;
+  background:white;
+}
+
+button:hover{
+  background:#f3f6fb;
+}
+
+/* ===============================
+FLOWCHART & BRANCHING STRUCT
+=============================== */
+
+#flowchart{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-width: 540px;
+}
+
+.block{
+  cursor:grab;
+  margin:2px 0;
+  position:relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.block.executing > .block-shape {
+  outline:4px solid #3b82f6;
+  outline-offset:4px;
+  border-radius:8px;
+}
+
+.block.dragging { opacity:0.3; }
+
+.drop-zone{
+  height:20px;
+  width:120px;
+  transition: background 0.15s;
+  border-radius: 4px;
+}
+.drop-zone.active{ background: #dbeafe; border: 2px dashed #3b82f6; }
+
+.connector{
+  width:16px;
+  height:24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 2-Way Fork Column Containers */
+.branch-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 4px;
+  width: 100%;
+}
+
+.branch-columns {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  align-items: flex-start;
+  margin-top: 2px;
+}
+
+.branch-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 170px;
+  min-height: 80px;
+  background: rgba(241, 245, 249, 0.7);
+  border: 2px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 6px;
+}
+
+/* ===============================
+INLINE BLOCK INPUTS
+=============================== */
+
+.block-input {
+  width: 48px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: bold;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 2px;
+  background: white;
+  color: #0f172a;
+}
+.block-input:focus {
+  outline: 2px solid #3b82f6;
+}
+
+/* ===============================
+DELETE CONFIG
+=============================== */
+
+.delete-btn{
+  position:absolute;
+  right:2px;
+  top:-4px;
+  background:white;
+  border:1px solid #cbd5e1;
+  border-radius:50%;
+  width:24px;
+  height:24px;
+  cursor:pointer;
+  z-index:100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+.delete-btn:hover { background: #fee2e2; }
+
+/* ===============================
+COASTER SIM PANEL
+=============================== */
+
+.sim-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.display-monitor {
+  background: #0f172a;
+  color: #38bdf8;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  font-family: monospace;
+  box-shadow: inset 0 4px 10px rgba(0,0,0,0.4);
+}
+
+.monitor-main { font-size: 26px; font-weight: bold; margin: 8px 0; color: #f8fafc; }
+.monitor-sub { font-size: 13px; color: #94a3b8; }
+
+.slider-box input { width: 100%; margin-top: 6px; }
+
+.status-row {
+  display: flex;
+  gap: 10px;
+}
+
+.indicator-light {
+  flex: 1;
+  padding: 12px;
+  text-align: center;
+  background: #334155;
+  color: #64748b;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 11px;
+  transition: all 0.2s;
+}
+
+.indicator-light.green.active { background: #10b981; color: white; box-shadow: 0 0 12px #10b981; }
+.indicator-light.red.active { background: #ef4444; color: white; box-shadow: 0 0 12px #ef4444; }
+
+/* ===============================
+ANIMATION ENGINE CANVAS STAGE
+=============================== */
+
+.animation-stage {
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
+  background: #ffffff;
+  height: 160px;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Walk Cycle Leg Animations */
+@keyframes leftLegWalk {
+  0% { transform: rotate(-20deg); }
+  100% { transform: rotate(20deg); }
+}
+@keyframes rightLegWalk {
+  0% { transform: rotate(20deg); }
+  100% { transform: rotate(-20deg); }
+}
+
+.walking #leg-l { animation: leftLegWalk 0.25s infinite alternate; transform-origin: 20px 95px; }
+.walking #leg-r { animation: rightLegWalk 0.25s infinite alternate; transform-origin: 20px 95px; }
+
+</style>
+</head>
+
+<body>
+
+<div class="panel">
+  <h2>Control Blocks</h2>
+  <button onclick="runProgram()">▶ Run Coaster Gate</button>
+  <button onclick="stopProgram()">⏹ Stop</button>
+  <button onclick="clearProgram()">🗑 Clear Canvas</button>
+  <hr style="border:none; border-top: 1px solid #e2e8f0; margin: 12px 0;">
+  
+  <button onclick="addStandardBlock('START')">Start Block</button>
+  <button onclick="addBranchBlock('IF_HEIGHT')">Branch: IF Height &ge; Input</button>
+  <button onclick="addBranchBlock('IF_VIP')">Branch: IF Has FastPass</button>
+  <button onclick="addStandardBlock('GATE_OPEN')">Action: Allow One Through</button>
+  <button onclick="addStandardBlock('GATE_CLOSE')">Action: Lock Turnstile Gate</button>
+  <button onclick="addStandardBlock('LIGHT_GREEN')">Action: Flash Green Light</button>
+  <button onclick="addStandardBlock('LIGHT_RED')">Action: Flash Red Light</button>
+  <button onclick="addStandardBlock('WAIT')">Wait Block (Editable)</button>
+  <button onclick="addStandardBlock('STOP')">Stop Block</button>
+</div>
+
+<div class="panel" style="overflow-x: auto;">
+  <h2>Visual Program Architecture</h2>
+  <div id="flowchart"></div>
+</div>
+
+<div class="panel">
+  <h2>Rider Track Simulation</h2>
+  <div class="sim-panel">
+    
+    <div class="display-monitor">
+      <div>TURNSTILE READOUT</div>
+      <div id="display-text" class="monitor-main">SYSTEM READY</div>
+      <div id="display-metrics" class="monitor-sub">Height: 140cm | Pass: No</div>
+    </div>
+
+    <div class="slider-box">
+      <label style="font-weight:600; color:#475569;">Next Patron Height:</label>
+      <input type="range" id="rider-height" min="90" max="200" value="140" oninput="syncSimData()">
+      <div style="text-align:right; font-size:13px; font-weight:bold; color:#0f172a;" id="height-lbl">140 cm</div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:8px;">
+      <input type="checkbox" id="rider-vip" onchange="syncSimData()" style="width:18px; height:18px; cursor:pointer;">
+      <label for="rider-vip" style="font-weight:600; color:#475569; cursor:pointer;">Holds VIP FastPass Ticket</label>
+    </div>
+
+    <div class="status-row">
+      <div id="light-red" class="indicator-light red">STOP LIGHT</div>
+      <div id="light-green" class="indicator-light green">BOARD LIGHT</div>
+    </div>
+
+    <div class="animation-stage">
+      <svg id="scene-svg" width="100%" height="160">
+        <line x1="0" y1="135" x2="320" y2="135" stroke="#334155" stroke-width="4"/>
+        
+        <g id="stick-walker" transform="translate(30, 0)" style="transition: transform 1.2s linear;">
+          <g id="stick-scaler" style="transform-origin: 20px 135px; transition: transform 0.2s;">
+            <circle cx="20" cy="45" r="10" fill="none" stroke="#0f172a" stroke-width="3"/>
+            <line x1="20" y1="55" x2="20" y2="95" stroke="#0f172a" stroke-width="3"/>
+            <line x1="20" y1="68" x2="5" y2="85" stroke="#0f172a" stroke-width="3"/>
+            <line x1="20" y1="68" x2="35" y2="85" stroke="#0f172a" stroke-width="3"/>
+            <line id="leg-l" x1="20" y1="95" x2="8" y2="135" stroke="#0f172a" stroke-width="3"/>
+            <line id="leg-r" x1="20" y1="95" x2="32" y2="135" stroke="#0f172a" stroke-width="3"/>
+          </g>
+        </g>
+
+        <g transform="translate(170, 75)">
+          <rect x="-12" y="0" width="24" height="60" fill="#475569" rx="2"/>
+          <circle cx="0" cy="15" r="6" fill="#1e293b"/>
+          <line id="gate-barrier-arm" x1="0" y1="15" x2="-55" y2="15" stroke="#ef4444" stroke-width="6" stroke-linecap="round" style="transform-origin: 0px 15px; transition: transform 0.4s ease;"/>
+        </g>
+      </svg>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+/* ===============================
+STATE MANAGEMENT
+=============================== */
+
+let flowchart = [];
+let dragSourceList = null;
+let dragSourceIndex = null;
+let running = false;
+let executingBlockId = null;
+let blockIdCounter = 0;
+
+let simHeight = 140;
+let simHasVIP = false;
+
+/* ===============================
+DATA CONSTRUCTORS
+=============================== */
+
+function addStandardBlock(type) {
+  let blockObj = { id: blockIdCounter++, type };
+  if (type === 'WAIT') blockObj.duration = 1.0; 
+  flowchart.push(blockObj);
+  render();
+}
+
+function addBranchBlock(type) {
+  let blockObj = {
+    id: blockIdCounter++,
+    type: type,
+    trueBranch: [],
+    falseBranch: []
+  };
+  if (type === 'IF_HEIGHT') blockObj.threshold = 130; 
+  flowchart.push(blockObj);
+  render();
+}
+
+function updateBlockParam(id, property, val) {
+  function searchAndUpdate(list) {
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].id === id) {
+        list[i][property] = parseFloat(val) || 0;
+        return true;
+      }
+      if (list[i].trueBranch && searchAndUpdate(list[i].trueBranch)) return true;
+      if (list[i].falseBranch && searchAndUpdate(list[i].falseBranch)) return true;
+    }
+    return false;
+  }
+  searchAndUpdate(flowchart);
+}
+
+function deleteBlockById(id) {
+  function searchAndDestroy(list) {
+    for (let i = 0; i < list.length; i++) {
+      if (list[i].id === id) {
+        list.splice(i, 1);
+        return true;
+      }
+      if (list[i].trueBranch && searchAndDestroy(list[i].trueBranch)) return true;
+      if (list[i].falseBranch && searchAndDestroy(list[i].falseBranch)) return true;
+    }
+    return false;
+  }
+  searchAndDestroy(flowchart);
+  render();
+}
+
+/* ===============================
+ENVIRONMENT SYNCHRONIZER
+=============================== */
+
+function syncSimData() {
+  simHeight = parseInt(document.getElementById('rider-height').value);
+  simHasVIP = document.getElementById('rider-vip').checked;
+  
+  document.getElementById('height-lbl').innerText = simHeight + " cm";
+  document.getElementById('display-metrics').innerText = `Height: ${simHeight}cm | Pass: ${simHasVIP ? 'Yes' : 'No'}`;
+
+  const ratio = simHeight / 140;
+  document.getElementById('stick-scaler').style.transform = `scale(${ratio})`;
+}
+
+function updateSimHardware(gateOpen, activeLight) {
+  const arm = document.getElementById('gate-barrier-arm');
+  const rLight = document.getElementById('light-red');
+  const gLight = document.getElementById('light-green');
+  const banner = document.getElementById('display-text');
+  const walker = document.getElementById('stick-walker');
+
+  if (gateOpen) { 
+    arm.style.transform = "rotate(-70deg)"; 
+    arm.style.stroke = "#10b981";
+    banner.innerText = "PROCEED"; 
+    walker.classList.add('walking');
+    walker.style.transform = "translateX(220px)";
+  } else { 
+    arm.style.transform = "rotate(0deg)"; 
+    arm.style.stroke = "#ef4444";
+  }
+
+  rLight.classList.remove('active');
+  gLight.classList.remove('active');
+
+  if (activeLight === 'red') { rLight.classList.add('active'); banner.innerText = "ACCESS DENIED"; }
+  if (activeLight === 'green') { gLight.classList.add('active'); }
+  if (activeLight === 'clear' && !gateOpen) { banner.innerText = "PROCESSING..."; }
+}
+
+function resetWalkerPosition() {
+  const walker = document.getElementById('stick-walker');
+  walker.classList.remove('walking');
+  walker.style.transform = "translateX(30px)";
+}
+
+/* ===============================
+RECURSIVE RENDER ENGINE
+=============================== */
+
+function render() {
+  const canvas = document.getElementById('flowchart');
+  canvas.innerHTML = '';
+  buildVisualTree(flowchart, canvas);
+}
+
+function buildVisualTree(currentList, targetDOMElement) {
+  currentList.forEach((step, i) => {
+    
+    targetDOMElement.appendChild(createDropZone(currentList, i));
+
+    const blockNode = document.createElement('div');
+    blockNode.className = 'block';
+    if (step.id === executingBlockId) blockNode.classList.add('executing');
+
+    blockNode.draggable = true;
+    blockNode.ondragstart = (e) => {
+      e.stopPropagation();
+      dragSourceList = currentList;
+      dragSourceIndex = i;
+      blockNode.classList.add('dragging');
+    };
+    blockNode.ondragend = () => {
+      dragSourceList = null;
+      dragSourceIndex = null;
+      render();
+    };
+
+    blockNode.innerHTML = `
+      <div class="block-shape" style="position:relative;">
+        <button class="delete-btn" onclick="deleteBlockById(${step.id})">✕</button>
+        ${getBlockMarkupDOM(step)}
+      </div>
+    `;
+
+    if (step.type === "IF_HEIGHT" || step.type === "IF_VIP") {
+      const branchContainer = document.createElement('div');
+      branchContainer.className = 'branch-container';
+
+      branchContainer.innerHTML = `
+        <div style="width:100%;">
+          <svg width="260" height="36" viewBox="0 0 260 36" style="display:block; margin:0 auto;">
+            <path d="M130,0 L130,12 M130,12 L50,12 L50,26 M130,12 L210,12 L210,26" fill="none" stroke="#3b82f6" stroke-width="2"/>
+            <polygon points="46,24 54,24 50,32" fill="#3b82f6"/>
+            <polygon points="206,24 214,24 210,32" fill="#3b82f6"/>
+            <text x="85" y="10" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#10b981">TRUE</text>
+            <text x="175" y="10" text-anchor="middle" dominant-baseline="middle" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#ef4444">FALSE</text>
+          </svg>
+        </div>
+      `;
+
+      const columnsWrapper = document.createElement('div');
+      columnsWrapper.className = 'branch-columns';
+
+      const leftColumn = document.createElement('div');
+      leftColumn.className = 'branch-column';
+      buildVisualTree(step.trueBranch, leftColumn);
+
+      const rightColumn = document.createElement('div');
+      rightColumn.className = 'branch-column';
+      buildVisualTree(step.falseBranch, rightColumn);
+
+      columnsWrapper.appendChild(leftColumn);
+      columnsWrapper.appendChild(rightColumn);
+      branchContainer.appendChild(columnsWrapper);
+
+      const mergeContainer = document.createElement('div');
+      mergeContainer.style.width = "100%";
+      mergeContainer.style.marginTop = "2px";
+      mergeContainer.innerHTML = `
+        <svg width="260" height="36" viewBox="0 0 260 36" style="display:block; margin:0 auto;">
+          <path d="M50,0 L50,14 L130,14 L130,26 M210,0 L210,14 L130,14" fill="none" stroke="#94a3b8" stroke-width="2"/>
+          <polygon points="126,24 134,24 130,32" fill="#94a3b8"/>
+        </svg>
+      `;
+      branchContainer.appendChild(mergeContainer);
+      
+      blockNode.appendChild(branchContainer);
+    }
+
+    targetDOMElement.appendChild(blockNode);
+
+    if (i < currentList.length - 1) {
+      const inlineArrow = document.createElement('div');
+      inlineArrow.className = 'connector';
+      inlineArrow.innerHTML = `
+        <svg width="16" height="24" viewBox="0 0 16 24" style="display:block;">
+          <line x1="8" y1="0" x2="8" y2="16" stroke="#94a3b8" stroke-width="2" />
+          <polygon points="4,14 12,14 8,22" fill="#94a3b8" />
+        </svg>
+      `;
+      targetDOMElement.appendChild(inlineArrow);
+    }
+  });
+
+  targetDOMElement.appendChild(createDropZone(currentList, currentList.length));
+}
+
+function createDropZone(targetList, targetIndex) {
+  const zone = document.createElement('div');
+  zone.className = 'drop-zone';
+  
+  zone.ondragover = e => { e.preventDefault(); zone.classList.add('active'); };
+  zone.ondragleave = () => zone.classList.remove('active');
+  zone.ondrop = (e) => {
+    e.stopPropagation();
+    zone.classList.remove('active');
+    
+    if (dragSourceList === null || dragSourceIndex === null) return;
+
+    const operationalItem = dragSourceList.splice(dragSourceIndex, 1)[0];
+    targetList.splice(targetIndex, 0, operationalItem);
+
+    dragSourceList = null;
+    dragSourceIndex = null;
+    render();
+  };
+  return zone;
+}
+
+/* ===============================
+SHAPE MARKUP ENGINE
+=============================== */
+
+function getBlockMarkupDOM(step) {
+  const textAttrs = `text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#0f172a"`;
+
+  if (step.type === "START") {
+    return `
+    <svg width="160" height="46" style="display:block;">
+      <rect x="3" y="3" width="154" height="40" rx="20" ry="20" fill="#f8fafc" stroke="#10b981" stroke-width="2.5"/>
+      <text x="80" y="23" ${textAttrs}>START INITIALIZATION</text>
+    </svg>`;
+  }
+  if (step.type === "STOP") {
+    return `
+    <svg width="160" height="46" style="display:block;">
+      <rect x="3" y="3" width="154" height="40" rx="20" ry="20" fill="#f8fafc" stroke="#ef4444" stroke-width="2.5"/>
+      <text x="80" y="23" ${textAttrs}>STOP ROUTINE</text>
+    </svg>`;
+  }
+
+  if (step.type === "IF_HEIGHT") {
+    const val = step.threshold !== undefined ? step.threshold : 130;
+    return `
+    <div style="position:relative; width:190px; height:74px;">
+      <svg width="190" height="74" style="display:block;">
+        <polygon points="95,3 187,37 95,71 3,37" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+      </svg>
+      <div style="position:absolute; top:0; left:0; width:190px; height:74px; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none;">
+        <span style="font-size:10px; font-weight:bold; color:#1e293b; text-transform:uppercase;">RIDER HEIGHT &ge;</span>
+        <div style="pointer-events:auto; display:flex; align-items:center; gap:2px; margin-top:2px;">
+          <input type="number" class="block-input" value="${val}" min="50" max="220" oninput="updateBlockParam(${step.id}, 'threshold', this.value)">
+          <span style="font-size:10px; font-weight:bold; color:#475569;">cm</span>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if (step.type === "IF_VIP") {
+    return `
+    <svg width="190" height="74" style="display:block;">
+      <polygon points="95,3 187,37 95,71 3,37" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+      <text x="95" y="37" text-anchor="middle" dominant-baseline="central" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#0f172a">HAS FASTPASS TICKET?</text>
+    </svg>`;
+  }
+
+  if (step.type === "WAIT") {
+    const val = step.duration !== undefined ? step.duration : 1.0;
+    return `
+    <div style="position:relative; width:160px; height:46px;">
+      <svg width="160" height="46" style="display:block;">
+        <rect x="3" y="3" width="154" height="40" rx="6" ry="6" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+      </svg>
+      <div style="position:absolute; top:0; left:0; width:160px; height:46px; display:flex; align-items:center; justify-content:center; gap:4px; pointer-events:none;">
+        <span style="font-size:11px; font-weight:bold; color:#78350f;">DELAY:</span>
+        <input type="number" step="0.1" class="block-input" value="${val}" style="width:42px; pointer-events:auto;" oninput="updateBlockParam(${step.id}, 'duration', this.value)">
+        <span style="font-size:11px; font-weight:bold; color:#78350f;">s</span>
+      </div>
+    </div>`;
+  }
+
+  let displayLabel = ""; let strokeColor = "#e2e8f0"; let fillColor = "#ffffff";
+  if (step.type === "GATE_OPEN")   { displayLabel = "Allow One Through"; strokeColor = "#10b981"; fillColor = "#ecfdf5"; }
+  if (step.type === "GATE_CLOSE")  { displayLabel = "Turnstile: LOCK"; strokeColor = "#f43f5e"; fillColor = "#fff1f2"; }
+  if (step.type === "LIGHT_GREEN") { displayLabel = "Signal: GREEN ON"; strokeColor = "#059669"; fillColor = "#f0fdf4"; }
+  if (step.type === "LIGHT_RED")   { displayLabel = "Signal: RED ON"; strokeColor = "#dc2626"; fillColor = "#fef2f2"; }
+
+  return `
+  <svg width="160" height="46" style="display:block;">
+    <rect x="3" y="3" width="154" height="40" rx="6" ry="6" fill="${fillColor}" stroke="${strokeColor}" stroke-width="2"/>
+    <text x="80" y="23" ${textAttrs}>${displayLabel}</text>
+  </svg>`;
+}
+
+/* ===============================
+RECURSIVE RUNTIME SYSTEM
+=============================== */
+
+async function runProgram() {
+  if (running) return;
+
+  if (flowchart.length === 0) return;
+  if (flowchart[0].type !== "START") {
+    alert("Blueprint mapping error: Pipeline must begin with a START block!");
+    return;
+  }
+
+  running = true;
+  resetWalkerPosition();
+  updateSimHardware(false, 'clear');
+
+  // Executes the array architecture from top to bottom exactly ONCE
+  await executeSequenceBranch(flowchart);
+  
+  // Clear out runtime tracking indicators cleanly when finished
+  running = false;
+  executingBlockId = null;
+  render();
+}
+
+async function executeSequenceBranch(list) {
+  let i = 0;
+  while (i < list.length && running) {
+    const step = list[i];
+    
+    if (step.type === "STOP") {
+      running = false;
+      break;
+    }
+
+    executingBlockId = step.id;
+    render();
+
+    if (step.type === "IF_HEIGHT") {
+      await sleep(500); 
+      const targetThreshold = step.threshold !== undefined ? step.threshold : 130;
+      if (simHeight >= targetThreshold) {
+        await executeSequenceBranch(step.trueBranch);
+      } else {
+        await executeSequenceBranch(step.falseBranch);
+      }
+    } 
+    else if (step.type === "IF_VIP") {
+      await sleep(500);
+      if (simHasVIP) {
+        await executeSequenceBranch(step.trueBranch);
+      } else {
+        await executeSequenceBranch(step.falseBranch);
+      }
+    }
+    else if (step.type === "GATE_OPEN") {
+      updateSimHardware(true, 'clear');
+      await sleep(1200); // Wait for the transition to finish passing through
+      
+      // Stop walking limb cycle animation instantly once target position is reached
+      const walker = document.getElementById('stick-walker');
+      if (walker) walker.classList.remove('walking');
+    } 
+    else if (step.type === "GATE_CLOSE") {
+      updateSimHardware(false, 'clear');
+    } 
+    else if (step.type === "LIGHT_GREEN") {
+      updateSimHardware(document.getElementById('gate-barrier-arm').style.transform.includes('-70deg'), 'green');
+    } 
+    else if (step.type === "LIGHT_RED") {
+      updateSimHardware(document.getElementById('gate-barrier-arm').style.transform.includes('-70deg'), 'red');
+    } 
+    else if (step.type === "WAIT") {
+      const targetDelay = step.duration !== undefined ? step.duration * 1000 : 1000;
+      await sleep(targetDelay);
+    }
+
+    await sleep(400);
+    i++;
+  }
+}
+
+function stopProgram() {
+  running = false;
+  executingBlockId = null;
+  updateSimHardware(false, 'clear');
+  resetWalkerPosition();
+  document.getElementById('display-text').innerText = "SYSTEM READY";
+  render();
+}
+
+function clearProgram() {
+  stopProgram();
+  flowchart = [];
+  render();
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// Initialize System Hooks
+render();
+syncSimData();
+
+</script>
+
+</body>
+</html>
