@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Grid Lab Explorer</title>
+    
+    <style>
+        /* --- Core Colors & Styles --- */
+        :root {
+            --editor-fs: 16px;
+            --guide-color: rgba(0, 0, 0, 0.08);
+            --accent-glow: #d97706;
+            --accent-off: #7f8c8d;
+            --glow-overlay: rgba(217, 119, 6, 0.15);
+            --table-highlight: rgba(46, 204, 113, 0.15);
+            --table-highlight-border: #2ecc71;
+        }
+
+        body.access-dark {
+            --guide-color: rgba(255, 255, 255, 0.08);
+            --accent-glow: #f1c40f;
+            --accent-off: #555;
+            --glow-overlay: rgba(241, 196, 15, 0.2);
+        }
+
+        body {
+            font-family: 'Courier New', Consolas, monospace;
+            margin: 0;
+            padding: 0;
+            transition: background 0.3s ease, color 0.3s ease;
+            background-color: #f5f5f5;
+            color: #000;
+            font-size: 16px;
+        }
+
+        /* --- Header Top Bar --- */
+        .header {
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            color: #000;
+            background: #b2bec3;
+        }
+
+        .header h1 {
+            color: #fff;
+            margin: 0;
+            font-size: 1.4rem;
+            text-align: center;
+            padding: 0 10px;
+        }
+
+        /* --- Accessibility Menu Button --- */
+        .accessibility-toggle {
+            position: absolute;
+            left: 10px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            border: 1px solid #aaa;
+            background: #fff;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* --- Settings Slide-Out Menu --- */
+        .accessibility-panel {
+            position: fixed;
+            top: 0;
+            left: -260px;
+            width: 250px;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: left 0.3s ease;
+            z-index: 1000;
+            background: #fff;
+            border-right: 1px solid #ccc;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .accessibility-panel.open {
+            left: 0;
+        }
+
+        .close-panel-btn {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .color-spot {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            margin: 5px;
+            cursor: pointer;
+            border: 1px solid #777;
+            display: inline-block;
+        }
+
+        .accessibility-scale {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #aaa;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* --- Main Responsive Grid Layout --- */
+        /* Desktop Mode: Main box left side, ASCII box vertical on the right side */
+        .main-wrapper {
+            max-width: 95%;
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        /* --- Workspaces --- */
+        .workspace-container {
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        .ide-toolbar {
+            background: #f1f2f6;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ccc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+        }
+
+        .ide-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #aaa;
+            background: #fff;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .workspace-body {
+            padding: 15px;
+            font-size: var(--editor-fs);
+        }
+
+        /* --- Binary Switches System --- */
+        .binary-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .bit-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.02);
+            padding: 10px 2px;
+            border-radius: 8px;
+            border: 1px solid var(--guide-color);
+        }
+
+        .bit-header {
+            font-weight: bold;
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        /* --- Light Bulb Buttons --- */
+        .bulb-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-radius: 50%;
+            padding: 4px;
+            transition: transform 0.1s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bulb-svg {
+            width: 40px;
+            height: 40px;
+        }
+
+        .bulb-glass {
+            fill: none;
+            stroke: var(--accent-off);
+            stroke-width: 2;
+        }
+
+        .bulb-filament {
+            fill: none;
+            stroke: var(--accent-off);
+            stroke-width: 1.5;
+        }
+
+        .bulb-base {
+            fill: var(--accent-off);
+        }
+
+        .light-ray {
+            stroke: var(--accent-glow);
+            stroke-width: 2.5;
+            opacity: 0;
+        }
+
+        /* Bulb turned ON styles */
+        .bulb-btn[aria-pressed="true"] {
+            background-color: var(--glow-overlay);
+        }
+
+        .bulb-btn[aria-pressed="true"] .bulb-glass {
+            fill: var(--accent-glow);
+        }
+
+        .bulb-btn[aria-pressed="true"] .bulb-filament {
+            stroke: #fff;
+        }
+
+        .bulb-btn[aria-pressed="true"] .light-ray {
+            opacity: 1;
+        }
+
+        .bulb-btn:active {
+            transform: scale(0.9);
+        }
+
+        .bit-state {
+            margin-top: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        /* --- Calculations Box --- */
+        .math-trace {
+            text-align: center;
+            padding: 12px;
+            background: rgba(0,0,0,0.02);
+            border: 1px dashed #aaa;
+            border-radius: 6px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .results-panel {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .result-label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            opacity: 0.8;
+        }
+
+        .result-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        /* --- Vertical Right Sidebar Character Table --- */
+        .ascii-matrix-wrapper {
+            max-height: 450px;
+            overflow-y: auto;
+            border: 1px solid var(--guide-color);
+            border-radius: 6px;
+            padding: 5px;
+        }
+
+        .ascii-matrix-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .ascii-card {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 12px;
+            border: 1px solid var(--guide-color);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background: rgba(0, 0, 0, 0.01);
+        }
+
+        .ascii-card.highlighted {
+            background-color: var(--table-highlight) !important;
+            border: 2px solid var(--table-highlight-border) !important;
+            font-weight: bold;
+        }
+
+        /* --- Mobile Phone Responsiveness Mode --- */
+        @media (max-width: 768px) {
+            /* Switch columns to a single column list stack */
+            .main-wrapper {
+                grid-template-columns: 1fr; 
+                max-width: 98%;
+                margin: 10px auto;
+                gap: 15px;
+            }
+
+            /* Cut grid into two rows of 4 buttons so they stay large on small mobile screens */
+            .binary-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+            }
+
+            .bulb-svg {
+                width: 45px; /* Bigger buttons for fingers to tap easily */
+                height: 45px;
+            }
+
+            .results-panel {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .ascii-matrix-wrapper {
+                max-height: 300px; /* Shorter scroll height on mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header" id="header">
+    <button class="accessibility-toggle" onclick="toggleAccessibility()">Display Settings</button>
+    <h1>Binary To Text Code Explorer</h1>
+</div>
+
+<!-- Display Settings Slide-Out Menu -->
+<div class="accessibility-panel" id="accessPanel">
+    <button class="close-panel-btn" onclick="toggleAccessibility()">X</button>
+    
+    <h3>Screen Color</h3>
+    <button class="color-spot" style="background:#f5f5f5" onclick="setBackground('white')"></button>
+    <button class="color-spot" style="background:#ffcccc" onclick="setBackground('red')"></button>
+    <button class="color-spot" style="background:#ffe5cc" onclick="setBackground('orange')"></button>
+    <button class="color-spot" style="background:#fff9c4" onclick="setBackground('yellow')"></button>
+    <button class="color-spot" style="background:#e8f5e9" onclick="setBackground('green')"></button>
+    <button class="color-spot" style="background:#e3f2fd" onclick="setBackground('blue')"></button>
+    <button class="color-spot" style="background:#e6e0f8" onclick="setBackground('purple')"></button>
+    <button class="color-spot" style="background:#fce4ec" onclick="setBackground('pink')"></button>
+    <button class="color-spot" style="background:#121212" onclick="setBackground('dark')"></button>
+
+    <h3>Text Size</h3>
+    <div style="display:flex; gap:10px;">
+        <button class="accessibility-scale" onclick="adjustFontSize(2)">Larger</button>
+        <button class="accessibility-scale" onclick="adjustFontSize(-2)">Smaller</button>
+    </div>
+</div>
+
+<div class="main-wrapper">
+    
+    <!-- Left Panel: Main Binary Input Switches Box -->
+    <div class="workspace-container" id="editorContainer">
+        <div class="ide-toolbar" id="editorToolbar">
+            <span>Click Bulbs to Flip Bits</span>
+            <button class="ide-btn" onclick="resetGrid()">Reset All</button>
+        </div>
+        <div class="workspace-body">
+            <div class="binary-grid" id="binaryGrid">
+                <!-- Programmatically filled columns -->
+            </div>
+
+            <div class="math-trace" id="mathTrace">0 = 0</div>
+
+            <div class="results-panel">
+                <div class="result-block">
+                    <div class="result-label">Total Number (Denary)</div>
+                    <div class="result-value" id="decimalTotal">0</div>
+                </div>
+                <div class="result-block">
+                    <div class="result-label">Secret Text Character</div>
+                    <div class="result-value" id="asciiChar" style="color: #2ecc71;">None</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel: Vertical Scrolling Character List Box -->
+    <div class="workspace-container" id="outputContainer">
+        <div class="ide-toolbar" id="outputToolbar">
+            <span>Character Code Cheat Sheet</span>
+        </div>
+        <div class="workspace-body">
+            <div class="ascii-matrix-wrapper">
+                <div class="ascii-matrix-grid" id="asciiMatrix">
+                    <!-- A-Z rows go here dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const bitValues = [128, 64, 32, 16, 8, 4, 2, 1];
+    const bitStates = new Array(8).fill(0);
+
+    const binaryGridEl = document.getElementById('binaryGrid');
+    const mathTraceEl = document.getElementById('mathTrace');
+    const decimalTotalEl = document.getElementById('decimalTotal');
+    const asciiCharEl = document.getElementById('asciiChar');
+    const asciiMatrixEl = document.getElementById('asciiMatrix');
+
+    // --- Build the Vertical A-Z Cheat Sheet Chart ---
+    for (let decValue = 65; decValue <= 90; decValue++) {
+        const letterCard = document.createElement('div');
+        letterCard.className = 'ascii-card';
+        letterCard.id = `ascii-char-${decValue}`;
+        letterCard.innerHTML = `
+            <span>Number: ${decValue}</span>
+            <span><strong>Character: ${String.fromCharCode(decValue)}</strong></span>
+        `;
+        asciiMatrixEl.appendChild(letterCard);
+    }
+
+    // --- Build the 8 Interactive Light Bulbs ---
+    bitValues.forEach((val, idx) => {
+        const col = document.createElement('div');
+        col.className = 'bit-column';
+
+        const header = document.createElement('div');
+        header.className = 'bit-header';
+        header.textContent = val;
+
+        const button = document.createElement('button');
+        button.className = 'bulb-btn';
+        button.setAttribute('aria-pressed', 'false');
+        button.setAttribute('aria-label', `Bit value ${val}`);
+
+        button.innerHTML = `
+            <svg class="bulb-svg" viewBox="0 0 48 48">
+                <line class="light-ray" x1="24" y1="5" x2="24" y2="1" />
+                <line class="light-ray" x1="37" y1="10" x2="41" y2="6" />
+                <line class="light-ray" x1="43" y1="23" x2="47" y2="23" />
+                <line class="light-ray" x1="37" y1="36" x2="41" y2="40" />
+                <line class="light-ray" x1="11" y1="10" x2="7" y2="6" />
+                <line class="light-ray" x1="5" y1="23" x2="1" y2="23" />
+                <line class="light-ray" x1="11" y1="36" x2="7" y2="40" />
+                
+                <path class="bulb-glass" d="M24,9 C16.5,9 14,14.5 14,21 C14,25.5 16.5,28.5 18.5,31 L18.5,35 L29.5,35 L29.5,31 C31.5,28.5 34,25.5 34,21 C34,14.5 31.5,9 24,9 Z" />
+                <path class="bulb-filament" d="M19,25 L22,17 L26,17 L29,25" />
+                <path class="bulb-base" d="M19.5,36 L28.5,36 L27.5,39 L20.5,39 Z M21.5,40 L26.5,40 L25.5,42 L22.5,42 Z" />
+            </svg>
+        `;
+
+        const indicator = document.createElement('div');
+        indicator.className = 'bit-state';
+        indicator.textContent = '0';
+
+        button.addEventListener('click', () => {
+            const isPressed = button.getAttribute('aria-pressed') === 'true';
+            button.setAttribute('aria-pressed', !isPressed);
+            bitStates[idx] = isPressed ? 0 : 1;
+            indicator.textContent = isPressed ? '0' : '1';
+            updateCalculation();
+        });
+
+        col.appendChild(header);
+        col.appendChild(button);
+        col.appendChild(indicator);
+        binaryGridEl.appendChild(col);
+    });
+
+    // --- Math Engine & Row Auto-Scrolling ---
+    function updateCalculation() {
+        let sum = 0;
+        let elements = [];
+
+        bitStates.forEach((state, idx) => {
+            if (state === 1) {
+                sum += bitValues[idx];
+                elements.push(bitValues[idx]);
+            }
+        });
+
+        mathTraceEl.textContent = elements.length === 0 ? "0 = 0" : `${elements.join(' + ')} = ${sum}`;
+        decimalTotalEl.textContent = sum;
+
+        // Reset tracking highlights 
+        document.querySelectorAll('.ascii-card').forEach(card => card.classList.remove('highlighted'));
+
+        // Match Code to Character Output Box
+        if (sum === 0) {
+            asciiCharEl.textContent = "None";
+        } else if (sum === 32) {
+            asciiCharEl.textContent = "[Space Bar]";
+        } else if (sum >= 65 && sum <= 90) {
+            asciiCharEl.textContent = String.fromCharCode(sum);
+            
+            // Highlight row matching current character and scroll smoothly down to show it
+            const targetCard = document.getElementById(`ascii-char-${sum}`);
+            if (targetCard) {
+                targetCard.classList.add('highlighted');
+                targetCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        } else {
+            asciiCharEl.textContent = "Hidden / Symbol";
+        }
+    }
+
+    function resetGrid() {
+        document.querySelectorAll('.bulb-btn').forEach(btn => btn.setAttribute('aria-pressed', 'false'));
+        document.querySelectorAll('.bit-state').forEach(state => state.textContent = '0');
+        bitStates.fill(0);
+        updateCalculation();
+    }
+
+    /* --- Accessibility Sidebar Driver Scripts --- */
+    function toggleAccessibility() {
+        document.getElementById('accessPanel').classList.toggle('open');
+    }
+
+    function darkenColor(hex, percent) {
+        hex = hex.replace('#','');
+        let r=parseInt(hex.substring(0,2),16);
+        let g=parseInt(hex.substring(2,4),16);
+        let b=parseInt(hex.substring(4,6),16);
+        r=Math.floor(r*(1-percent/100));
+        g=Math.floor(g*(1-percent/100));
+        b=Math.floor(b*(1-percent/100));
+        return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+    }
+
+    function setBackground(color) {
+        localStorage.setItem('bgColor', color);
+        document.body.className='';
+        
+        if(color === 'dark') {
+            document.body.classList.add('access-dark');
+        } else {
+            document.body.classList.add('access-'+color);
+        }
+
+        const map={
+            white:'#f5f5f5', red:'#ffcccc', orange:'#ffe5cc',
+            yellow:'#fff9c4', green:'#e8f5e9', blue:'#e3f2fd',
+            purple:'#e6e0f8', pink:'#fce4ec', dark:'#121212'
+        };
+
+        const targetBg = map[color];
+        document.body.style.background = targetBg;
+
+        const header = document.getElementById('header');
+        const panel = document.getElementById('accessPanel');
+        const edContainer = document.getElementById('editorContainer');
+        const outContainer = document.getElementById('outputContainer');
+        const edToolbar = document.getElementById('editorToolbar');
+        const outToolbar = document.getElementById('outputToolbar');
+
+        const darkHex = color === 'dark' ? '#000000' : darkenColor(targetBg, 40);
+        const toolbarBg = color === 'dark' ? '#1e1e1e' : darkenColor(targetBg, 8);
+        const borderHex = color === 'dark' ? '#2d2d2d' : darkenColor(targetBg, 25);
+
+        header.style.background = darkHex;
+        panel.style.background = targetBg;
+
+        edContainer.style.backgroundColor = targetBg;
+        outContainer.style.backgroundColor = targetBg;
+        edContainer.style.borderColor = borderHex;
+        outContainer.style.borderColor = borderHex;
+        
+        edToolbar.style.backgroundColor = toolbarBg;
+        outToolbar.style.backgroundColor = toolbarBg;
+        edToolbar.style.borderColor = borderHex;
+        outToolbar.style.borderColor = borderHex;
+
+        const textColors = color === 'dark' ? '#ffffff' : '#000000';
+        const btnBgColors = color === 'dark' ? '#2d2d2d' : '#ffffff';
+        
+        document.body.style.color = textColors;
+        header.style.color = '#ffffff';
+        edToolbar.style.color = textColors;
+        outToolbar.style.color = textColors;
+
+        document.querySelectorAll('button:not(.color-spot):not(.close-panel-btn)').forEach(btn => {
+            btn.style.background = btnBgColors;
+            btn.style.color = textColors;
+            btn.style.borderColor = borderHex;
+        });
+    }
+
+    function adjustFontSize(amount){
+        let current = parseFloat(localStorage.getItem('fontSize')||'16');
+        current += amount;
+        if(current < 12) current = 12;
+        if(current > 28) current = 28;
+        document.body.style.fontSize = current + 'px';
+        document.documentElement.style.setProperty('--editor-fs', current + 'px');
+        localStorage.setItem('fontSize', current);
+    }
+
+    // Initialize layout settings on load
+    const savedBg = localStorage.getItem('bgColor') || 'white';
+    setBackground(savedBg);
+    adjustFontSize(0);
+</script>
+</body>
+</html>
