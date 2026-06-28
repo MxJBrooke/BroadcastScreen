@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Python IDE</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/skulpt@1.2.0/dist/skulpt-stdlib.js"></script>
+
+    <style>
+        /* --- Core Theme Variables & Inherited Styling Structure --- */
+        :root {
+            --editor-fs: 16px;
+            --editor-ls: normal;
+            --bg-main: #f5f5f5;
+            --panel-bg: #ffffff;
+            --border-color: #ccc;
+            --header-bg: #b2bec3;
+            --toolbar-bg: #f1f2f6;
+            --text-color: #000000;
+        }
+
+        body {
+            font-family: 'Courier New', Consolas, monospace;
+            margin: 0;
+            transition: background 0.3s ease, color 0.3s ease, font-size 0.3s ease;
+            background-color: var(--bg-main);
+            color: var(--text-color);
+        }
+
+        /* --- Header Configuration --- */
+        .header {
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            color: #000;
+            transition: all 0.3s ease;
+            background: var(--header-bg);
+        }
+
+        .header h1 {
+            color: #fff;
+            margin: 0;
+        }
+
+        /* --- Unified Action Control Button Styles --- */
+        .accessibility-toggle, .accessibility-scale, .btn-run, .tab-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid #aaa;
+            background: #fff;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            height: 28px;
+        }
+        
+        .accessibility-toggle:hover, .accessibility-scale:hover, .btn-run:hover, .tab-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .accessibility-toggle {
+            position: absolute;
+            left: 20px;
+            height: auto;
+        }
+
+        .btn-run {
+            background: #fff;
+            color: #000;
+            height: auto;
+        }
+
+        /* --- Accessibility Floating Side Overlay --- */
+        .accessibility-panel {
+            position: fixed;
+            top: 0;
+            left: -260px;
+            width: 250px;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: left 0.3s ease, background 0.3s ease;
+            z-index: 1000;
+            background: #fff;
+            border-right: 1px solid #ccc;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+
+        .accessibility-panel.open {
+            left: 0;
+        }
+
+        .accessibility-panel button.close-panel-btn {
+            float: right;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .color-spot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin: 5px;
+            cursor: pointer;
+            border: 1px solid #777;
+            display: inline-block;
+        }
+
+        .accessibility-control {
+            margin: 10px 0;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        /* --- Main App Layout Architecture --- */
+        .main-wrapper {
+            max-width: 95%;
+            margin: 40px auto;
+            display: flex;
+            gap: 20px;
+            height: 700px;
+        }
+
+        /* --- Python IDE Workspace Container Split --- */
+        .workspace-side, .output-side {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: var(--panel-bg);
+            overflow: hidden;
+            position: relative;
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+        }
+
+        .ide-toolbar {
+            background: var(--toolbar-bg);
+            padding: 0 12px;
+            height: 44px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: inherit;
+            transition: background 0.3s ease, border-color 0.3s ease;
+            box-sizing: border-box;
+            flex-shrink: 0;
+            font-weight: bold;
+        }
+
+        /* --- Tabs Styling --- */
+        .execution-tabs {
+            display: flex;
+            gap: 4px;
+        }
+        .tab-btn {
+            height: 32px;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
+            border-bottom: none;
+            opacity: 0.6;
+            color: inherit;
+        }
+        .tab-btn.active {
+            opacity: 1;
+            background: var(--panel-bg);
+            border-color: var(--border-color) var(--border-color) transparent var(--border-color);
+        }
+
+        .content-pane {
+            flex: 1;
+            display: none;
+            position: relative;
+            overflow: auto;
+            background-color: var(--panel-bg);
+            transition: background-color 0.3s ease;
+        }
+        .content-pane.active { display: flex; }
+
+        /* --- Block Builder UI Styles --- */
+        .block-interface {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .toolbox {
+            width: 220px;
+            background: rgba(0,0,0,0.04);
+            border-right: 1px solid var(--border-color);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            transition: border-color 0.3s ease, background-color 0.2s ease;
+            position: relative;
+        }
+
+        .toolbox.drag-over-delete {
+            background: rgba(214, 48, 49, 0.15) !important;
+        }
+
+        /* Drag-over Garbage Indicator Overlay */
+        .delete-overlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(214, 48, 49, 0.85);
+            color: white;
+            font-size: 40px;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .delete-overlay span {
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .toolbox-category {
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: bold;
+            color: inherit;
+            opacity: 0.7;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 2px;
+        }
+
+        .canvas-workspace {
+            flex: 1;
+            padding: 20px;
+            background: rgba(0,0,0,0.02);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-content: flex-start;
+        }
+
+        /* --- Drag & Drop Blocks Architecture --- */
+        .block {
+            background: #3498db;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: grab;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            font-family: inherit;
+            font-size: 14px;
+            user-select: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: fit-content;
+            border: 2px solid rgba(0,0,0,0.1);
+            box-sizing: border-box;
+        }
+        .block:active { cursor: grabbing; }
+        
+        .block-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        
+        /* Category Block Theme Colors */
+        .block[data-cat="control"] { background: #e67e22; }
+        .block[data-cat="pen"] { background: #9b59b6; }
+        .block[data-cat="color"] { background: #1abc9c; }
+        .block[data-cat="speed"] { background: #f1c40f; color: #2d3436; }
+
+        .block input, .block select {
+            background: white;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 5px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+            outline: none;
+        }
+        .block input[type="number"] { width: 45px; }
+        .block input[type="color"] {
+            width: 40px;
+            height: 24px;
+            padding: 0;
+            cursor: pointer;
+            border: 1px solid #ccc;
+        }
+
+        /* Nested Loop Alignment and Indentation Box */
+        .loop-children {
+            margin-top: 5px;
+            margin-left: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            border-left: 3px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 4px;
+            min-height: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: max-content;
+            min-width: 180px;
+            box-sizing: border-box;
+        }
+
+        .toolbox .loop-children { display: none; } 
+
+        .workspace-placeholder {
+            color: inherit;
+            opacity: 0.5;
+            font-style: italic;
+            text-align: center;
+            margin-top: 40px;
+            width: 100%;
+        }
+
+        /* --- Locked Terminal Viewpane --- */
+        .CodeMirror {
+            width: 100%;
+            height: 100%;
+            background: transparent !important;
+            color: inherit !important;
+            font-family: 'Courier New', Consolas, monospace !important;
+            font-size: var(--editor-fs) !important;
+        }
+        .CodeMirror-gutters {
+            background: rgba(0,0,0,0.05) !important;
+            border-right: 1px solid var(--border-color) !important;
+        }
+        .cm-locked-banner {
+            background: #d63031;
+            color: white;
+            text-align: center;
+            font-size: 12px;
+            padding: 4px;
+            font-weight: bold;
+        }
+
+        /* --- Dynamic Context Warning Overlay --- */
+        .pen-warning-glow {
+            border: 2px dashed #8e44ad !important;
+            box-shadow: 0 0 10px rgba(142, 68, 173, 0.5) !important;
+            position: relative;
+        }
+        .pen-warning-glow::after {
+            content: "⚠️ Pen may be UP!";
+            position: absolute;
+            top: -18px;
+            right: 0;
+            background: #8e44ad;
+            color: white;
+            font-size: 9px;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        #turtleCanvas {
+            background: #ffffff;
+            width: 100%;
+            height: 100%;
+        }
+
+        #consoleOutput {
+            padding: 15px;
+            margin: 0;
+            white-space: pre-wrap;
+            color: #d63031;
+            font-weight: bold;
+            font-family: inherit;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header" id="header">
+    <button class="accessibility-toggle" onclick="toggleAccessibility()">Accessibility</button>
+    <h1>Classroom Python IDE</h1>
+</div>
+
+<div class="accessibility-panel" id="accessPanel">
+    <button class="close-panel-btn" onclick="toggleAccessibility()">X</button>
+    <h3>Colours</h3>
+    <button class="color-spot" style="background:#f5f5f5" onclick="setBackground('white')"></button>
+    <button class="color-spot" style="background:#ffcccc" onclick="setBackground('red')"></button>
+    <button class="color-spot" style="background:#ffe5cc" onclick="setBackground('orange')"></button>
+    <button class="color-spot" style="background:#fff9c4" onclick="setBackground('yellow')"></button>
+    <button class="color-spot" style="background:#e8f5e9" onclick="setBackground('green')"></button>
+    <button class="color-spot" style="background:#e3f2fd" onclick="setBackground('blue')"></button>
+    <button class="color-spot" style="background:#e6e0f8" onclick="setBackground('purple')"></button>
+    <button class="color-spot" style="background:#fce4ec" onclick="setBackground('pink')"></button>
+    <button class="color-spot" style="background:#121212" onclick="setBackground('dark')"></button>
+
+    <h3>Font Size</h3>
+    <div class="accessibility-control">
+        <button class="accessibility-scale" onclick="adjustFontSize(1)">Increase</button>
+        <button class="accessibility-scale" onclick="adjustFontSize(-1)">Decrease</button>
+    </div>
+</div>
+
+<div class="main-wrapper">
+    <div class="workspace-side" id="editorContainer">
+        <div class="ide-toolbar" id="editorToolbar">
+            <div class="execution-tabs">
+                <button class="tab-btn active" id="tabBlocksBtn" onclick="switchWorkspaceTab('blocks')">🧩 Visual Blocks</button>
+                <button class="tab-btn" id="tabCodeBtn" onclick="switchWorkspaceTab('code')">💻 View Python Code</button>
+            </div>
+        </div>
+
+        <div id="paneBlocks" class="content-pane active">
+            <div class="block-interface">
+                <div class="toolbox" id="toolbox" ondragover="allowDropDelete(event)" ondragenter="handleDragEnterDelete(event)" ondragleave="handleDragLeaveDelete(event)" ondrop="handleDelete(event)">
+                    <div class="delete-overlay" id="deleteOverlay">
+                        🗑️
+                        <span>Drop to Delete</span>
+                    </div>
+
+                    <div class="toolbox-category">Control Blocks</div>
+                    <div class="block" draggable="true" ondragstart="drag(event)" data-cat="control" data-type="loop">
+                        <div class="block-label">for i in range(<input type="number" value="4" min="1" onchange="processWorkspaceEngine()">):</div>
+                        <div class="loop-children" ondragover="allowDrop(event)" ondrop="drop(event)"></div>
+                    </div>
+                    
+                    <div class="toolbox-category">Movement Blocks</div>
+                    <div class="block" draggable="true" ondragstart="drag(event)" data-cat="move" data-cmd="forward">
+                        <div class="block-label">turtle.forward(<input type="number" value="100" onchange="processWorkspaceEngine()">)</div>
+                    </div>
+                    <div class="block" draggable="true" ondragstart="drag(event)" data-cat="move" data-cmd="left">
+                        <div class="block-label">turtle.left(<input type="number" value="90" onchange="processWorkspaceEngine()">)</div>
+                    </div>
+                    <div class="block" draggable="true" ondragstart="drag(event)" data-cat="move" data-cmd="right">
+                        <div class="block-label">turtle.right(<input type="number" value="90" onchange="processWorkspaceEngine()">)</div>
+                    </div>
+                    
+                    <div class="toolbox-category">Pen Controls</div>
+                    <div class="block" draggable="true" ondragstart="drag(event)" data-cat="pen" data-cmd="penup">
+                        <div class="block-label">turtle.penup()</div>
+                    </div>
+                    <div class="block" draggable="true" ondragstart="drag(event)" data-cat="pen" data-cmd="pendown">
+                        <div class="block-label">turtle.pendown()</div>
+                    </div>
+                    
+                    <div class="toolbox-category">Styling & Canvas</div>
+                    <div class="block" draggable="true" ondragstart="drag(event)" data-cat="color" data-type="pencolor">
+                        <div class="block-label">
+                            turtle.color(<input type="color" value="#000000" onchange="processWorkspaceEngine()">)
+                        </div>
+                    </div>
+                    <div class="block" draggable="true" ondragstart="drag(event)" data-cat="color" data-type="bgcolor">
+                        <div class="block-label">
+                            turtle.Screen().bgcolor(<input type="color" value="#ffffff" onchange="processWorkspaceEngine()">)
+                        </div>
+                    </div>
+                    <div class="block" draggable="true" ondragstart="drag(event)" data-cat="speed">
+                        <div class="block-label">
+                            turtle.speed(<select onchange="processWorkspaceEngine()">
+                                <option value="3">slow</option>
+                                <option value="6" selected>normal</option>
+                                <option value="10">fast</option>
+                                <option value="0">instant</option>
+                            </select>)
+                        </div>
+                    </div>
+
+                    <p style="font-size: 11px; color:inherit; opacity:0.6; text-align:center; margin-top:20px; line-height: 1.3;">🗑️ Drag blocks back here to delete them.</p>
+                </div>
+                <div class="canvas-workspace" id="workspace" ondragover="allowDrop(event)" ondrop="drop(event)">
+                    <div class="workspace-placeholder" id="placeholder">Drag and stack your loop and canvas puzzle blocks here!</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="paneCode" class="content-pane" style="flex-direction: column;">
+            <div class="cm-locked-banner">🔒 READ-ONLY MODE — Select and copy your clean Python script below!</div>
+            <textarea id="codeView"></textarea>
+        </div>
+    </div>
+
+    <div class="output-side" id="outputContainer">
+        <div class="ide-toolbar" id="outputToolbar">
+            <div class="execution-tabs">
+                <button class="tab-btn active">Turtle Canvas View Monitor</button>
+            </div>
+            <button class="btn-run" onclick="runOutputEnginePython()">Run Code</button>
+        </div>
+        <div style="flex: 1; display: flex; flex-direction: column; background: white; position: relative;">
+            <div id="turtleCanvas"></div>
+            <pre id="consoleOutput"></pre>
+        </div>
+    </div>
+</div>
+
+<script>
+    // CodeMirror Terminal Context Syncing
+    const editor = CodeMirror.fromTextArea(document.getElementById("codeView"), {
+        mode: {name: "python", version: 3},
+        lineNumbers: true,
+        readOnly: true,
+        theme: "default"
+    });
+
+    let draggedElement = null;
+
+    function switchWorkspaceTab(tab) {
+        document.getElementById('paneBlocks').classList.remove('active');
+        document.getElementById('paneCode').classList.remove('active');
+        document.getElementById('tabBlocksBtn').classList.remove('active');
+        document.getElementById('tabCodeBtn').classList.remove('active');
+        
+        if (tab === 'blocks') {
+            document.getElementById('paneBlocks').classList.add('active');
+            document.getElementById('tabBlocksBtn').classList.add('active');
+        } else {
+            document.getElementById('paneCode').classList.add('active');
+            document.getElementById('tabCodeBtn').classList.add('active');
+            processWorkspaceEngine();
+            setTimeout(() => editor.refresh(), 20);
+        }
+    }
+
+    /* --- Workspace Drag & Drop Core System Overrides --- */
+    function drag(ev) {
+        ev.stopPropagation(); // FIX: This stops inner blocks from passing their drag event up to parent loops
+        draggedElement = ev.currentTarget; 
+        ev.dataTransfer.setData("text", ""); 
+    }
+
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function allowDropDelete(ev) {
+        ev.preventDefault();
+    }
+
+    function handleDragEnterDelete(ev) {
+        if (draggedElement && !draggedElement.parentElement.classList.contains('toolbox')) {
+            document.getElementById('toolbox').classList.add('drag-over-delete');
+            document.getElementById('deleteOverlay').style.display = 'flex';
+        }
+    }
+
+    function handleDragLeaveDelete(ev) {
+        const rect = document.getElementById('toolbox').getBoundingClientRect();
+        if (ev.clientX < rect.left || ev.clientX >= rect.right || ev.clientY < rect.top || ev.clientY >= rect.bottom) {
+            hideDeleteIndicator();
+        }
+    }
+
+    function hideDeleteIndicator() {
+        document.getElementById('toolbox').classList.remove('drag-over-delete');
+        document.getElementById('deleteOverlay').style.display = 'none';
+    }
+
+    function drop(ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+
+        let targetCanvasSpace = ev.target.closest('.loop-children') || ev.target.closest('.canvas-workspace');
+        if (!targetCanvasSpace) return;
+
+        document.getElementById('placeholder').style.display = 'none';
+
+        if (draggedElement.parentElement.classList.contains('toolbox')) {
+            const clone = draggedElement.cloneNode(true);
+            
+            clone.querySelectorAll('input, select').forEach(el => {
+                el.addEventListener('change', processWorkspaceEngine);
+            });
+
+            clone.addEventListener('dragstart', drag);
+            targetCanvasSpace.appendChild(clone);
+        } else {
+            targetCanvasSpace.appendChild(draggedElement);
+        }
+        
+        checkPlaceholderVisibility();
+        processWorkspaceEngine();
+    }
+
+    function handleDelete(ev) {
+        ev.preventDefault();
+        hideDeleteIndicator();
+        
+        if (draggedElement && !draggedElement.parentElement.classList.contains('toolbox')) {
+            
+            // FIX: Safely rescue nested child elements if a loop is deleted
+            const isLoopBlock = draggedElement.getAttribute('data-type') === 'loop';
+            const nestedTray = draggedElement.querySelector('.loop-children');
+
+            if (isLoopBlock && nestedTray && nestedTray.children.length > 0) {
+                const workspace = document.getElementById('workspace');
+                while (nestedTray.children.length > 0) {
+                    workspace.insertBefore(nestedTray.children[0], draggedElement);
+                }
+            }
+
+            draggedElement.remove();
+            checkPlaceholderVisibility();
+            processWorkspaceEngine();
+        }
+    }
+
+    function checkPlaceholderVisibility() {
+        const workspace = document.getElementById('workspace');
+        const totalBlocks = workspace.querySelectorAll('.block');
+        document.getElementById('placeholder').style.display = totalBlocks.length === 0 ? 'block' : 'none';
+    }
+
+    /* --- Structural AST Token Traversal Parse Engine --- */
+    function evaluatePenStateAndParse(container, stateObj, depth = 0) {
+        let codeStr = "";
+        const tabs = "    ".repeat(depth);
+        const elements = container.children;
+
+        for (let el of elements) {
+            if (!el.classList.contains('block')) continue;
+            const cat = el.getAttribute('data-cat');
+            const type = el.getAttribute('data-type');
+
+            if (cat === 'pen') {
+                const cmd = el.getAttribute('data-cmd');
+                stateObj.isPenDown = (cmd === 'pendown');
+                el.classList.remove('pen-warning-glow');
+                codeStr += `${tabs}turtle.${cmd}()\n`;
+            } 
+            else if (cat === 'move') {
+                const cmd = el.getAttribute('data-cmd');
+                const val = el.querySelector('input').value || 0;
+                
+                if (!stateObj.isPenDown) {
+                    el.classList.add('pen-warning-glow');
+                } else {
+                    el.classList.remove('pen-warning-glow');
+                }
+                codeStr += `${tabs}turtle.${cmd}(${val})\n`;
+            } 
+            else if (cat === 'control' && type === 'loop') {
+                el.classList.remove('pen-warning-glow');
+                const iterations = el.querySelector('input').value || 1;
+                codeStr += `${tabs}for i in range(${iterations}):\n`;
+                
+                const nestedTray = el.querySelector('.loop-children');
+                const subScriptCode = evaluatePenStateAndParse(nestedTray, stateObj, depth + 1);
+                codeStr += subScriptCode ? subScriptCode : `${tabs}    pass\n`;
+            } 
+            else if (cat === 'color') {
+                el.classList.remove('pen-warning-glow');
+                const col = el.querySelector('input[type="color"]').value;
+                if (type === 'bgcolor') {
+                    // FIX: Output Skulpt-compatible Screen().bgcolor() method instead of standard turtle alias
+                    codeStr += `${tabs}turtle.Screen().bgcolor("${col}")\n`;
+                } else {
+                    codeStr += `${tabs}turtle.color("${col}")\n`;
+                }
+            }
+            else if (cat === 'speed') {
+                el.classList.remove('pen-warning-glow');
+                const velocity = el.querySelector('select').value;
+                codeStr += `${tabs}turtle.speed(${velocity})\n`;
+            }
+        }
+        return codeStr;
+    }
+
+    function processWorkspaceEngine() {
+        const workspace = document.getElementById('workspace');
+        let trackingState = { isPenDown: true }; 
+        
+        let targetScript = "import turtle\n\n";
+        targetScript += evaluatePenStateAndParse(workspace, trackingState, 0);
+        
+        editor.setValue(targetScript);
+        return targetScript;
+    }
+
+    /* --- Accessibility Core Configuration Engine --- */
+    function toggleAccessibility() {
+        document.getElementById('accessPanel').classList.toggle('open');
+    }
+
+    function darkenColor(hex, percent) {
+        hex = hex.replace('#','');
+        let r=parseInt(hex.substring(0,2),16);
+        let g=parseInt(hex.substring(2,4),16);
+        let b=parseInt(hex.substring(4,6),16);
+        r=Math.floor(r*(1-percent/100));
+        g=Math.floor(g*(1-percent/100));
+        b=Math.floor(b*(1-percent/100));
+        return '#'+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+    }
+
+    function setBackground(color) {
+        localStorage.setItem('bgColor', color);
+        document.body.className = '';
+        document.body.classList.add('access-' + color);
+
+        const map = {
+            white:'#f5f5f5', red:'#ffcccc', orange:'#ffe5cc',
+            yellow:'#fff9c4', green:'#e8f5e9', blue:'#e3f2fd',
+            purple:'#e6e0f8', pink:'#fce4ec', dark:'#121212'
+        };
+
+        const targetBg = map[color];
+        document.body.style.backgroundColor = targetBg;
+        document.documentElement.style.setProperty('--bg-main', targetBg);
+        document.documentElement.style.setProperty('--panel-bg', targetBg);
+
+        const header = document.getElementById('header');
+        const panel = document.getElementById('accessPanel');
+        const edContainer = document.getElementById('editorContainer');
+        const outContainer = document.getElementById('outputContainer');
+        const edToolbar = document.getElementById('editorToolbar');
+        const outToolbar = document.getElementById('outputToolbar');
+
+        const darkHex = color === 'dark' ? '#000000' : darkenColor(targetBg, 40);
+        const toolbarBg = color === 'dark' ? '#1e1e1e' : darkenColor(targetBg, 8);
+        const borderHex = color === 'dark' ? '#2d2d2d' : darkenColor(targetBg, 25);
+
+        document.documentElement.style.setProperty('--header-bg', darkHex);
+        document.documentElement.style.setProperty('--toolbar-bg', toolbarBg);
+        document.documentElement.style.setProperty('--border-color', borderHex);
+
+        header.style.background = darkHex;
+        panel.style.background = targetBg;
+
+        edContainer.style.backgroundColor = targetBg;
+        outContainer.style.backgroundColor = targetBg;
+        edContainer.style.borderColor = borderHex;
+        outContainer.style.borderColor = borderHex;
+        
+        edToolbar.style.backgroundColor = toolbarBg;
+        outToolbar.style.backgroundColor = toolbarBg;
+        edToolbar.style.borderColor = borderHex;
+        outToolbar.style.borderColor = borderHex;
+
+        const textColors = color === 'dark' ? '#ffffff' : '#000000';
+        const btnBgColors = color === 'dark' ? '#2d2d2d' : '#ffffff';
+        
+        document.body.style.color = textColors;
+        header.style.color = (color === 'dark') ? '#ffffff' : '#000000';
+        edToolbar.style.color = textColors;
+        outToolbar.style.color = textColors;
+
+        document.querySelectorAll('button:not(.color-spot):not(.close-panel-btn)').forEach(btn => {
+            btn.style.background = btnBgColors;
+            btn.style.color = textColors;
+            btn.style.borderColor = borderHex;
+        });
+
+        setTimeout(() => editor.refresh(), 50);
+    }
+
+    function adjustFontSize(amount) {
+        let current = parseFloat(localStorage.getItem('fontSize') || '16');
+        current += amount;
+        document.body.style.fontSize = current + 'px';
+        document.documentElement.style.setProperty('--editor-fs', current + 'px');
+        localStorage.setItem('fontSize', current);
+        setTimeout(() => editor.refresh(), 50);
+    }
+
+    /* --- Python Runtime Pipeline Execution (Skulpt) --- */
+    function builtinRead(x) {
+        if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
+            throw "File not found: '" + x + "'";
+        return Sk.builtinFiles["files"][x];
+    }
+
+    function runOutputEnginePython() {
+        const code = processWorkspaceEngine();
+        const consoleOut = document.getElementById("consoleOutput");
+        
+        consoleOut.innerHTML = "";
+        document.getElementById("turtleCanvas").innerHTML = "";
+        
+        Sk.configure({
+            output: function(text) { consoleOut.innerHTML += text; },
+            read: builtinRead,
+            __future__: Sk.python3
+        });
+
+        (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = 'turtleCanvas';
+
+        Sk.misceval.asyncToPromise(function() {
+            return Sk.importMainWithBody("<stdin>", false, code, true);
+        }).then(function() {
+            // Execution Complete
+        }, function(err) {
+            consoleOut.innerHTML = err.toString();
+        });
+    }
+
+    // --- Lifecycle Initialization Engine ---
+    window.onload = function() {
+        const saved = localStorage.getItem('bgColor') || 'white';
+        setBackground(saved);
+
+        const fs = parseFloat(localStorage.getItem('fontSize') || '16');
+        document.body.style.fontSize = fs + 'px';
+        document.documentElement.style.setProperty('--editor-fs', fs + 'px');
+
+        processWorkspaceEngine();
+    };
+
+    window.addEventListener('click', function(e) {
+        const panel = document.getElementById('accessPanel');
+        if (!panel.contains(e.target) && !e.target.closest('.accessibility-toggle')) {
+            panel.classList.remove('open');
+        }
+    });
+</script>
+
+</body>
+</html>
