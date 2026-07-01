@@ -510,12 +510,13 @@ editor.on("renderLine", function(cm, lineHandle, el) {
         el.style.backgroundImage = `url("${svgUri}")`;
         el.style.backgroundPosition = `${pad}px center`;
         el.style.backgroundSize = `${totalPx}px 100%`;
-        if (isInvalid) el.style.backgroundColor = "rgba(0,0,0,0.05)";
+        // MODIFIED: Made the background under an invalid snake vibrant pink
+        if (isInvalid) el.style.backgroundColor = "rgba(232, 67, 147, 0.85)";
         return;
     }
 
     if (isInvalid) {
-        el.style.backgroundImage = `linear-gradient(to right, rgba(232, 67, 147, 0.45) ${pad}px, rgba(232, 67, 147, 0.45) ${pad + totalPx}px, transparent ${pad + totalPx}px)`;
+        el.style.backgroundImage = `linear-gradient(to right, rgba(255, 0, 167, 0.15) ${pad}px, rgba(232, 67, 147, 0.85) ${pad + totalPx}px, transparent ${pad + totalPx}px)`;
         el.style.backgroundSize = "100% 100%";
         return;
     }
@@ -748,6 +749,14 @@ function generateRobotError(errorObj, fullCode) {
             let doubleQuotesCount = (txt.match(/"/g) || []).length;
             let singleQuotesCount = (txt.match(/'/g) || []).length;
 
+            // MODIFIED: Added check for single equal assignment in an evaluation context (e.g., if name = "jade":)
+            if (/^(if\b|elif\b|while\b)/.test(trimmed) && trimmed.includes('=') && !trimmed.includes('==') && !trimmed.includes('!=') && !trimmed.includes('<=\b') && !trimmed.includes('>=\b')) {
+                missingSymbol = "==";
+                targetLineNum = lNum;
+                friendlyExplanation = "<strong>Using assignment instead of comparison!</strong><br><ul class='guide-list'><li>When checking if a variable equals something in a conditional statement, you must use double equals <code>==</code> instead of a single equal <code>=</code>!</li></ul>";
+                break;
+            }
+
             if (/^(if\b|def\b|for\b|while\b|elif\b|else\b)/.test(trimmed)) {
                 if (!trimmed.endsWith(":")) {
                     missingSymbol = "Colon (:)";
@@ -794,7 +803,6 @@ function generateRobotError(errorObj, fullCode) {
         const varName = varMatch ? varMatch[1] : "word";
         friendlyExplanation = `<strong>Spelling mistake or missing variable!</strong><br><ul class='guide-list'><li>Python doesn't know what <code>${varName}</code> means. Remember that spelling and capitals matter!</li></ul>`;
     } else if (rawMessage.includes("TypeError")) {
-        // Explicit support branch for dynamic TypeError messages passed from Skulpt execution pipelines
         friendlyExplanation = `<strong>Data Type Mistake (TypeError)!</strong><br><ul class='guide-list'><li>You are matching data types that do not mix well together. For example, trying to add numbers and strings, or passing the wrong data structure type to a function. Check your values!</li></ul>`;
     }
 
@@ -906,7 +914,6 @@ function runPython() {
     myPromise.then(function() {
         // Success
     }, function(err) {
-        // Any thrown TypeError exceptions pass seamlessly here down into the renderer below
         outputBox.innerHTML += generateRobotError(err, code);
     });
 }
