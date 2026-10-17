@@ -3,57 +3,152 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Student Picker Fruit Machine</title>
+<title>Student Picker Fruit Machine - Mx Brooke's Education Resources</title>
 
 <style>
 :root {
+    --bg-main: #FFF4E6;
+    --header-bg: #4A3E32;
+    --accent-amber: #E69A10;
+    --accent-hover: #C5830D;
+    --accent-gold: #E69A10;
+    --text-dark: #2C241D;
+    --text-muted: #6B5B4E;
+    --card-bg: #FFFFFF;
+    --card-border: #F0D5B7;
+    --dropdown-bg: #3D3227;
+    --dropdown-hover: #544638;
+    
+    /* Hexagon & Angular Clip Paths */
+    --hex-cut-sm: polygon(8px 0%, calc(100% - 8px) 0%, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0% calc(100% - 8px), 0% 8px);
+    --hex-cut-md: polygon(14px 0%, calc(100% - 14px) 0%, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0% calc(100% - 14px), 0% 14px);
+    --hex-cut-lg: polygon(22px 0%, calc(100% - 22px) 0%, 100% 22px, 100% calc(100% - 22px), calc(100% - 22px) 100%, 22px 100%, 0% calc(100% - 22px), 0% 22px);
+    
     --confetti-size: 48px;
     --picker-scale: 1;
 }
 
-body {
-    font-family: Consolas, monospace;
+* {
+    box-sizing: border-box;
     margin: 0;
-    background-color: #f5f5f5;
-    color: #000;
-    overflow-x: hidden;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+    padding: 0;
 }
 
-/* Header */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    position: relative;
+    background-image: radial-gradient(var(--card-border) 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+
+/* Background Hollow Hexagons Container */
+.bg-hexagons {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.bg-hex {
+    position: absolute;
+    background: transparent;
+}
+
+.bg-hex svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke-width: 5px;
+    stroke-linejoin: round;
+}
+
+/* Header & Angular Navigation */
 .header {
     width: 100%;
     height: 80px;
-    background-color: #333;
-    border-bottom: 2px solid #222;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background-color: var(--header-bg);
+    border-bottom: 3px solid #3D3227;
     position: fixed;
     top: 0;
-    z-index: 20;
+    left: 0;
+    z-index: 100;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 0 24px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
-.header img {
-    height: 60px;
+.brand-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-self: center;
+    grid-column: 2;
+}
+
+.brand-section img.logo {
+    height: 52px;
+    width: auto;
     cursor: pointer;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    transition: transform 0.2s ease;
+}
+
+.brand-section img.logo:hover {
+    transform: scale(1.05) rotate(-2deg);
+}
+
+.brand-title {
+    color: #FFFFFF;
+    font-size: 1.1rem;
+    font-weight: bold;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.brand-title::after {
+    content: "⬡";
+    color: var(--accent-amber);
+    font-size: 1.2rem;
 }
 
 #pickStudentHeaderBtn {
-    position: absolute;
-    left: 40px;
-    background-color: #555;
-    color: #fff;
+    background-color: var(--accent-amber);
+    color: #2C241D;
     border: none;
     padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 5px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: bold;
+    clip-path: var(--hex-cut-sm);
     cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    justify-self: start;
+    grid-column: 1;
+}
+
+#pickStudentHeaderBtn:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-1px);
+}
+
+#pickStudentHeaderBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* Sidebar */
@@ -61,60 +156,104 @@ body {
     position: fixed;
     top: 80px;
     left: 0;
-    width: 250px;
+    width: 260px;
     height: calc(100vh - 80px);
-    background: #222;
-    border-right: 2px solid #555;
+    background: var(--header-bg);
+    border-right: 3px solid #3D3227;
     padding: 20px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     z-index: 10;
-    color: #fff;
+    color: #FFFFFF;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+}
+
+#sidebar h2 {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    color: var(--accent-amber);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#sidebar h2::before {
+    content: "⬡";
 }
 
 #sidebar textarea,
 #sidebar button,
 #sidebar input[type="range"] {
-    background-color: #333;
-    color: #fff;
-    border: 1px solid #555;
-    padding: 5px;
-    margin-bottom: 10px;
-    font-family: Consolas, monospace;
+    background-color: #3D3227;
+    color: #FFFFFF;
+    border: 1px solid #6B5B4E;
+    padding: 8px;
+    margin-bottom: 12px;
+    font-family: 'Poppins', sans-serif;
     width: 100%;
+    clip-path: var(--hex-cut-sm);
+}
+
+#sidebar textarea {
+    clip-path: none;
+    border-radius: 4px;
+    resize: vertical;
+}
+
+#sidebar button {
+    background-color: var(--accent-amber);
+    color: #2C241D;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+#sidebar button:hover {
+    background-color: var(--accent-hover);
 }
 
 #sidebar label {
-    font-size: 14px;
-    margin-top: 10px;
+    font-size: 0.85rem;
+    margin-top: 6px;
+    color: #FFE8CF;
+    font-weight: 500;
 }
 
 /* Sidebar toggle button */
 #toggleSidebar {
     position: fixed;
-    bottom: 50px; /* above footer */
+    bottom: 50px;
+    left: 260px;
     z-index: 20;
-    background: grey;
-    color: #fff;
-    border: none;
-    padding: 10px 15px;
+    background: var(--header-bg);
+    color: var(--accent-amber);
+    border: 2px solid #3D3227;
+    padding: 10px 14px;
     cursor: pointer;
-    transition: left 0.3s;
+    clip-path: var(--hex-cut-sm);
+    font-weight: bold;
+    transition: left 0.3s ease, background-color 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+#toggleSidebar:hover {
+    background-color: #3D3227;
 }
 
 /* Main container */
 #mainContainer {
     margin-top: 80px;
-    margin-left: 250px;
+    margin-left: 260px;
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     position: relative;
-    width: calc(100% - 250px);
-    transition: margin-left 0.3s, width 0.3s;
+    width: calc(100% - 260px);
+    transition: margin-left 0.3s ease, width 0.3s ease;
+    z-index: 5;
 }
 
 /* Background names */
@@ -130,14 +269,15 @@ body {
     position: absolute;
     font-size: var(--confetti-size);
     white-space: nowrap;
+    font-weight: 600;
 }
 
 /* Picker spanning from header to footer */
 #pickerDisplay {
-    height: calc(100vh - 100px); /* subtract header (80px) & footer (100px) */
-    border: 2px solid #ccc;
-    border-radius: 8px;
-    background-color: rgba(224,224,224,0.95);
+    height: calc(100vh - 140px);
+    border: 3px solid var(--card-border);
+    border-radius: 12px;
+    background-color: rgba(255, 255, 255, 0.95);
     overflow: hidden;
     position: relative;
     display: flex;
@@ -146,6 +286,13 @@ body {
     z-index: 1;
     transform: scale(var(--picker-scale));
     transform-origin: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+#pickerDisplay:hover {
+    border-color: var(--accent-amber);
 }
 
 #nameReel {
@@ -160,14 +307,14 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #aaa;
+    color: var(--text-muted);
     font-size: 24px;
     transition: color 0.2s, font-size 0.2s, text-shadow 0.2s;
     white-space: nowrap;
 }
 
 #nameReel div.current {
-    color: #000;
+    color: var(--text-dark);
     font-size: 48px;
     font-weight: bold;
 }
@@ -175,13 +322,12 @@ body {
 /* Footer for picked students */
 #pickedStudentsFooter {
     width: 100%;
-    height: 30px; /* reasonable height */
+    height: 50px;
     overflow-y: auto;
-    background-color: rgba(51,51,51,0.95);
+    background-color: var(--header-bg);
     color: #fff;
-    border-top: 2px solid #555;
-    padding: 10px 20px;
-    font-family: Consolas, monospace;
+    border-top: 3px solid #3D3227;
+    padding: 8px 20px;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -189,46 +335,70 @@ body {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
+    align-items: center;
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.1);
 }
 
 #pickedStudentsFooter div {
-    background-color: #444;
-    padding: 5px 10px;
-    border-radius: 5px;
+    background-color: var(--accent-amber);
+    color: #2C241D;
+    padding: 4px 10px;
+    clip-path: var(--hex-cut-sm);
+    font-weight: bold;
+    font-size: 0.85rem;
 }
 
 /* Dark mode */
 body.dark-mode {
-    background-color: #121212;
-    color: #fff;
+    --bg-main: #1E1813;
+    --text-dark: #FFF4E6;
+    --text-muted: #BFAEA0;
+    --card-bg: #2C241D;
+    --card-border: #4A3E32;
+    background-image: radial-gradient(#3D3227 1px, transparent 1px);
 }
 
 body.dark-mode #pickerDisplay {
-    background-color: rgba(51,51,51,0.95);
-    border-color: #555;
-}
-
-body.dark-mode #sidebar {
-    background-color: #222;
+    background-color: rgba(44, 36, 29, 0.95);
+    border-color: #4A3E32;
 }
 
 body.dark-mode #backgroundNames div {
     opacity: 0.35;
-    filter: brightness(0.8);
+    filter: brightness(0.9);
+}
+
+body.dark-mode #nameReel div {
+    color: #8C7B6E;
 }
 
 body.dark-mode #nameReel div.current {
-    color: #fff;
+    color: #FFF4E6;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-    <button id="pickStudentHeaderBtn">Pick a Student</button>
-    <img src="https://clf.uk/wp-content/uploads/CLF-Logo-Transparent-White-Text.png" onclick="toggleTheme()">
-</div>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Dynamically Generated Random Background Hexagons -->
+<div class="bg-hexagons" id="bgHexagonsContainer"></div>
+
+<header class="header">
+    <button id="pickStudentHeaderBtn">Pick a Student ⬡</button>
+
+    <div class="brand-section">
+        <a href="https://www.mxbrooke.co.uk">
+            <img src="https://www.mxbrooke.co.uk/images/logo.svg" alt="MXB Logo" class="logo" title="Mx Brooke's Education Resources">
+        </a>
+        <a href="https://www.mxbrooke.co.uk" class="brand-title">MxBrooke.co.uk</a>
+    </div>
+
+    <div style="justify-self: end; grid-column: 3; display: flex; align-items: center;">
+        <button onclick="toggleTheme()" style="background: rgba(0,0,0,0.2); color: #fff; border: none; padding: 8px 14px; clip-path: var(--hex-cut-sm); cursor: pointer; font-family: inherit; font-weight: bold;">Theme</button>
+    </div>
+</header>
 
 <div id="sidebar">
     <h2>Student Picker</h2>
@@ -258,7 +428,7 @@ Julia</textarea>
 
 <div id="mainContainer">
     <div id="backgroundNames"></div>
-    <div id="pickerDisplay">
+    <div id="pickerDisplay" title="Click to pick a student!">
         <div id="nameReel"></div>
     </div>
 </div>
@@ -267,6 +437,36 @@ Julia</textarea>
 <div id="pickedStudentsFooter"></div>
 
 <script>
+// Randomly Generate Background Hexagons on Load
+function generateBackgroundHexagons() {
+    const container = document.getElementById('bgHexagonsContainer');
+    const palette = ['#E69A10', '#4A3E32', '#3D3227', '#6B5B4E'];
+    const count = 7;
+
+    for (let i = 0; i < count; i++) {
+        const hex = document.createElement('div');
+        hex.className = 'bg-hex';
+
+        const size = Math.floor(Math.random() * 160) + 120;
+        hex.style.width = size + 'px';
+        hex.style.height = (size * 1.14) + 'px';
+
+        const topPos = Math.random() * 85;
+        const leftPos = Math.random() * 90;
+        hex.style.top = topPos + '%';
+        hex.style.left = leftPos + '%';
+
+        const rotation = Math.random() * 60 - 30;
+        const opacity = (Math.random() * 0.15 + 0.08).toFixed(2);
+        hex.style.transform = `rotate(${rotation}deg)`;
+        hex.style.opacity = opacity;
+
+        const color = palette[Math.floor(Math.random() * palette.length)];
+        hex.innerHTML = `<svg viewBox="0 0 100 100"><polygon points="25,5 75,5 95,50 75,95 25,95 5,50" stroke="${color}" /></svg>`;
+        container.appendChild(hex);
+    }
+}
+
 function toggleTheme() {
     document.body.classList.toggle('dark-mode');
 }
@@ -279,11 +479,9 @@ const toggleBtn = document.getElementById('toggleSidebar');
 toggleBtn.onclick = () => {
     const hidden = sidebar.style.display === 'none';
     sidebar.style.display = hidden ? 'flex' : 'none';
-    mainContainer.style.marginLeft = hidden ? '250px' : '0';
-    mainContainer.style.width = hidden ? 'calc(100% - 250px)' : '100%';
-
-    // Move toggle button outside the sidebar when open
-    toggleBtn.style.left = hidden ? '250px' : '0';
+    mainContainer.style.marginLeft = hidden ? '260px' : '0';
+    mainContainer.style.width = hidden ? 'calc(100% - 260px)' : '100%';
+    toggleBtn.style.left = hidden ? '260px' : '0';
 };
 
 /* Zoom slider */
@@ -306,11 +504,12 @@ let bgNames = [];
 const studentListTextarea = document.getElementById('studentList');
 const nameReel = document.getElementById('nameReel');
 const pickBtnHeader = document.getElementById('pickStudentHeaderBtn');
+const pickerDisplay = document.getElementById('pickerDisplay');
 const resetBtn = document.getElementById('resetListBtn');
 const backgroundDiv = document.getElementById('backgroundNames');
 const pickedFooter = document.getElementById('pickedStudentsFooter');
 
-const pastelColors = ['#EFA5C3','#A8E0F7','#FFF1A8','#F7A5A5'];
+const portalColors = ['#E69A10', '#6B5B4E', '#C5830D', '#D48A08'];
 
 function updateStudentArray() {
     originalStudents = studentListTextarea.value.split('\n').map(s => s.trim()).filter(Boolean);
@@ -327,19 +526,19 @@ function adjustPickerWidth() {
 
     let maxWidth = 100;
     currentStudents.forEach(name => {
-        ctx.font = '24px Consolas';
+        ctx.font = '24px Poppins';
         const normalWidth = ctx.measureText(name).width;
-        ctx.font = '48px Consolas';
+        ctx.font = '48px Poppins';
         const highlightWidth = ctx.measureText(name).width;
-        const width = Math.max(normalWidth, highlightWidth) + 40;
+        const width = Math.max(normalWidth, highlightWidth) + 60;
         if (width > maxWidth) maxWidth = width;
     });
 
     const sidebarWidth = sidebar.style.display === 'none' ? 0 : sidebar.offsetWidth;
-    const maxAllowed = window.innerWidth - sidebarWidth - 20;
+    const maxAllowed = window.innerWidth - sidebarWidth - 40;
     maxWidth = Math.min(maxWidth, maxAllowed);
 
-    document.getElementById('pickerDisplay').style.width = maxWidth + 'px';
+    pickerDisplay.style.width = maxWidth + 'px';
 }
 
 function populateReel(names, highlightIndex) {
@@ -373,7 +572,7 @@ function updateBackgroundNames() {
             y: Math.random() * visibleHeight,
             dx: (Math.random() * 0.5 + 0.1) * (Math.random() < 0.5 ? -1 : 1),
             dy: (Math.random() * 0.5 + 0.1) * (Math.random() < 0.5 ? -1 : 1),
-            color: pastelColors[Math.floor(Math.random() * pastelColors.length)]
+            color: portalColors[Math.floor(Math.random() * portalColors.length)]
         });
     }
 
@@ -404,8 +603,10 @@ function animateBackground() {
     requestAnimationFrame(animateBackground);
 }
 
-/* Picker logic */
-pickBtnHeader.onclick = () => {
+/* Core Pick Student Function */
+function pickStudent() {
+    if (pickBtnHeader.disabled) return;
+
     if (currentStudents.length === 0) {
         alert("No students left to pick!");
         return;
@@ -417,7 +618,7 @@ pickBtnHeader.onclick = () => {
     for (let i = 0; i < 30; i++) reelNames.push(...currentStudents);
     populateReel(reelNames, 0);
 
-    const displayHeight = document.getElementById('pickerDisplay').clientHeight;
+    const displayHeight = pickerDisplay.clientHeight;
     const middleOffset = Math.floor(displayHeight / 2 / 50);
     const finalIndex = pickedIndex + currentStudents.length * 15;
     const finalOffset = -(finalIndex - middleOffset) * 50;
@@ -439,8 +640,8 @@ pickBtnHeader.onclick = () => {
         nameReel.childNodes.forEach((div, idx) => {
             if (idx === current) {
                 div.classList.add('current');
-                const glow = pastelColors[Math.floor(Math.random() * pastelColors.length)];
-                div.style.textShadow = `0 0 8px ${glow}, 0 0 16px ${glow}, 0 0 24px ${glow}, 0 0 32px ${glow}`;
+                const glow = portalColors[Math.floor(Math.random() * portalColors.length)];
+                div.style.textShadow = `0 0 8px ${glow}, 0 0 16px ${glow}`;
             } else {
                 div.classList.remove('current');
                 div.style.textShadow = '';
@@ -463,7 +664,11 @@ pickBtnHeader.onclick = () => {
         }
     }
     requestAnimationFrame(animate);
-};
+}
+
+/* Event Listeners */
+pickBtnHeader.onclick = pickStudent;
+pickerDisplay.onclick = pickStudent;
 
 /* Reset */
 resetBtn.onclick = () => {
@@ -472,8 +677,11 @@ resetBtn.onclick = () => {
 };
 studentListTextarea.addEventListener('input', updateStudentArray);
 
-updateStudentArray();
-animateBackground();
+window.onload = function() {
+    generateBackgroundHexagons();
+    updateStudentArray();
+    animateBackground();
+};
 </script>
 
 </body>
