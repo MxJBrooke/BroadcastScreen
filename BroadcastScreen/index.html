@@ -3,170 +3,413 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Classroom Noise Meter</title>
+<title>Classroom Noise Meter - Mx Brooke's Education Resources</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
-/* ----------------- Global Styles ----------------- */
-body {
-    font-family: Consolas, monospace;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    margin: 0;
-    background-color: #f5f5f5;
-    color: #000;
-    overflow: hidden;
-    transition: all 0.3s ease;
+:root {
+    --bg-main: #FFF4E6;
+    --header-bg: #4A3E32;
+    --accent-amber: #E69A10;
+    --accent-hover: #C5830D;
+    --text-dark: #2C241D;
+    --text-muted: #6B5B4E;
+    --card-bg: #FFFFFF;
+    --card-border: #F0D5B7;
+    --input-bg: #FAF5EF;
+    
+    /* Restored Original Noise Expectation Colors (Silent matches Header) */
+    --meter-silent: #4A3E32; 
+    --meter-quiet:  #E69A10; /* Golden Yellow */
+    --meter-peer:   #E67E22; /* Warm Orange */
+    --meter-team:   #E72B37; /* Bright Red */
+    
+    /* Mic Status Colors */
+    --mic-ok: #10B981;
+    --mic-exceeded: #E72B37;
+    
+    /* Hexagonal / Angular Clip Paths */
+    --hex-cut-card: polygon(16px 0%, calc(100% - 16px) 0%, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0% calc(100% - 16px), 0% 16px);
+    --hex-cut-sm: polygon(8px 0%, calc(100% - 8px) 0%, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0% calc(100% - 8px), 0% 8px);
+    --hex-cut-md: polygon(12px 0%, calc(100% - 12px) 0%, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0% calc(100% - 12px), 0% 12px);
 }
 
-/* ----------------- Header ----------------- */
-.header {
-    width: 100%;
-    height: 80px;
-    background-color: #333;
-    border-bottom: 2px solid #222;
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-dark);
+    height: 100vh;
     display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
+    flex-direction: column;
+    overflow: hidden;
     position: relative;
 }
 
-.logo-box {
-    background-color: #333;        
-    padding: 5px 10px;             
-    border-radius: 0 0 12px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.logo-box img {
-    height: 60px;
-    cursor: pointer;
-}
-
-/* Exam Toggle */
-.exam-toggle {
-    position: absolute;
-    right: 20px;
-    padding: 8px 14px;
-    border-radius: 6px;
-    border: 1px solid #aaa;
-    background: #e0e0e0;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-/* ----------------- Main Content ----------------- */
-.main {
-    flex: 1;
-    display: flex;
+/* Background Hexagons */
+.bg-hexagons {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 1;
     overflow: hidden;
 }
 
-/* ----------------- Divider ----------------- */
-.divider {
-    width: 6px;
-    background-color: #ccc;
-    cursor: col-resize;
-    transition: background 0.2s;
+.bg-hex {
+    position: absolute;
+    background: transparent;
 }
-.divider:hover { background-color: #999; }
 
-/* ----------------- Left Panel ----------------- */
+.bg-hex svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke-width: 5px;
+    stroke-linejoin: round;
+}
+
+/* Flying Bees Canvas */
+#beeCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Header */
+.header {
+    width: 100%;
+    height: 80px;
+    background-color: var(--header-bg);
+    border-bottom: 4px solid #3D3227;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 24px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    transition: background 0.4s ease, border-color 0.4s ease;
+}
+
+.brand-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+}
+
+.brand-section img.logo {
+    height: 52px;
+    width: auto;
+    transition: transform 0.2s ease;
+}
+
+.brand-section:hover img.logo {
+    transform: scale(1.05) rotate(-2deg);
+}
+
+.brand-title {
+    color: #FFFFFF;
+    font-size: 1.25rem;
+    font-weight: bold;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.brand-title::after {
+    content: "⬡";
+    color: var(--accent-amber);
+    font-size: 1.3rem;
+}
+
+/* Exam Mode Button */
+.exam-toggle {
+    position: absolute;
+    right: 24px;
+    background-color: var(--accent-amber);
+    color: #2C241D;
+    border: none;
+    padding: 10px 18px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: bold;
+    clip-path: var(--hex-cut-sm);
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.exam-toggle:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-2px);
+}
+
+/* Main Workspace */
+.main {
+    margin-top: 80px;
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+    z-index: 10;
+}
+
+/* Resizable Divider */
+.divider {
+    width: 8px;
+    background-color: var(--card-border);
+    cursor: col-resize;
+    transition: background-color 0.2s;
+    z-index: 15;
+}
+
+.divider:hover {
+    background-color: var(--accent-amber);
+}
+
+/* Left Panel - Instructions */
 .left {
-    flex: 1 1 50%;
-    padding: 20px;
-    border-right: 2px solid #ccc;
+    flex: 0 0 42%;
+    width: 42%;
+    padding: 24px;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    gap: 16px;
     overflow-y: auto;
-    min-width: 200px;
+    min-width: 250px;
 }
 
-/* ----------------- Exam Sidebar ----------------- */
+/* Left Panel - Exam Mode */
 .exam-sidebar {
-    flex: 0 0 350px;
-    padding: 20px;
-    border-right: 2px solid #ccc;
+    flex: 0 0 42%;
+    width: 42%;
+    padding: 24px;
     display: none;
     flex-direction: column;
     overflow-y: auto;
-    background: #fff;
+    min-width: 250px;
+    gap: 16px;
+}
+
+/* Angular Card Structure with Continuous Outer Border */
+.hex-card-wrapper {
+    background-color: var(--card-border);
+    padding: 2px;
+    clip-path: var(--hex-cut-card);
+    filter: drop-shadow(0px 4px 10px rgba(74, 62, 50, 0.08));
+    transition: background-color 0.3s ease, filter 0.3s ease;
+}
+
+.hex-card-wrapper.exceeded {
+    background-color: var(--mic-exceeded);
+    filter: drop-shadow(0px 0px 20px rgba(231, 43, 55, 0.75));
+    animation: fuzzyRedPulse 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes fuzzyRedPulse {
+    0% {
+        filter: drop-shadow(0px 0px 12px rgba(231, 43, 55, 0.5));
+    }
+    100% {
+        filter: drop-shadow(0px 0px 28px rgba(231, 43, 55, 0.95));
+    }
+}
+
+.hex-card-inner {
+    background-color: var(--card-bg);
+    clip-path: var(--hex-cut-card);
+    padding: 20px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.hex-card-inner strong {
+    color: var(--text-dark);
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hex-card-inner strong::before {
+    content: "⬡";
+    color: var(--accent-amber);
+}
+
+.hex-card-inner textarea {
+    width: 100%;
+    min-height: 75px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+    background-color: var(--input-bg);
+    border: 1px solid var(--card-border);
+    clip-path: var(--hex-cut-sm);
+    resize: vertical;
+    outline: none;
+}
+
+.hex-card-inner textarea:focus {
+    border-color: var(--accent-amber);
 }
 
 .exam-sidebar h2 {
-    margin-bottom: 15px;
+    color: var(--text-dark);
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.exam-sidebar h2::before {
+    content: "⬡";
+    color: var(--accent-amber);
 }
 
 .exam-sidebar ul {
     padding-left: 20px;
-    line-height: 1.8;
-    font-size: 18px;
+    line-height: 1.7;
+    font-size: 0.95rem;
+    color: var(--text-dark);
 }
 
-/* Exam font controls */
+.exam-sidebar li {
+    margin-bottom: 6px;
+}
+
 .exam-font-controls {
     display: flex;
     gap: 10px;
-    margin-bottom: 15px;
+    margin-bottom: 4px;
 }
 
 .exam-font-controls button {
-    padding: 6px 12px;
+    background-color: var(--header-bg);
+    color: #FFFFFF;
+    border: none;
+    padding: 6px 14px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: bold;
+    clip-path: var(--hex-cut-sm);
     cursor: pointer;
+    transition: background-color 0.2s ease;
 }
 
-/* ----------------- Custom Sections ----------------- */
-#custom {
-    display: flex;
-    flex-direction: column;
-    width: 90%;
-    max-width: 600px;
-    margin-top: 20px;
-    background-color: #fff;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
+.exam-font-controls button:hover {
+    background-color: var(--accent-amber);
+    color: #2C241D;
 }
 
-#custom textarea {
-    width: 100%;
-    height: 40px;   
-    padding: 6px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    resize: vertical;
-    font-size: 14px;
-}
-
-/* ----------------- Right Panel ----------------- */
+/* Right Panel */
 .right {
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 50px 20px;
+    padding: 28px 24px;
     overflow-y: auto;
-    min-width: 200px;
-    gap: 50px;
+    min-width: 250px;
+    gap: 22px;
 }
 
-/* ----------------- Noise Meter ----------------- */
+/* Mode Switcher Tabs */
+.mode-switcher-container {
+    width: 100%;
+}
+
+.mode-tabs {
+    display: flex;
+    background-color: var(--header-bg);
+    padding: 5px;
+    clip-path: var(--hex-cut-sm);
+    gap: 6px;
+}
+
+.mode-tab {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    color: #FFFFFF;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    clip-path: var(--hex-cut-sm);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    opacity: 0.75;
+}
+
+.mode-tab:hover {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.mode-tab.active {
+    background-color: var(--accent-amber);
+    color: #2C241D;
+    opacity: 1;
+    font-weight: 700;
+}
+
+.section-label {
+    font-size: 1.05rem;
+    font-weight: bold;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    width: 100%;
+}
+
+.section-label::before {
+    content: "⬡";
+    color: var(--accent-amber);
+}
+
+/* Mode Card Container Wrapper */
+.mode-card-wrapper {
+    width: 100%;
+}
+
+/* Manual Expectation Meter Container */
 .bar-container {
     position: relative;
-    width: 80%;
-    max-width: 600px;
-    height: 50px;
+    width: 100%;
+    height: 58px;
     display: flex;
-    border-radius: 10px;
-    overflow: visible;
-    border: 2px solid #ccc;
-    background-color: #e0e0e0;
+    gap: 6px;
+    padding: 6px;
+    background-color: var(--header-bg);
+    border: 2px solid var(--card-border);
+    clip-path: var(--hex-cut-md);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    margin: 28px 0;
 }
 
 .segment {
@@ -176,51 +419,127 @@ body {
     align-items: center;
     justify-content: center;
     font-weight: bold;
+    font-size: 0.9rem;
     user-select: none;
-    transition: transform 0.2s;
-    border-radius: 5px;
-    margin: 2px;
-    padding: 12px 0;
+    clip-path: var(--hex-cut-sm);
+    transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+    opacity: 0.65;
+    text-align: center;
+    padding: 2px;
 }
 
-.segment.silent { background-color: #B1166F; color: #fff; }
-.segment.quiet { background-color: #FED41A; }
-.segment.peer { background-color: #0DB2E1; }
-.segment.team { background-color: #E72B37; color: #fff; }
+.segment:hover {
+    opacity: 0.9;
+}
+
+/* Palette Colors & Readable Text Contrast */
+.segment.silent { background-color: var(--meter-silent); color: #FFFFFF; }
+.segment.quiet  { background-color: var(--meter-quiet);  color: #2C241D; }
+.segment.peer   { background-color: var(--meter-peer);   color: #FFFFFF; }
+.segment.team   { background-color: var(--meter-team);   color: #FFFFFF; }
 
 .segment.active {
-    outline: 3px solid #000;
-    transform: scale(1.05);
+    opacity: 1;
+    transform: scale(1.06);
+    box-shadow: 0 0 0 2px #FFFFFF;
+    z-index: 5;
 }
 
 .arrow-svg, .arrow-bottom-svg {
     position: absolute;
-    width: 30px;
-    height: 30px;
-    transition: left 0.3s ease;
+    width: 28px;
+    height: 28px;
+    transition: left 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     z-index: 10;
 }
 
-.arrow-svg { top: -35px; }
-.arrow-bottom-svg { bottom: -35px; transform: rotate(180deg); }
+.arrow-svg { top: -30px; }
+.arrow-bottom-svg { bottom: -30px; transform: rotate(180deg); }
 
-/* ----------------- Timer ----------------- */
+/* Live Microphone Room Volume Card */
+.mic-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.volume-meter-wrapper {
+    position: relative;
+    width: 100%;
+    height: 42px;
+    background-color: var(--input-bg);
+    border: 2px solid var(--card-border);
+    clip-path: var(--hex-cut-md);
+    overflow: hidden;
+    user-select: none;
+    cursor: pointer;
+}
+
+.volume-bar-fill {
+    height: 100%;
+    width: 0%;
+    background-color: var(--mic-ok);
+    transition: width 0.1s linear, background-color 0.2s ease;
+}
+
+/* Draggable Threshold Handle */
+.threshold-handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 16px;
+    margin-left: -8px;
+    background-color: var(--header-bg);
+    border: 2px solid var(--accent-amber);
+    clip-path: var(--hex-cut-sm);
+    cursor: ew-resize;
+    z-index: 12;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 8px rgba(0,0,0,0.3);
+}
+
+.threshold-handle::after {
+    content: "║";
+    color: #FFFFFF;
+    font-size: 0.7rem;
+    line-height: 1;
+}
+
+.threshold-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: var(--accent-amber);
+    z-index: 11;
+    pointer-events: none;
+}
+
+.mic-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Timer Container */
 .timer-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 80%;
-    max-width: 600px;
-    background-color: #fff;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
+    width: 100%;
 }
 
 .timer {
-    font-size: 80px;
+    font-size: 4.5rem;
     font-weight: bold;
-    margin-bottom: 20px;
+    color: var(--text-dark);
+    margin-bottom: 16px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -2px;
 }
 
 .timer-buttons, .timer-control {
@@ -228,276 +547,320 @@ body {
     flex-wrap: wrap;
     gap: 10px;
     justify-content: center;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+    width: 100%;
 }
 
 .timer-buttons button, .timer-control button {
-    background-color: #e0e0e0;
-    border: 1px solid #aaa;
-    padding: 8px 16px;
-    font-size: 16px;
-    border-radius: 5px;
-}
-
-/* ----------------- Dark Mode ----------------- */
-body.dark-mode {
-    background-color: #121212;
-    color: #fff;
-}
-body.dark-mode #custom,
-body.dark-mode .timer-container,
-body.dark-mode .exam-sidebar {
-    background-color: #222;
-    border-color: #333;
-}
-/* ----------------- Left Panel ----------------- */
-.left {
-    flex: 0 0 50%;
-    width: 50%;
-    padding: 20px;
-    border-right: 2px solid #ccc;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    overflow-y: auto;
-    min-width: 250px;
-    box-sizing: border-box;
-}
-
-/* ----------------- Custom Sections (Now/Next/Then Do) ----------------- */
-#custom {
-    width: 100%;
-    max-width: 100%;
-    margin-top: 20px;
-    background-color: #fff;
-    padding: 15px;           /* even padding around content */
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    color: #000;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-/* Textareas */
-#custom textarea {
-    width: 100%;
-    min-height: 60px;
-    padding: 10px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    resize: vertical;
-    box-sizing: border-box;   /* ensures padding included in width */
-}
-
-/* ----------------- Exam Sidebar ----------------- */
-.exam-sidebar {
-    flex: 0 0 350px;
-    padding: 20px;
-    border-right: 2px solid #ccc;
-    display: none;
-    flex-direction: column;
-    overflow-y: auto;
-    background: #fff;
-    box-sizing: border-box;
-}
-
-.exam-sidebar h2 {
-    margin-bottom: 10px;
-}
-
-.exam-sidebar ul {
-    padding-left: 20px;
-    line-height: 1.8;
-    font-size: 16px;   /* default font size */
-}
-
-/* Exam sidebar font controls */
-.exam-font-controls {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-.exam-font-controls button {
-    padding: 6px 12px;
-    font-size: 14px;
+    background-color: var(--header-bg);
+    color: #FFFFFF;
+    border: none;
+    padding: 10px 18px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: bold;
+    clip-path: var(--hex-cut-sm);
     cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.timer-buttons button:hover, .timer-control button:hover {
+    background-color: var(--accent-amber);
+    color: #2C241D;
+    transform: translateY(-2px);
+}
+
+.timer-buttons button.active {
+    background-color: var(--accent-amber);
+    color: #2C241D;
+}
+
+#customTimeInput {
+    width: 130px;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    background-color: var(--input-bg);
+    border: 1px solid var(--card-border);
+    clip-path: var(--hex-cut-sm);
+    outline: none;
+    text-align: center;
+}
+
+#customTimeInput:focus {
+    border-color: var(--accent-amber);
+}
+
+footer {
+    text-align: center;
+    padding: 16px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--card-border);
+    position: relative;
+    z-index: 10;
+    background-color: var(--bg-main);
+}
+
+@media (max-width: 768px) {
+    .main {
+        flex-direction: column;
+        overflow-y: auto;
+    }
+    .left, .exam-sidebar, .right {
+        width: 100% !important;
+        flex: none !important;
+    }
+    .divider {
+        display: none;
+    }
+    .timer {
+        font-size: 3.5rem;
+    }
 }
 </style>
 </head>
-<body>
 
 <body>
 
-<!-- ================= HEADER ================= -->
-<div class="header">
-    <div class="logo-box">
-        <img src="https://clf.uk/wp-content/uploads/CLF-Logo-Transparent-White-Text.png"
-             alt="CLF Logo"
-             onclick="toggleTheme()">
+<!-- Background Hexagons -->
+<div class="bg-hexagons" id="bgHexagonsContainer"></div>
+
+<!-- Background Canvas for Flying Bees -->
+<canvas id="beeCanvas"></canvas>
+
+<header class="header" id="headerBar">
+    <div class="brand-section" onclick="window.location.href='https://www.mxbrooke.co.uk/'">
+        <img src="https://www.mxbrooke.co.uk/images/logo.svg" alt="MXB Logo" class="logo" title="Mx Brooke's Education Resources">
+        <span class="brand-title">MxBrooke.co.uk</span>
     </div>
 
     <button class="exam-toggle" onclick="toggleExamMode()">
         Exam Mode
     </button>
-</div>
+</header>
 
-
-<!-- ================= MAIN ================= -->
 <div class="main">
 
     <!-- ===== EXAM SIDEBAR ===== -->
     <div class="exam-sidebar" id="examSidebar">
+        <div class="hex-card-wrapper">
+            <div class="hex-card-inner">
+                <div class="exam-font-controls">
+                    <button onclick="adjustExamFont(-2)">A−</button>
+                    <button onclick="adjustExamFont(2)">A+</button>
+                </div>
+                <div id="examContent">
+                    <h2>Exam Conditions</h2>
+                    <ul>
+                        <li>Absolute silence must be maintained from the moment you enter until you leave.</li>
+                        <li>Phones, smartwatches, and notes are banned. Use may lead to disqualification.</li>
+                        <li>Only clear, unlabelled water bottles allowed. No food or sweets.</li>
+                        <li>Only permitted equipment on desk.</li>
+                        <li>Enter quietly, find your seat, and raise your hand if you need assistance.</li>
+                    </ul>
 
-        <div class="exam-font-controls">
-            <button onclick="adjustExamFont(-2)">A−</button>
-            <button onclick="adjustExamFont(2)">A+</button>
-        </div>
-
-        <div id="examContent">
-
-            <h2>Exam Conditions</h2>
-            <ul>
-                <li>Absolute silence must be maintained from the moment you enter until you leave.</li>
-                <li>Phones, smartwatches, and notes are banned. Use may lead to disqualification.</li>
-                <li>Only clear, unlabelled water bottles allowed. No food or sweets.</li>
-                <li>Only permitted equipment on desk.</li>
-                <li>Enter quietly, find your seat, and raise your hand if you need assistance.</li>
-            </ul>
-
-            <h2>Exam Advice</h2>
-            <ul>
-                <li>Read through every question fully.</li>
-                <li>Check your work carefully at the end.</li>
-                <li>If stuck, move on and return later.</li>
-                <li>Use a black pen.</li>
-                <li>Raise your hand if you need assistance.</li>
-		<li>Check the back page for questions.</li>
-		<li>Attempt every question.</li>
-            </ul>
-
+                    <h2 style="margin-top: 16px;">Exam Advice</h2>
+                    <ul>
+                        <li>Read through every question fully.</li>
+                        <li>Check your work carefully at the end.</li>
+                        <li>If stuck, move on and return later.</li>
+                        <li>Use a black pen.</li>
+                        <li>Raise your hand if you need assistance.</li>
+                        <li>Check the back page for questions.</li>
+                        <li>Attempt every question.</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 
-
-    <!-- ===== NORMAL SIDEBAR ===== -->
+    <!-- ===== NORMAL INSTRUCTION SIDEBAR ===== -->
     <div class="left" id="normalSidebar">
-
-        <div id="custom">
-            <strong>Now Do:</strong>
-            <textarea placeholder="Type your instructions here..."></textarea>
+        <div class="exam-font-controls" style="margin-bottom: 4px;">
+            <button onclick="adjustInstructionFont(-2)">A−</button>
+            <button onclick="adjustInstructionFont(2)">A+</button>
         </div>
 
-        <div id="custom">
-            <strong>Next Do:</strong>
-            <textarea placeholder="Type your instructions here..."></textarea>
+        <div class="hex-card-wrapper instruction-card">
+            <div class="hex-card-inner">
+                <strong class="instruction-title">Now Do:</strong>
+                <textarea class="instruction-text" placeholder="Type your instructions here..."></textarea>
+            </div>
         </div>
 
-        <div id="custom">
-            <strong>Then Do:</strong>
-            <textarea placeholder="Type your instructions here..."></textarea>
+        <div class="hex-card-wrapper instruction-card">
+            <div class="hex-card-inner">
+                <strong class="instruction-title">Next Do:</strong>
+                <textarea class="instruction-text" placeholder="Type your instructions here..."></textarea>
+            </div>
         </div>
 
+        <div class="hex-card-wrapper instruction-card">
+            <div class="hex-card-inner">
+                <strong class="instruction-title">Then Do:</strong>
+                <textarea class="instruction-text" placeholder="Type your instructions here..."></textarea>
+            </div>
+        </div>
     </div>
-
 
     <!-- ===== DRAG DIVIDER ===== -->
     <div class="divider" id="divider"></div>
 
-
     <!-- ===== RIGHT PANEL ===== -->
     <div class="right">
 
-        <!-- ==== NOISE METER ==== -->
-        <div class="bar-container" id="bar">
+        <!-- ===== MODE SWITCHER TABS ===== -->
+        <div class="mode-switcher-container">
+            <div class="mode-tabs">
+                <button class="mode-tab active" id="tabManual" onclick="switchMode('manual')">
+                    📋 Manual Expectation Mode
+                </button>
+                <button class="mode-tab" id="tabMic" onclick="switchMode('mic')">
+                    🎤 Live Microphone Mode
+                </button>
+            </div>
+        </div>
 
-            <div class="segment silent" onclick="setNoise(0)">
-                Silent Work
+        <!-- ===== CARD WRAPPER ===== -->
+        <div class="mode-card-wrapper">
+            
+            <!-- 1. MANUAL NOISE LEVEL CARD -->
+            <div class="hex-card-wrapper" id="manualCardWrapper">
+                <div class="hex-card-inner">
+                    <div class="section-label" style="margin-bottom:0;">Noise Level Expectation</div>
+                    <div class="bar-container" id="bar">
+                        <div class="segment silent" onclick="setNoise(0)">
+                            Silent Work
+                        </div>
+
+                        <div class="segment quiet" onclick="setNoise(1)">
+                            Quiet Voices
+                        </div>
+
+                        <div class="segment peer" onclick="setNoise(2)">
+                            Turn & Talk
+                        </div>
+
+                        <div class="segment team" onclick="setNoise(3)">
+                            Team Talk
+                        </div>
+
+                        <svg class="arrow-svg" id="arrow-top" viewBox="0 0 30 30">
+                            <polygon points="15,0 0,30 30,30" fill="#E69A10" stroke="#4A3E32" stroke-width="2"/>
+                        </svg>
+
+                        <svg class="arrow-bottom-svg" id="arrow-bottom" viewBox="0 0 30 30">
+                            <polygon points="15,0 0,30 30,30" fill="#E69A10" stroke="#4A3E32" stroke-width="2"/>
+                        </svg>
+                    </div>
+                </div>
             </div>
 
-            <div class="segment quiet" onclick="setNoise(1)">
-                Quiet Voices
+            <!-- 2. LIVE MICROPHONE VOLUME CARD -->
+            <div class="hex-card-wrapper" id="micCardWrapper" style="display: none;">
+                <div class="hex-card-inner">
+                    <div class="mic-header">
+                        <div class="section-label" style="margin-bottom:0;">Live Classroom Volume</div>
+                    </div>
+
+                    <div class="volume-meter-wrapper" id="volumeMeterWrapper">
+                        <div class="volume-bar-fill" id="volumeBarFill"></div>
+                        <div class="threshold-line" id="thresholdLine"></div>
+                        <div class="threshold-handle" id="thresholdHandle" title="Drag to adjust threshold"></div>
+                    </div>
+
+                    <div class="mic-info">
+                        <span>1s Rolling Avg: <strong id="volDisplay">0%</strong></span>
+                        <span>Noise Limit: <strong id="thresholdDisplay">35%</strong></span>
+                    </div>
+                </div>
             </div>
-
-            <div class="segment peer" onclick="setNoise(2)">
-                Turn & Talk
-            </div>
-
-            <div class="segment team" onclick="setNoise(3)">
-                Team Talk
-            </div>
-
-            <svg class="arrow-svg" id="arrow-top" viewBox="0 0 30 30">
-                <polygon points="15,0 0,30 30,30"
-                         fill="black"
-                         stroke="white"
-                         stroke-width="2"/>
-            </svg>
-
-            <svg class="arrow-bottom-svg" id="arrow-bottom" viewBox="0 0 30 30">
-                <polygon points="15,0 0,30 30,30"
-                         fill="black"
-                         stroke="white"
-                         stroke-width="2"/>
-            </svg>
 
         </div>
 
+        <!-- ==== TIMER CONTAINER ==== -->
+        <div class="timer-container">
+            <div class="hex-card-wrapper" style="width: 100%;">
+                <div class="hex-card-inner" style="align-items: center;">
+                    <div class="section-label" style="justify-content: center;">Classroom Timer</div>
+                    <div class="timer" id="timer">
+                        05:00
+                    </div>
 
-        <!-- ==== TIMER ==== -->
-        <div class="timer-container" id="timer-container">
+                    <div class="timer-buttons">
+                        <button onclick="setQuickTime(1, this)">1 min</button>
+                        <button onclick="setQuickTime(2, this)">2 min</button>
+                        <button onclick="setQuickTime(5, this)" class="active">5 min</button>
+                        <button onclick="setQuickTime(10, this)">10 min</button>
 
-            <div class="timer" id="timer">
-                05:00
+                        <input type="number" id="customTimeInput" placeholder="Custom (min)" min="1">
+                        <button onclick="setCustomTime()">Set</button>
+                    </div>
+
+                    <div class="timer-control">
+                        <button id="playPauseBtn" onclick="toggleTimerRun()">Play</button>
+                        <button onclick="resetTimer()">Reset</button>
+                    </div>
+                </div>
             </div>
-
-            <div class="timer-buttons">
-                <button onclick="setQuickTime(1, this)">1 min</button>
-                <button onclick="setQuickTime(2, this)">2 min</button>
-                <button onclick="setQuickTime(5, this)" class="active">5 min</button>
-                <button onclick="setQuickTime(10, this)">10 min</button>
-
-                <input type="number"
-                       id="customTimeInput"
-                       placeholder="Custom (min)"
-                       style="width:100px; padding:4px; font-size:16px;"
-                       min="1">
-
-                <button onclick="setCustomTime()">Set</button>
-            </div>
-
-            <div class="timer-control">
-                <button id="playPauseBtn" onclick="toggleTimerRun()">Play</button>
-                <button onclick="resetTimer()">Reset</button>
-            </div>
-
         </div>
 
     </div>
 
 </div>
 
-</body>
+<footer>
+    <p>Mx Brooke's Education Resources. Copy, Use and Modify as you Wish.</p>
+</footer>
+
 <script>
+// Random Background Hexagons
+function generateBackgroundHexagons() {
+    const container = document.getElementById('bgHexagonsContainer');
+    const palette = ['#E69A10', '#4A3E32', '#3D3227', '#6B5B4E'];
+    const count = 7;
+
+    for (let i = 0; i < count; i++) {
+        const hex = document.createElement('div');
+        hex.className = 'bg-hex';
+
+        const size = Math.floor(Math.random() * 160) + 120;
+        hex.style.width = size + 'px';
+        hex.style.height = (size * 1.14) + 'px';
+
+        const topPos = Math.random() * 85;
+        const leftPos = Math.random() * 90;
+        hex.style.top = topPos + '%';
+        hex.style.left = leftPos + '%';
+
+        const rotation = Math.random() * 60 - 30;
+        const opacity = (Math.random() * 0.15 + 0.08).toFixed(2);
+        hex.style.transform = `rotate(${rotation}deg)`;
+        hex.style.opacity = opacity;
+
+        const color = palette[Math.floor(Math.random() * palette.length)];
+
+        hex.innerHTML = `<svg viewBox="0 0 100 100"><polygon points="25,5 75,5 95,50 75,95 25,95 5,50" stroke="${color}" /></svg>`;
+        container.appendChild(hex);
+    }
+}
 
 /* ----------------- Exam Mode ----------------- */
 let examMode = false;
 
 function toggleExamMode() {
     examMode = !examMode;
-
     document.getElementById("examSidebar").style.display = examMode ? "flex" : "none";
     document.getElementById("normalSidebar").style.display = examMode ? "none" : "flex";
 }
 
-/* ----------------- Global Font Size Control for Exam Sidebar ----------------- */
+/* ----------------- Font Size Controls ----------------- */
 function adjustExamFont(delta) {
     const examSidebar = document.getElementById('examSidebar');
     if (!examSidebar) return;
 
-    // adjust font size for all headings and lists inside exam sidebar
     const elements = examSidebar.querySelectorAll('h2, ul, li');
     elements.forEach(el => {
         const style = window.getComputedStyle(el).getPropertyValue('font-size');
@@ -509,42 +872,91 @@ function adjustExamFont(delta) {
     });
 }
 
-/* ----------------- Divider Resize ----------------- */
+function adjustInstructionFont(delta) {
+    const normalSidebar = document.getElementById('normalSidebar');
+    if (!normalSidebar) return;
+
+    const elements = normalSidebar.querySelectorAll('.instruction-title, .instruction-text');
+    elements.forEach(el => {
+        const style = window.getComputedStyle(el).getPropertyValue('font-size');
+        let currentSize = parseFloat(style);
+        currentSize += delta;
+        if (currentSize < 10) currentSize = 10;
+        if (currentSize > 36) currentSize = 36;
+        el.style.fontSize = currentSize + 'px';
+    });
+}
+
+/* ----------------- Resizable Split Pane ----------------- */
 const divider = document.getElementById("divider");
 const leftPanel = document.querySelector(".left");
 const rightPanel = document.querySelector(".right");
 const examSidebar = document.getElementById("examSidebar");
 
-let dragging = false;
+let draggingDivider = false;
 
 divider.addEventListener("mousedown", () => {
-    dragging = true;
+    draggingDivider = true;
     document.body.style.userSelect = "none";
 });
 
 window.addEventListener("mousemove", (e) => {
-    if (!dragging) return;
+    if (!draggingDivider) return;
 
     const mainRect = document.querySelector(".main").getBoundingClientRect();
     let newLeftWidth = e.clientX - mainRect.left;
 
-    newLeftWidth = Math.max(200, Math.min(newLeftWidth, mainRect.width - 200));
+    newLeftWidth = Math.max(220, Math.min(newLeftWidth, mainRect.width - 220));
 
     if (examMode) {
         examSidebar.style.flex = `0 0 ${newLeftWidth}px`;
+        examSidebar.style.width = `${newLeftWidth}px`;
     } else {
         leftPanel.style.flex = `0 0 ${newLeftWidth}px`;
+        leftPanel.style.width = `${newLeftWidth}px`;
     }
 
     rightPanel.style.flex = "1 1 auto";
 });
 
 window.addEventListener("mouseup", () => {
-    dragging = false;
+    draggingDivider = false;
     document.body.style.userSelect = "";
 });
 
-/* ----------------- Noise Meter ----------------- */
+/* ----------------- Mode Switching (Manual vs Mic) ----------------- */
+let currentMode = 'manual';
+
+function switchMode(mode) {
+    currentMode = mode;
+    const tabManual = document.getElementById('tabManual');
+    const tabMic = document.getElementById('tabMic');
+    const manualCard = document.getElementById('manualCardWrapper');
+    const micCard = document.getElementById('micCardWrapper');
+
+    if (mode === 'manual') {
+        tabManual.classList.add('active');
+        tabMic.classList.remove('active');
+        manualCard.style.display = 'block';
+        micCard.style.display = 'none';
+        
+        // Stop mic processing when switching away to save resources
+        stopMicrophone();
+        
+        // Restore active manual expectation header theme
+        setNoise(currentNoiseIndex);
+    } else {
+        tabMic.classList.add('active');
+        tabManual.classList.remove('active');
+        manualCard.style.display = 'none';
+        micCard.style.display = 'block';
+
+        // Auto-start microphone immediately upon switching to Live Microphone Mode
+        startMicrophone();
+    }
+}
+
+/* ----------------- Manual Expectations Control ----------------- */
 const arrowTop = document.getElementById('arrow-top');
 const arrowBottom = document.getElementById('arrow-bottom');
 const bar = document.getElementById('bar');
@@ -552,27 +964,180 @@ const segmentsEls = document.querySelectorAll('.segment');
 const segmentsCount = segmentsEls.length;
 let currentNoiseIndex = 0;
 
+// Palette Colors: Matching Header, Golden Yellow, Warm Orange, Bright Red
+const expectationColors = ['#4A3E32', '#FED41A', '#E67E22', '#E72B37'];
+
 function setNoise(index) {
     currentNoiseIndex = index;
     segmentsEls.forEach((seg, i) => seg.classList.toggle('active', i === index));
 
-    const barWidth = bar.clientWidth;
-    const segmentWidth = barWidth / segmentsCount;
-    const arrowPos = segmentWidth * index + segmentWidth / 2 - 15;
+    if (bar && bar.clientWidth > 0) {
+        const barWidth = bar.clientWidth;
+        const segmentWidth = barWidth / segmentsCount;
+        const arrowPos = segmentWidth * index + segmentWidth / 2 - 14;
 
-    arrowTop.style.left = `${arrowPos}px`;
-    arrowBottom.style.left = `${arrowPos}px`;
+        arrowTop.style.left = `${arrowPos}px`;
+        arrowBottom.style.left = `${arrowPos}px`;
+    }
 
-    const colors = ['#B1166F', '#FED41A', '#0DB2E1', '#E72B37'];
-    const header = document.querySelector('.header');
-    header.style.background = `linear-gradient(to bottom, #333, ${colors[index]})`;
-    header.style.borderBottomColor = colors[index];
+    if (currentMode === 'manual') {
+        const header = document.getElementById('headerBar');
+        const color = expectationColors[index];
+        header.style.background = `linear-gradient(to bottom, #4A3E32, ${color})`;
+        header.style.borderBottomColor = color;
+    }
 }
 
 setNoise(0);
-window.addEventListener('resize', () => setNoise(currentNoiseIndex));
+window.addEventListener('resize', () => {
+    if (currentMode === 'manual') setNoise(currentNoiseIndex);
+});
 
-/* ----------------- Timer ----------------- */
+/* ----------------- Live Microphone & Web Audio API ----------------- */
+let audioCtx = null;
+let analyser = null;
+let microphoneStream = null;
+let isMicActive = false;
+let currentThresholdPercent = 35;
+
+const samplesBuffer = [];
+const bufferLength = 30; // 30 frames ~ 1 second window
+
+async function startMicrophone() {
+    if (isMicActive) return;
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        microphoneStream = stream;
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 512;
+        analyser.smoothingTimeConstant = 0.3;
+
+        const source = audioCtx.createMediaStreamSource(stream);
+        source.connect(analyser);
+
+        isMicActive = true;
+        processAudio();
+    } catch (err) {
+        alert("Microphone permission denied or unavailable. Please enable microphone permissions in your browser.");
+        console.error("Mic Access Error: ", err);
+    }
+}
+
+function stopMicrophone() {
+    if (microphoneStream) {
+        microphoneStream.getTracks().forEach(track => track.stop());
+    }
+    if (audioCtx) {
+        audioCtx.close();
+    }
+    isMicActive = false;
+    
+    const volFill = document.getElementById('volumeBarFill');
+    if (volFill) volFill.style.width = '0%';
+    const volDisplay = document.getElementById('volDisplay');
+    if (volDisplay) volDisplay.textContent = '0%';
+    const micCardWrapper = document.getElementById('micCardWrapper');
+    if (micCardWrapper) micCardWrapper.classList.remove('exceeded');
+}
+
+function processAudio() {
+    if (!isMicActive) return;
+
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(dataArray);
+
+    let sum = 0;
+    for (let i = 0; i < dataArray.length; i++) {
+        sum += dataArray[i] * dataArray[i];
+    }
+    const rms = Math.sqrt(sum / dataArray.length);
+    const instantVolume = Math.min(100, Math.round((rms / 110) * 100));
+
+    samplesBuffer.push(instantVolume);
+    if (samplesBuffer.length > bufferLength) {
+        samplesBuffer.shift();
+    }
+
+    const rollingAvgVol = Math.round(samplesBuffer.reduce((a, b) => a + b, 0) / samplesBuffer.length);
+
+    const volFill = document.getElementById('volumeBarFill');
+    const micCardWrapper = document.getElementById('micCardWrapper');
+    if (volFill) volFill.style.width = rollingAvgVol + '%';
+    const volDisplay = document.getElementById('volDisplay');
+    if (volDisplay) volDisplay.textContent = rollingAvgVol + '%';
+
+    const isExceeded = rollingAvgVol > currentThresholdPercent;
+    
+    if (isExceeded) {
+        if (volFill) volFill.style.backgroundColor = 'var(--mic-exceeded)';
+        if (micCardWrapper) micCardWrapper.classList.add('exceeded');
+    } else {
+        if (volFill) volFill.style.backgroundColor = 'var(--mic-ok)';
+        if (micCardWrapper) micCardWrapper.classList.remove('exceeded');
+    }
+
+    if (currentMode === 'mic') {
+        updateHeaderThemeForMic(isExceeded);
+    }
+
+    requestAnimationFrame(processAudio);
+}
+
+function updateHeaderThemeForMic(isExceeded) {
+    const header = document.getElementById('headerBar');
+    if (isExceeded) {
+        header.style.background = `linear-gradient(to bottom, #4A3E32, #E72B37)`;
+        header.style.borderBottomColor = '#E72B37';
+    } else {
+        header.style.background = `linear-gradient(to bottom, #4A3E32, #10B981)`;
+        header.style.borderBottomColor = '#10B981';
+    }
+}
+
+/* ----------------- Draggable Threshold Handle ----------------- */
+const wrapper = document.getElementById('volumeMeterWrapper');
+const handle = document.getElementById('thresholdHandle');
+const line = document.getElementById('thresholdLine');
+let isDraggingThreshold = false;
+
+function updateThresholdPosition(percent) {
+    currentThresholdPercent = Math.max(5, Math.min(95, percent));
+    handle.style.left = currentThresholdPercent + '%';
+    line.style.left = currentThresholdPercent + '%';
+    document.getElementById('thresholdDisplay').textContent = currentThresholdPercent + '%';
+}
+
+wrapper.addEventListener('click', (e) => {
+    if (isDraggingThreshold) return;
+    const rect = wrapper.getBoundingClientRect();
+    let offsetX = e.clientX - rect.left;
+    let newPercent = Math.round((offsetX / rect.width) * 100);
+    updateThresholdPosition(newPercent);
+});
+
+handle.addEventListener('mousedown', (e) => {
+    isDraggingThreshold = true;
+    e.stopPropagation();
+    e.preventDefault();
+});
+
+window.addEventListener('mousemove', (e) => {
+    if (!isDraggingThreshold) return;
+    const rect = wrapper.getBoundingClientRect();
+    let offsetX = e.clientX - rect.left;
+    let newPercent = Math.round((offsetX / rect.width) * 100);
+    updateThresholdPosition(newPercent);
+});
+
+window.addEventListener('mouseup', () => {
+    isDraggingThreshold = false;
+});
+
+updateThresholdPosition(35);
+
+/* ----------------- Timer & Flying Bee Dynamics ----------------- */
+let totalTimerDuration = 5 * 60;
 let timerDuration = 5 * 60;
 let timerRunning = false;
 let timerInterval = null;
@@ -612,13 +1177,14 @@ function toggleTimerRun() {
 function resetTimer() {
     clearInterval(timerInterval);
     timerRunning = false;
-    timerDuration = 5 * 60;
+    timerDuration = totalTimerDuration;
     updateTimerDisplay();
     playPauseBtn.textContent = "Play";
 }
 
 function setQuickTime(mins, btn) {
-    timerDuration = mins * 60;
+    totalTimerDuration = mins * 60;
+    timerDuration = totalTimerDuration;
     updateTimerDisplay();
     document.querySelectorAll('.timer-buttons button').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
@@ -631,18 +1197,232 @@ function setCustomTime() {
         alert("Please enter a valid number of minutes (>=1)");
         return;
     }
-    timerDuration = mins * 60;
+    totalTimerDuration = mins * 60;
+    timerDuration = totalTimerDuration;
     updateTimerDisplay();
     document.querySelectorAll('.timer-buttons button').forEach(b => b.classList.remove('active'));
 }
 
-/* ----------------- Dark Mode ----------------- */
-function toggleTheme() {
-    document.body.classList.toggle('dark-mode');
+/* ----------------- Flying Bees Canvas Animation ----------------- */
+let stitchParticles = [];
+let mouseX = -1000;
+let mouseY = -1000;
+
+window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+});
+
+window.addEventListener('mouseleave', () => {
+    mouseX = -1000;
+    mouseY = -1000;
+});
+
+const logoImage = new Image();
+logoImage.src = 'https://www.mxbrooke.co.uk/images/logo.svg';
+
+class StitchParticle {
+    constructor(x, y, angle) {
+        this.x = x;
+        this.y = y;
+        this.angle = angle;
+        this.length = 9; 
+        this.maxLife = 350; 
+        this.life = this.maxLife;
+    }
+
+    update() {
+        this.life--;
+    }
+
+    draw(ctx) {
+        const alpha = Math.max(0, this.life / this.maxLife) * 0.45;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+
+        ctx.beginPath();
+        ctx.moveTo(-this.length / 2, 0);
+        ctx.lineTo(this.length / 2, 0);
+
+        ctx.strokeStyle = `rgba(74, 62, 50, ${alpha})`;
+        ctx.lineWidth = 2.0;
+        ctx.lineCap = 'square';
+        ctx.stroke();
+
+        ctx.restore();
+    }
 }
 
-updateTimerDisplay();
+class FlyingLogoBee {
+    constructor(canvasWidth, canvasHeight) {
+        this.reset(canvasWidth, canvasHeight);
+    }
 
+    reset(w, h) {
+        this.x = Math.random() * w;
+        this.y = Math.random() * h;
+        this.vx = (Math.random() - 0.5) * 1.5;
+        this.vy = (Math.random() - 0.5) * 1.5;
+        this.targetSize = 32; 
+        this.angle = Math.random() * Math.PI * 2;
+        this.distanceSinceLastStitch = 0;
+        this.stitchInterval = 28;
+    }
+
+    update(w, h) {
+        if (!timerRunning) {
+            return;
+        }
+
+        let timeProgress = 1 - (timerDuration / (totalTimerDuration || 1));
+        timeProgress = Math.max(0, Math.min(1, timeProgress));
+        const speedMultiplier = 1 + (timeProgress * 2.5);
+
+        const oldX = this.x;
+        const oldY = this.y;
+
+        const dx = mouseX - this.x;
+        const dy = mouseY - this.y;
+        const distToCursor = Math.hypot(dx, dy);
+        const attractionRadius = 220;
+
+        if (distToCursor < attractionRadius && distToCursor > 25) {
+            const angleToCursor = Math.atan2(dy, dx);
+            this.vx += Math.cos(angleToCursor) * 0.12 * speedMultiplier;
+            this.vy += Math.sin(angleToCursor) * 0.12 * speedMultiplier;
+        } else {
+            this.angle += (Math.random() - 0.5) * 0.2;
+            this.vx += Math.cos(this.angle) * 0.08 * speedMultiplier;
+            this.vy += Math.sin(this.angle) * 0.08 * speedMultiplier;
+        }
+
+        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        const maxSpeed = 1.9 * speedMultiplier;
+        if (speed > maxSpeed) {
+            this.vx = (this.vx / speed) * maxSpeed;
+            this.vy = (this.vy / speed) * maxSpeed;
+        }
+
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < -40) this.x = w + 40;
+        if (this.x > w + 40) this.x = -40;
+        if (this.y < -40) this.y = h + 40;
+        if (this.y > h + 40) this.y = -40;
+
+        const distMoved = Math.hypot(this.x - oldX, this.y - oldY);
+        this.distanceSinceLastStitch += distMoved;
+
+        if (this.distanceSinceLastStitch >= this.stitchInterval) {
+            this.distanceSinceLastStitch = 0;
+            const flightAngle = Math.atan2(this.vy, this.vx);
+            
+            const offset = this.targetSize * 0.45;
+            const trailX = this.x - Math.cos(flightAngle) * offset;
+            const trailY = this.y - Math.sin(flightAngle) * offset;
+
+            stitchParticles.push(new StitchParticle(trailX, trailY, flightAngle));
+        }
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        const flightAngle = Math.atan2(this.vy, this.vx);
+        const rotationOffset = Math.PI / 2;
+        const wiggle = timerRunning ? Math.sin(Date.now() * 0.02) * 0.12 : 0;
+        ctx.rotate(flightAngle + rotationOffset + wiggle);
+
+        ctx.beginPath();
+        ctx.arc(0, 0, this.targetSize * 0.45, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(230, 154, 16, 0.12)";
+        ctx.fill();
+
+        if (logoImage.complete && logoImage.naturalWidth > 0 && logoImage.naturalHeight > 0) {
+            const aspect = logoImage.naturalWidth / logoImage.naturalHeight;
+            let drawWidth = this.targetSize;
+            let drawHeight = this.targetSize;
+
+            if (aspect > 1) {
+                drawHeight = this.targetSize / aspect;
+            } else {
+                drawWidth = this.targetSize * aspect;
+            }
+
+            ctx.drawImage(logoImage, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+        } else {
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                const a = (Math.PI / 3) * i;
+                const hx = Math.cos(a) * (this.targetSize / 2);
+                const hy = Math.sin(a) * (this.targetSize / 2);
+                if (i === 0) ctx.moveTo(hx, hy);
+                else ctx.lineTo(hx, hy);
+            }
+            ctx.closePath();
+            ctx.fillStyle = "#E69A10";
+            ctx.fill();
+            ctx.strokeStyle = "#4A3E32";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+}
+
+const canvas = document.getElementById('beeCanvas');
+const ctx = canvas.getContext('2d');
+let bees = [];
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+function initBees() {
+    resizeCanvas();
+    bees = [];
+    stitchParticles = [];
+    const count = Math.min(8, Math.max(4, Math.floor(window.innerWidth / 220)));
+    for (let i = 0; i < count; i++) {
+        bees.push(new FlyingLogoBee(canvas.width, canvas.height));
+    }
+}
+
+function animateBees() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = stitchParticles.length - 1; i >= 0; i--) {
+        const p = stitchParticles[i];
+        p.update();
+        if (p.life <= 0) {
+            stitchParticles.splice(i, 1);
+        } else {
+            p.draw(ctx);
+        }
+    }
+
+    bees.forEach(bee => {
+        bee.update(canvas.width, canvas.height);
+        bee.draw(ctx);
+    });
+
+    requestAnimationFrame(animateBees);
+}
+
+window.addEventListener('resize', resizeCanvas);
+
+window.onload = function() {
+    generateBackgroundHexagons();
+    initBees();
+    animateBees();
+    updateTimerDisplay();
+};
 </script>
+
 </body>
 </html>
