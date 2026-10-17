@@ -7,17 +7,17 @@
 
 <style>
 :root {
-    --bg-main: #FFE8CF;
-    --header-bg: #5d5246;
-    --accent-amber: #9E5E1A;
-    --accent-hover: #7C4812;
-    --accent-gold: #D9822B;
+    --bg-main: #FFF4E6;
+    --header-bg: #4A3E32;
+    --accent-amber: #E69A10;
+    --accent-hover: #C5830D;
+    --accent-gold: #E69A10;
     --text-dark: #2C241D;
     --text-muted: #6B5B4E;
     --card-bg: #FFFFFF;
-    --card-border: #E6D2BD;
-    --dropdown-bg: #4A4137;
-    --dropdown-hover: #605448;
+    --card-border: #F0D5B7;
+    --dropdown-bg: #3D3227;
+    --dropdown-hover: #544638;
     
     /* Hexagon & Angular Clip Paths */
     --hex-cut-sm: polygon(8px 0%, calc(100% - 8px) 0%, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0% calc(100% - 8px), 0% 8px);
@@ -41,6 +41,33 @@ body {
     flex-direction: column;
     overflow-x: hidden;
     position: relative;
+    background-image: radial-gradient(var(--card-border) 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+
+/* Background Hollow Hexagons Container */
+.bg-hexagons {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.bg-hex {
+    position: absolute;
+    background: transparent;
+}
+
+.bg-hex svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke-width: 5px;
+    stroke-linejoin: round;
 }
 
 /* Background Canvas for Bee Stitch Trails & Mini Bees */
@@ -51,7 +78,7 @@ body {
     width: 100vw;
     height: 100vh;
     pointer-events: none;
-    z-index: 1;
+    z-index: 2;
 }
 
 /* Header & Angular Navigation */
@@ -59,14 +86,14 @@ body {
     width: 100%;
     height: 80px;
     background-color: var(--header-bg);
-    border-bottom: 3px solid #4a4137;
+    border-bottom: 3px solid #3D3227;
     position: fixed;
     top: 0;
     left: 0;
     z-index: 100;
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
-    justify-content: space-between;
     padding: 0 24px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
@@ -75,6 +102,7 @@ body {
     display: flex;
     align-items: center;
     gap: 16px;
+    justify-self: start;
 }
 
 .brand-section img.logo {
@@ -107,7 +135,9 @@ body {
 .nav-menu {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 12px;
+    justify-self: center;
 }
 
 .nav-item {
@@ -132,6 +162,7 @@ body {
 
 .nav-btn:hover, .nav-item:focus-within .nav-btn {
     background-color: var(--accent-amber);
+    color: #2C241D;
     transform: translateY(-1px);
 }
 
@@ -148,7 +179,8 @@ body {
 .dropdown-menu {
     position: absolute;
     top: 100%;
-    left: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
     min-width: 260px;
     background-color: var(--dropdown-bg);
     padding: 8px;
@@ -156,8 +188,7 @@ body {
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
     opacity: 0;
     visibility: hidden;
-    transform: translateY(8px);
-    transition: all 0.2s ease;
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
     z-index: 110;
 }
 
@@ -165,7 +196,7 @@ body {
 .nav-item:focus-within .dropdown-menu {
     opacity: 1;
     visibility: visible;
-    transform: translateY(4px);
+    transform: translateX(-50%) translateY(4px);
 }
 
 .dropdown-item {
@@ -180,46 +211,9 @@ body {
 }
 
 .dropdown-item:hover {
-    background-color: var(--dropdown-hover);
-    color: #FFE8CF;
+    background-color: var(--accent-amber);
+    color: #2C241D;
     padding-left: 18px;
-}
-
-/* Search Box Input */
-.header-search {
-    position: relative;
-}
-
-.search-input {
-    background: rgba(0, 0, 0, 0.25);
-    border: none;
-    color: #FFFFFF;
-    padding: 8px 12px 8px 30px;
-    clip-path: var(--hex-cut-sm);
-    font-family: inherit;
-    font-size: 0.85rem;
-    outline: none;
-    width: 190px;
-    transition: width 0.25s ease, background-color 0.25s ease;
-}
-
-.search-input::placeholder {
-    color: rgba(255, 255, 255, 0.65);
-}
-
-.search-input:focus {
-    width: 240px;
-    background: rgba(0, 0, 0, 0.45);
-}
-
-.search-icon {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: rgba(255, 255, 255, 0.65);
-    font-size: 0.8rem;
-    pointer-events: none;
 }
 
 /* Main Container & Hero Showcase */
@@ -241,23 +235,33 @@ body {
     padding: 3px;
     clip-path: var(--hex-cut-lg);
     margin: 20px 0 45px 0;
-    box-shadow: 0 10px 30px var(--card-shadow);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
 }
 
 .hero-card {
     background-color: var(--card-bg);
     clip-path: var(--hex-cut-lg);
-    padding: 36px 32px;
-    display: grid;
-    grid-template-columns: 1fr 300px;
-    gap: 32px;
-    align-items: center;
+    padding: 40px 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     position: relative;
+}
+
+.hero-card::after {
+    content: "⬡";
+    position: absolute;
+    right: 40px;
+    bottom: -20px;
+    font-size: 14rem;
+    color: rgba(230, 154, 16, 0.05);
+    pointer-events: none;
+    line-height: 1;
 }
 
 .badge-featured {
     display: inline-block;
-    background-color: #5d5246;
+    background-color: var(--header-bg);
     color: #FFE8CF;
     font-size: 0.78rem;
     font-weight: bold;
@@ -269,7 +273,7 @@ body {
 }
 
 .hero-title {
-    font-size: 1.8rem;
+    font-size: 2rem;
     font-weight: bold;
     color: var(--text-dark);
     margin-bottom: 12px;
@@ -277,10 +281,11 @@ body {
 }
 
 .hero-description {
-    font-size: 0.95rem;
+    font-size: 1.05rem;
     color: var(--text-muted);
     line-height: 1.6;
     margin-bottom: 24px;
+    max-width: 750px;
 }
 
 .hero-actions {
@@ -292,7 +297,7 @@ body {
 /* Angular Buttons */
 .btn-primary {
     background-color: var(--accent-amber);
-    color: #FFFFFF;
+    color: #2C241D;
     text-decoration: none;
     padding: 12px 24px;
     clip-path: var(--hex-cut-sm);
@@ -311,52 +316,6 @@ body {
     transform: translateY(-2px);
 }
 
-.btn-secondary {
-    background-color: var(--header-bg);
-    color: #FFE8CF;
-    text-decoration: none;
-    padding: 12px 20px;
-    clip-path: var(--hex-cut-sm);
-    font-weight: bold;
-    font-size: 0.95rem;
-    border: none;
-    display: inline-flex;
-    align-items: center;
-    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
-    cursor: pointer;
-}
-
-.btn-secondary:hover {
-    background-color: #4a4137;
-    color: #FFFFFF;
-    transform: translateY(-2px);
-}
-
-.hero-preview {
-    background-color: #5d5246;
-    clip-path: var(--hex-cut-md);
-    padding: 28px;
-    color: #FFE8CF;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    box-shadow: inset 0 0 15px rgba(0,0,0,0.3);
-}
-
-.hero-preview-icon {
-    font-size: 3.5rem;
-    margin-bottom: 12px;
-}
-
-.hero-preview-tag {
-    font-size: 0.8rem;
-    color: #D9822B;
-    text-transform: uppercase;
-    font-weight: bold;
-}
-
 .section-title {
     font-size: 1.3rem;
     font-weight: bold;
@@ -365,12 +324,12 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    border-bottom: 2px dashed #E6D2BD;
+    border-bottom: 2px dashed var(--card-border);
     padding-bottom: 8px;
 }
 
 .section-title::before {
-    content: "⬢";
+    content: "⬡";
     color: var(--accent-amber);
 }
 
@@ -399,29 +358,15 @@ body {
     justify-content: center;
     min-height: 95px;
     position: relative;
-    box-shadow: 0 4px 10px rgba(93, 82, 70, 0.15);
-    transition: background-color 0.25s ease, transform 0.25s ease;
+    box-shadow: 0 4px 10px rgba(74, 62, 50, 0.15);
+    transition: background-color 0.25s ease, transform 0.25s ease, color 0.25s ease;
     line-height: 1.35;
 }
 
 .projectButton:hover {
     background-color: var(--accent-amber);
-    color: #FFFFFF;
+    color: #2C241D;
     transform: translateY(-4px);
-}
-
-.no-results {
-    text-align: center;
-    padding: 50px 20px;
-    color: var(--text-muted);
-    font-size: 1.1rem;
-    display: none;
-    background: white;
-    clip-path: var(--hex-cut-md);
-}
-
-.hidden-element {
-    display: none !important;
 }
 
 footer {
@@ -438,31 +383,26 @@ footer {
     .header {
         height: auto;
         padding: 12px 16px;
-        flex-wrap: wrap;
+        display: flex;
+        flex-direction: column;
         gap: 12px;
+    }
+    .brand-section {
+        justify-self: center;
     }
     .nav-menu {
         width: 100%;
         overflow-x: auto;
         padding-bottom: 4px;
     }
-    .hero-card {
-        grid-template-columns: 1fr;
-    }
-    .hero-preview {
-        display: none;
-    }
-    .search-input {
-        width: 140px;
-    }
-    .search-input:focus {
-        width: 170px;
-    }
 }
 </style>
 </head>
 
 <body>
+
+<!-- Dynamically Generated Random Background Hexagons -->
+<div class="bg-hexagons" id="bgHexagonsContainer"></div>
 
 <!-- Background Canvas -->
 <canvas id="beeCanvas"></canvas>
@@ -474,12 +414,12 @@ footer {
         <span class="brand-title">MxBrooke.co.uk</span>
     </div>
 
-    <!-- Header Angular Dropdown Navigation -->
+    <!-- Header Angular Dropdown Navigation (Centered) -->
     <nav class="nav-menu">
         <div class="nav-item">
             <button class="nav-btn">
                 <span>Student Links</span>
-                <span class="chevron"></span>
+                <span class="chevron">▼</span>
             </button>
             <div class="dropdown-menu">
                 <a href="ide/" class="dropdown-item">IDE (Development Env)</a>
@@ -498,7 +438,7 @@ footer {
         <div class="nav-item">
             <button class="nav-btn">
                 <span>Year 11 Revision</span>
-                <span class="chevron"></span>
+                <span class="chevron">▼</span>
             </button>
             <div class="dropdown-menu">
                 <a href="vault/" class="dropdown-item">Programming Skills Questions</a>
@@ -510,8 +450,8 @@ footer {
         <div class="nav-item">
             <button class="nav-btn">
                 <span>Teacher Links</span>
-                <span class="chevron"></span>
-            </button>
+                <span class="chevron">▼</span>
+            </button> 
             <div class="dropdown-menu">
                 <a href="BroadcastScreen/" class="dropdown-item">Broadcast Screen</a>
                 <a href="RandomNamePicker/" class="dropdown-item">Random Name Picker</a>
@@ -525,7 +465,7 @@ footer {
         <div class="nav-item">
             <button class="nav-btn">
                 <span>Computing Teacher</span>
-                <span class="chevron"></span>
+                <span class="chevron">▼</span>
             </button>
             <div class="dropdown-menu">
                 <a href="bitmapimagetool/" class="dropdown-item">Bitmap Image Visualiser</a>
@@ -535,10 +475,8 @@ footer {
         </div>
     </nav>
 
-    <!-- Header Live Search Box -->
-    <div class="header-search">
-        <input type="text" id="searchInput" class="search-input" placeholder="Search tools..." onkeyup="filterTools()">
-    </div>
+    <!-- Empty div to balance grid layout -->
+    <div></div>
 </header>
 
 <div id="mainContainer">
@@ -546,81 +484,28 @@ footer {
     <!-- Angular Featured Tool Hero Showcase -->
     <div class="hero-card-wrapper" id="featuredHero">
         <div class="hero-card">
-            <div>
-                <span class="badge-featured">Featured New Resource</span>
-                <h1 class="hero-title">Logic Gates Circuit Simulator</h1>
-                <p class="hero-description">
-                    Interactive logic gate designer & truth table simulator. Build digital logic circuits using AND, OR, NOT, NAND, NOR, and XOR gates in real-time.
-                </p>
-                <div class="hero-actions">
-                    <button class="btn-primary" onclick="location.href='logicgates/'">
-                        Launch Simulator
-                    </button>
-                    <button class="btn-secondary" onclick="scrollToSection('student-section')">
-                        Browse All Resources
-                    </button>
-                </div>
-            </div>
-            <div class="hero-preview">
-                <div class="hero-preview-tag">Interactive Tool</div>
-                <p style="font-size: 0.75rem; margin-top: 6px; opacity: 0.8;">Logic Circuit Simulation</p>
+            <span class="badge-featured">Featured New Resource</span>
+            <h1 class="hero-title">Logic Swarm Game</h1>
+            <p class="hero-description">
+                Practice your understanding of logic gates and beat the swarm!
+            </p>
+            <div class="hero-actions">
+                <button class="btn-primary" onclick="location.href='games/logicswarm'">
+                    Launch Simulator ⬡
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Student Links Section -->
-    <section class="resource-section" id="student-section">
-        <h3 class="section-title">Student Links</h3>
-        <div class="buttonGrid student-group">
-            <button class="projectButton" onclick="location.href='ide/'">IDE (Integrated Development Environment)</button>
-            <button class="projectButton" onclick="location.href='encyclopedia/'">Encyclopedia</button>
-            <button class="projectButton" onclick="location.href='games/'">Games</button>
-            <button class="projectButton" onclick="location.href='programming/'">Programming Challenges</button>
-            <button class="projectButton" onclick="location.href='netsim/'">Network Simulator</button>
-            <button class="projectButton" onclick="location.href='dnssim/'">DNS Simulator</button>
-            <button class="projectButton" onclick="location.href='blockhtml/'">Block-by-Block HTML</button>
-            <button class="projectButton" onclick="location.href='quizzes/'">Quizzes</button>
-            <button class="projectButton" onclick="location.href='logicgates/'">Logic gates circuit sim</button>
-            <button class="projectButton" onclick="location.href='flowcharts/'">Flowcharts</button>
-        </div>
-    </section>
-
-    <!-- Year 11 Revision Links Section -->
-    <section class="resource-section" id="revision-section">
-        <h3 class="section-title">Year 11 Revision Links</h3>
-        <div class="buttonGrid revision-group">
-            <button class="projectButton" onclick="location.href='vault/'">Programming Skills Questions</button>
-            <button class="projectButton" onclick="location.href='https://unnatural-code-master-prep.base44.app/'">Paper 2 Quiz Questions</button>
-            <button class="projectButton" onclick="location.href='https://gate-genius-quest.lovable.app/'">Logic Gates Questions</button>
-        </div>
-    </section>
-
-    <!-- Teacher Links Section -->
-    <section class="resource-section" id="teacher-section">
-        <h3 class="section-title">Teacher Links</h3>
-        <div class="buttonGrid teacher-group">
-            <button class="projectButton" onclick="location.href='BroadcastScreen/'">Broadcast Screen</button>
-            <button class="projectButton" onclick="location.href='RandomNamePicker/'">Random Name Picker</button>
-            <button class="projectButton" onclick="location.href='seatingplan/'">Seating Planner</button>
-            <button class="projectButton" onclick="location.href='ReadingTimer/'">Reading Benefits Timer</button>
-            <button class="projectButton" onclick="location.href='Scoreboard/'">Scoreboard</button>
-            <button class="projectButton" onclick="location.href='TeleScroll/'">Teleprompter</button>
-        </div>
-    </section>
-
     <!-- Computing Teacher Section -->
     <section class="resource-section" id="computing-section">
-        <h3 class="section-title">Computing Teacher</h3>
+        <h3 class="section-title">Recommended Resources</h3>
         <div class="buttonGrid computing-group">
             <button class="projectButton" onclick="location.href='bitmapimagetool/'">Bitmap Image Visualiser</button>
             <button class="projectButton" onclick="location.href='soundvisualiser/'">Sound Visualiser</button>
             <button class="projectButton" onclick="location.href='searches/'">Searching Algorithms Visualiser</button>
         </div>
     </section>
-
-    <div id="noResults" class="no-results">
-        No resources matched your search query. Try typing another keyword.
-    </div>
 
 </div>
 
@@ -629,51 +514,59 @@ footer {
 </footer>
 
 <script>
+// Randomly Generate Background Hexagons on Load
+function generateBackgroundHexagons() {
+    const container = document.getElementById('bgHexagonsContainer');
+    const palette = ['#E69A10', '#4A3E32', '#3D3227', '#6B5B4E'];
+    const count = 7; // Number of background hexagons
+
+    for (let i = 0; i < count; i++) {
+        const hex = document.createElement('div');
+        hex.className = 'bg-hex';
+
+        // Random sizes between 120px and 280px
+        const size = Math.floor(Math.random() * 160) + 120;
+        hex.style.width = size + 'px';
+        hex.style.height = (size * 1.14) + 'px';
+
+        // Random positions across the viewport
+        const topPos = Math.random() * 85;
+        const leftPos = Math.random() * 90;
+        hex.style.top = topPos + '%';
+        hex.style.left = leftPos + '%';
+
+        // Random rotation and opacity
+        const rotation = Math.random() * 60 - 30;
+        const opacity = (Math.random() * 0.15 + 0.08).toFixed(2);
+        hex.style.transform = `rotate(${rotation}deg)`;
+        hex.style.opacity = opacity;
+
+        // Random color from palette
+        const color = palette[Math.floor(Math.random() * palette.length)];
+
+        // SVG 6-sided polygon outline
+        hex.innerHTML = `<svg viewBox="0 0 100 100"><polygon points="25,5 75,5 95,50 75,95 25,95 5,50" stroke="${color}" /></svg>`;
+        container.appendChild(hex);
+    }
+}
+
 function scrollToSection(id) {
     document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
 }
 
-function filterTools() {
-    const query = document.getElementById('searchInput').value.toLowerCase().trim();
-    const buttons = document.querySelectorAll('.projectButton');
-    const sections = document.querySelectorAll('.resource-section');
-    const hero = document.getElementById('featuredHero');
-    let visibleCount = 0;
-
-    if (query.length > 0) {
-        hero.style.display = 'none';
-    } else {
-        hero.style.display = 'block';
-    }
-
-    buttons.forEach(btn => {
-        const text = btn.textContent.toLowerCase();
-        if (text.includes(query)) {
-            btn.classList.remove('hidden-element');
-            visibleCount++;
-        } else {
-            btn.classList.add('hidden-element');
-        }
-    });
-
-    sections.forEach(sec => {
-        const hasVisible = sec.querySelectorAll('.projectButton:not(.hidden-element)').length > 0;
-        if (hasVisible) {
-            sec.classList.remove('hidden-element');
-        } else {
-            sec.classList.add('hidden-element');
-        }
-    });
-
-    const noResults = document.getElementById('noResults');
-    if (visibleCount === 0 && query.length > 0) {
-        noResults.style.display = 'block';
-    } else {
-        noResults.style.display = 'none';
-    }
-}
-
 let stitchParticles = [];
+let mouseX = -1000;
+let mouseY = -1000;
+
+window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+});
+
+window.addEventListener('mouseleave', () => {
+    mouseX = -1000;
+    mouseY = -1000;
+});
 
 // Preload Logo SVG Image
 const logoImage = new Image();
@@ -684,8 +577,8 @@ class StitchParticle {
         this.x = x;
         this.y = y;
         this.angle = angle;
-        this.length = 9; // Stitch dash length
-        this.maxLife = 350; // Fade duration
+        this.length = 9; 
+        this.maxLife = 350; 
         this.life = this.maxLife;
     }
 
@@ -703,7 +596,7 @@ class StitchParticle {
         ctx.moveTo(-this.length / 2, 0);
         ctx.lineTo(this.length / 2, 0);
 
-        ctx.strokeStyle = `rgba(93, 82, 70, ${alpha})`;
+        ctx.strokeStyle = `rgba(74, 62, 50, ${alpha})`;
         ctx.lineWidth = 2.0;
         ctx.lineCap = 'square';
         ctx.stroke();
@@ -722,7 +615,7 @@ class FlyingLogoBee {
         this.y = Math.random() * h;
         this.vx = (Math.random() - 0.5) * 1.5;
         this.vy = (Math.random() - 0.5) * 1.5;
-        this.targetSize = 32; // Fixed dimension to preserve aspect ratio
+        this.targetSize = 32; 
         this.angle = Math.random() * Math.PI * 2;
         this.distanceSinceLastStitch = 0;
         this.stitchInterval = 28;
@@ -732,14 +625,24 @@ class FlyingLogoBee {
         const oldX = this.x;
         const oldY = this.y;
 
-        // Curved flight path movement
-        this.angle += (Math.random() - 0.5) * 0.2;
-        this.vx += Math.cos(this.angle) * 0.08;
-        this.vy += Math.sin(this.angle) * 0.08;
+        // Cursor attraction & swarm reactivity logic
+        const dx = mouseX - this.x;
+        const dy = mouseY - this.y;
+        const distToCursor = Math.hypot(dx, dy);
+        const attractionRadius = 220;
 
-        // Speed limit
+        if (distToCursor < attractionRadius && distToCursor > 25) {
+            const angleToCursor = Math.atan2(dy, dx);
+            this.vx += Math.cos(angleToCursor) * 0.12;
+            this.vy += Math.sin(angleToCursor) * 0.12;
+        } else {
+            this.angle += (Math.random() - 0.5) * 0.2;
+            this.vx += Math.cos(this.angle) * 0.08;
+            this.vy += Math.sin(this.angle) * 0.08;
+        }
+
         const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
-        const maxSpeed = 1.6;
+        const maxSpeed = 1.9;
         if (speed > maxSpeed) {
             this.vx = (this.vx / speed) * maxSpeed;
             this.vy = (this.vy / speed) * maxSpeed;
@@ -748,13 +651,11 @@ class FlyingLogoBee {
         this.x += this.vx;
         this.y += this.vy;
 
-        // Screen wrap
         if (this.x < -40) this.x = w + 40;
         if (this.x > w + 40) this.x = -40;
         if (this.y < -40) this.y = h + 40;
         if (this.y > h + 40) this.y = -40;
 
-        // Calculate travel distance & drop stitch trail behind bee
         const distMoved = Math.hypot(this.x - oldX, this.y - oldY);
         this.distanceSinceLastStitch += distMoved;
 
@@ -774,21 +675,16 @@ class FlyingLogoBee {
         ctx.save();
         ctx.translate(this.x, this.y);
 
-        // Calculate velocity angle
         const flightAngle = Math.atan2(this.vy, this.vx);
-        
-        // Orient bee head along flight direction (offset by +90deg / Math.PI/2 for upward facing SVG logo)
         const rotationOffset = Math.PI / 2;
         const wiggle = Math.sin(Date.now() * 0.01) * 0.08;
         ctx.rotate(flightAngle + rotationOffset + wiggle);
 
-        // Soft background glow
         ctx.beginPath();
         ctx.arc(0, 0, this.targetSize * 0.45, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(158, 94, 26, 0.1)";
+        ctx.fillStyle = "rgba(230, 154, 16, 0.12)";
         ctx.fill();
 
-        // Render logo SVG while maintaining original aspect ratio without distortion
         if (logoImage.complete && logoImage.naturalWidth > 0 && logoImage.naturalHeight > 0) {
             const aspect = logoImage.naturalWidth / logoImage.naturalHeight;
             let drawWidth = this.targetSize;
@@ -802,7 +698,6 @@ class FlyingLogoBee {
 
             ctx.drawImage(logoImage, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
         } else {
-            // Hexagon badge fallback during image load
             ctx.beginPath();
             for (let i = 0; i < 6; i++) {
                 const a = (Math.PI / 3) * i;
@@ -812,9 +707,9 @@ class FlyingLogoBee {
                 else ctx.lineTo(hx, hy);
             }
             ctx.closePath();
-            ctx.fillStyle = "#9E5E1A";
+            ctx.fillStyle = "#E69A10";
             ctx.fill();
-            ctx.strokeStyle = "#5d5246";
+            ctx.strokeStyle = "#4A3E32";
             ctx.lineWidth = 2;
             ctx.stroke();
         }
@@ -845,7 +740,6 @@ function initBees() {
 function animateBees() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. Draw dashed stitches
     for (let i = stitchParticles.length - 1; i >= 0; i--) {
         const p = stitchParticles[i];
         p.update();
@@ -856,7 +750,6 @@ function animateBees() {
         }
     }
 
-    // 2. Draw flying logo bees
     bees.forEach(bee => {
         bee.update(canvas.width, canvas.height);
         bee.draw(ctx);
@@ -868,6 +761,7 @@ function animateBees() {
 window.addEventListener('resize', resizeCanvas);
 
 window.onload = function() {
+    generateBackgroundHexagons();
     initBees();
     animateBees();
 };
