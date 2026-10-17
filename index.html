@@ -6,212 +6,871 @@
 <title>Mx Brooke's Education Resources</title>
 
 <style>
-/* ----------------- Global ----------------- */
-body {
-    font-family: Consolas, monospace;
-    margin: 0;
-    background-color: #f5f5f5;
-    color: #000;
-    overflow-x: hidden;
+:root {
+    --bg-main: #FFE8CF;
+    --header-bg: #5d5246;
+    --accent-amber: #9E5E1A;
+    --accent-hover: #7C4812;
+    --accent-gold: #D9822B;
+    --text-dark: #2C241D;
+    --text-muted: #6B5B4E;
+    --card-bg: #FFFFFF;
+    --card-border: #E6D2BD;
+    --dropdown-bg: #4A4137;
+    --dropdown-hover: #605448;
+    
+    /* Hexagon & Angular Clip Paths */
+    --hex-cut-sm: polygon(8px 0%, calc(100% - 8px) 0%, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0% calc(100% - 8px), 0% 8px);
+    --hex-cut-md: polygon(14px 0%, calc(100% - 14px) 0%, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0% calc(100% - 14px), 0% 14px);
+    --hex-cut-lg: polygon(22px 0%, calc(100% - 22px) 0%, 100% 22px, 100% calc(100% - 22px), calc(100% - 22px) 100%, 22px 100%, 0% calc(100% - 22px), 0% 22px);
+    --hex-badge: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
 }
 
-/* ----------------- Header (Same as your project) ----------------- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Background Canvas for Bee Stitch Trails & Mini Bees */
+#beeCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Header & Angular Navigation */
 .header {
     width: 100%;
     height: 80px;
-    background-color: #333;
-    border-bottom: 2px solid #222;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background-color: var(--header-bg);
+    border-bottom: 3px solid #4a4137;
     position: fixed;
     top: 0;
-    z-index: 20;
+    left: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
-.header img {
-    height: 60px;
+.brand-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.brand-section img.logo {
+    height: 52px;
+    width: auto;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.brand-section img.logo:hover {
+    transform: scale(1.05) rotate(-2deg);
+}
+
+.brand-title {
+    color: #FFFFFF;
+    font-size: 1.1rem;
+    font-weight: bold;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.brand-title::after {
+    content: "⬡";
+    color: var(--accent-amber);
+    font-size: 1.2rem;
+}
+
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-item {
+    position: relative;
+}
+
+.nav-btn {
+    background: rgba(0, 0, 0, 0.2);
+    color: #FFFFFF;
+    border: none;
+    padding: 10px 16px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: bold;
+    clip-path: var(--hex-cut-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.nav-btn:hover, .nav-item:focus-within .nav-btn {
+    background-color: var(--accent-amber);
+    transform: translateY(-1px);
+}
+
+.chevron {
+    font-size: 0.7rem;
+    transition: transform 0.2s ease;
+}
+
+.nav-item:hover .chevron {
+    transform: rotate(180deg);
+}
+
+/* Header Angular Dropdown Menus */
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 260px;
+    background-color: var(--dropdown-bg);
+    padding: 8px;
+    clip-path: var(--hex-cut-md);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(8px);
+    transition: all 0.2s ease;
+    z-index: 110;
+}
+
+.nav-item:hover .dropdown-menu,
+.nav-item:focus-within .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(4px);
+}
+
+.dropdown-item {
+    display: block;
+    padding: 10px 14px;
+    color: #FFFFFF;
+    text-decoration: none;
+    font-size: 0.88rem;
+    clip-path: var(--hex-cut-sm);
+    transition: background-color 0.15s ease, padding-left 0.15s ease;
+    margin-bottom: 4px;
+}
+
+.dropdown-item:hover {
+    background-color: var(--dropdown-hover);
+    color: #FFE8CF;
+    padding-left: 18px;
+}
+
+/* Search Box Input */
+.header-search {
+    position: relative;
+}
+
+.search-input {
+    background: rgba(0, 0, 0, 0.25);
+    border: none;
+    color: #FFFFFF;
+    padding: 8px 12px 8px 30px;
+    clip-path: var(--hex-cut-sm);
+    font-family: inherit;
+    font-size: 0.85rem;
+    outline: none;
+    width: 190px;
+    transition: width 0.25s ease, background-color 0.25s ease;
+}
+
+.search-input::placeholder {
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.search-input:focus {
+    width: 240px;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.8rem;
+    pointer-events: none;
+}
+
+/* Main Container & Hero Showcase */
+#mainContainer {
+    margin-top: 100px;
+    max-width: 1150px;
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    flex-grow: 1;
+    position: relative;
+    z-index: 10;
+    padding-bottom: 60px;
+}
+
+/* Angular Wrapper for Hero Card Border Effect */
+.hero-card-wrapper {
+    background: var(--accent-amber);
+    padding: 3px;
+    clip-path: var(--hex-cut-lg);
+    margin: 20px 0 45px 0;
+    box-shadow: 0 10px 30px var(--card-shadow);
+}
+
+.hero-card {
+    background-color: var(--card-bg);
+    clip-path: var(--hex-cut-lg);
+    padding: 36px 32px;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 32px;
+    align-items: center;
+    position: relative;
+}
+
+.badge-featured {
+    display: inline-block;
+    background-color: #5d5246;
+    color: #FFE8CF;
+    font-size: 0.78rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    clip-path: var(--hex-cut-sm);
+    margin-bottom: 14px;
+    letter-spacing: 0.5px;
+}
+
+.hero-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    line-height: 1.2;
+}
+
+.hero-description {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+/* Angular Buttons */
+.btn-primary {
+    background-color: var(--accent-amber);
+    color: #FFFFFF;
+    text-decoration: none;
+    padding: 12px 24px;
+    clip-path: var(--hex-cut-sm);
+    font-weight: bold;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: var(--header-bg);
+    color: #FFE8CF;
+    text-decoration: none;
+    padding: 12px 20px;
+    clip-path: var(--hex-cut-sm);
+    font-weight: bold;
+    font-size: 0.95rem;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
     cursor: pointer;
 }
 
-/* ----------------- Main ----------------- */
-#mainContainer {
-    margin-top: 120px;
-    min-height: calc(100vh - 80px);
+.btn-secondary:hover {
+    background-color: #4a4137;
+    color: #FFFFFF;
+    transform: translateY(-2px);
+}
+
+.hero-preview {
+    background-color: #5d5246;
+    clip-path: var(--hex-cut-md);
+    padding: 28px;
+    color: #FFE8CF;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding-bottom: 40px;
+    text-align: center;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.3);
 }
 
-/* ----------------- Button Grid ----------------- */
+.hero-preview-icon {
+    font-size: 3.5rem;
+    margin-bottom: 12px;
+}
+
+.hero-preview-tag {
+    font-size: 0.8rem;
+    color: #D9822B;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.section-title {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--text-dark);
+    margin: 36px 0 18px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 2px dashed #E6D2BD;
+    padding-bottom: 8px;
+}
+
+.section-title::before {
+    content: "⬢";
+    color: var(--accent-amber);
+}
+
+/* Grid & Hexagon Resource Cards */
 .buttonGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 30px;
-    width: 80%;
-    max-width: 90%;
-    margin-bottom: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
 }
 
+/* Angular Hexagon Chamfered Project Card Buttons */
 .projectButton {
-    color: #fff;
+    background-color: var(--header-bg);
+    color: #FFFFFF;
     border: none;
-    padding: 40px 20px;
-    font-size: 18px;
-    border-radius: 12px;
+    padding: 24px 20px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: bold;
+    clip-path: var(--hex-cut-md);
     cursor: pointer;
-    transition: all 0.3s ease;
     text-align: center;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 95px;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(93, 82, 70, 0.15);
+    transition: background-color 0.25s ease, transform 0.25s ease;
+    line-height: 1.35;
 }
 
 .projectButton:hover {
-    transform: translateY(-5px);
-    background-color: #000; /* Fallback hover color */
+    background-color: var(--accent-amber);
+    color: #FFFFFF;
+    transform: translateY(-4px);
 }
 
-/* ----------------- Group Color Settings (Light Mode) ----------------- */
-
-/* Student Links - Pinkish Magenta */
-.student-group .projectButton { background-color: #A81769; }
-.student-group .projectButton:hover { background-color: #c42480; }
-
-/* Year 11 Revision Links - Dark Blue */
-.revision-group .projectButton { background-color: #1a5276; }
-.revision-group .projectButton:hover { background-color: #2471a3; }
-
-/* Teacher Links - Teal/Cyan */
-.teacher-group .projectButton { background-color: #08B1DB; }
-.teacher-group .projectButton:hover { background-color: #0bc5f2; }
-
-/* Computing Teacher - Purple */
-.computing-group .projectButton { background-color: #6c3483; }
-.computing-group .projectButton:hover { background-color: #884ea0; }
-
-
-/* ----------------- Dark Mode ----------------- */
-body.dark-mode {
-    background-color: #121212;
-    color: #fff;
+.no-results {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    display: none;
+    background: white;
+    clip-path: var(--hex-cut-md);
 }
 
-/* Student Links (Dark Mode) */
-body.dark-mode .student-group .projectButton { background-color: #b82379; }
-body.dark-mode .student-group .projectButton:hover { background-color: #F5CC1B; color: #000; }
+.hidden-element {
+    display: none !important;
+}
 
-/* Year 11 Revision Links (Dark Mode) */
-body.dark-mode .revision-group .projectButton { background-color: #2980b9; }
-body.dark-mode .revision-group .projectButton:hover { background-color: #F5CC1B; color: #000; }
+footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--card-border);
+    position: relative;
+    z-index: 10;
+}
 
-/* Teacher Links (Dark Mode) */
-body.dark-mode .teacher-group .projectButton { background-color: #069bb2; }
-body.dark-mode .teacher-group .projectButton:hover { background-color: #F5CC1B; color: #000; }
-
-/* Computing Teacher (Dark Mode) */
-body.dark-mode .computing-group .projectButton { background-color: #af7ac5; }
-body.dark-mode .computing-group .projectButton:hover { background-color: #F5CC1B; color: #000; }
+@media (max-width: 820px) {
+    .header {
+        height: auto;
+        padding: 12px 16px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .nav-menu {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+    .hero-card {
+        grid-template-columns: 1fr;
+    }
+    .hero-preview {
+        display: none;
+    }
+    .search-input {
+        width: 140px;
+    }
+    .search-input:focus {
+        width: 170px;
+    }
+}
 </style>
 </head>
 
 <body>
 
-<div class="header">
-    <img src="https://clf.uk/wp-content/uploads/CLF-Logo-Transparent-White-Text.png"
-         alt="CLF Logo"
-         onclick="toggleTheme()">
-</div>
+<!-- Background Canvas -->
+<canvas id="beeCanvas"></canvas>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<header class="header">
+    <div class="brand-section">
+        <img src="https://www.mxbrooke.co.uk/images/logo.svg" alt="MXB Logo" class="logo" onclick="location.href='#'" title="Mx Brooke's Education Resources">
+        <span class="brand-title">MxBrooke.co.uk</span>
+    </div>
+
+    <!-- Header Angular Dropdown Navigation -->
+    <nav class="nav-menu">
+        <div class="nav-item">
+            <button class="nav-btn">
+                <span>Student Links</span>
+                <span class="chevron"></span>
+            </button>
+            <div class="dropdown-menu">
+                <a href="ide/" class="dropdown-item">IDE (Development Env)</a>
+                <a href="encyclopedia/" class="dropdown-item">Encyclopedia</a>
+                <a href="games/" class="dropdown-item">Games</a>
+                <a href="programming/" class="dropdown-item">Programming Challenges</a>
+                <a href="netsim/" class="dropdown-item">Network Simulator</a>
+                <a href="dnssim/" class="dropdown-item">DNS Simulator</a>
+                <a href="blockhtml/" class="dropdown-item">Block-by-Block HTML</a>
+                <a href="quizzes/" class="dropdown-item">Quizzes</a>
+                <a href="logicgates/" class="dropdown-item">Logic gates circuit sim</a>
+                <a href="flowcharts/" class="dropdown-item">Flowcharts</a>
+            </div>
+        </div>
+
+        <div class="nav-item">
+            <button class="nav-btn">
+                <span>Year 11 Revision</span>
+                <span class="chevron"></span>
+            </button>
+            <div class="dropdown-menu">
+                <a href="vault/" class="dropdown-item">Programming Skills Questions</a>
+                <a href="https://unnatural-code-master-prep.base44.app/" class="dropdown-item">Paper 2 Quiz Questions</a>
+                <a href="https://gate-genius-quest.lovable.app/" class="dropdown-item">Logic Gates Questions</a>
+            </div>
+        </div>
+
+        <div class="nav-item">
+            <button class="nav-btn">
+                <span>Teacher Links</span>
+                <span class="chevron"></span>
+            </button>
+            <div class="dropdown-menu">
+                <a href="BroadcastScreen/" class="dropdown-item">Broadcast Screen</a>
+                <a href="RandomNamePicker/" class="dropdown-item">Random Name Picker</a>
+                <a href="seatingplan/" class="dropdown-item">Seating Planner</a>
+                <a href="ReadingTimer/" class="dropdown-item">Reading Benefits Timer</a>
+                <a href="Scoreboard/" class="dropdown-item">Scoreboard</a>
+                <a href="TeleScroll/" class="dropdown-item">Teleprompter</a>
+            </div>
+        </div>
+
+        <div class="nav-item">
+            <button class="nav-btn">
+                <span>Computing Teacher</span>
+                <span class="chevron"></span>
+            </button>
+            <div class="dropdown-menu">
+                <a href="bitmapimagetool/" class="dropdown-item">Bitmap Image Visualiser</a>
+                <a href="soundvisualiser/" class="dropdown-item">Sound Visualiser</a>
+                <a href="searches/" class="dropdown-item">Searching Visualiser</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header Live Search Box -->
+    <div class="header-search">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search tools..." onkeyup="filterTools()">
+    </div>
+</header>
 
 <div id="mainContainer">
-    <h3>Student Links</h3>
-    <div class="buttonGrid student-group">
-        <button class="projectButton" onclick="location.href='ide/'">
-            IDE (Integrated Development Environment)
-        </button>
-        <button class="projectButton" onclick="location.href='encyclopedia/'">
-            Encyclopedia
-        </button>
-        <button class="projectButton" onclick="location.href='games/'">
-            Games
-        </button>
-        <button class="projectButton" onclick="location.href='programming/'">
-            Programming Challenges
-        </button>
-        <button class="projectButton" onclick="location.href='netsim/'">
-            Network Simulator
-        </button>
-        <button class="projectButton" onclick="location.href='dnssim/'">
-            DNS Simulator
-        </button>
-        <button class="projectButton" onclick="location.href='blockhtml/'">
-            Block-by-Block HTML
-        </button>
-        <button class="projectButton" onclick="location.href='quizzes/'">
-            Quizzes
-        </button>
-        <button class="projectButton" onclick="location.href='logicgates/'">
-            Logic gates ciruit sim
-        </button>
-        <button class="projectButton" onclick="location.href='flowcharts/'">
-            Flowcharts
-        </button>
-        
+
+    <!-- Angular Featured Tool Hero Showcase -->
+    <div class="hero-card-wrapper" id="featuredHero">
+        <div class="hero-card">
+            <div>
+                <span class="badge-featured">Featured New Resource</span>
+                <h1 class="hero-title">Logic Gates Circuit Simulator</h1>
+                <p class="hero-description">
+                    Interactive logic gate designer & truth table simulator. Build digital logic circuits using AND, OR, NOT, NAND, NOR, and XOR gates in real-time.
+                </p>
+                <div class="hero-actions">
+                    <button class="btn-primary" onclick="location.href='logicgates/'">
+                        Launch Simulator
+                    </button>
+                    <button class="btn-secondary" onclick="scrollToSection('student-section')">
+                        Browse All Resources
+                    </button>
+                </div>
+            </div>
+            <div class="hero-preview">
+                <div class="hero-preview-tag">Interactive Tool</div>
+                <p style="font-size: 0.75rem; margin-top: 6px; opacity: 0.8;">Logic Circuit Simulation</p>
+            </div>
+        </div>
     </div>
 
-    <h3>Year 11 Revision Links</h3>
-    <div class="buttonGrid revision-group">
-        <button class="projectButton" onclick="location.href='vault/'">
-            Programming Skills Questions
-        </button>
-        <button class="projectButton" onclick="location.href='https://unnatural-code-master-prep.base44.app/'">
-            Paper 2 Quiz Questions
-        </button>
-        <button class="projectButton" onclick="location.href='https://gate-genius-quest.lovable.app/'">
-            Logic Gates Questions
-        </button>
+    <!-- Student Links Section -->
+    <section class="resource-section" id="student-section">
+        <h3 class="section-title">Student Links</h3>
+        <div class="buttonGrid student-group">
+            <button class="projectButton" onclick="location.href='ide/'">IDE (Integrated Development Environment)</button>
+            <button class="projectButton" onclick="location.href='encyclopedia/'">Encyclopedia</button>
+            <button class="projectButton" onclick="location.href='games/'">Games</button>
+            <button class="projectButton" onclick="location.href='programming/'">Programming Challenges</button>
+            <button class="projectButton" onclick="location.href='netsim/'">Network Simulator</button>
+            <button class="projectButton" onclick="location.href='dnssim/'">DNS Simulator</button>
+            <button class="projectButton" onclick="location.href='blockhtml/'">Block-by-Block HTML</button>
+            <button class="projectButton" onclick="location.href='quizzes/'">Quizzes</button>
+            <button class="projectButton" onclick="location.href='logicgates/'">Logic gates circuit sim</button>
+            <button class="projectButton" onclick="location.href='flowcharts/'">Flowcharts</button>
+        </div>
+    </section>
+
+    <!-- Year 11 Revision Links Section -->
+    <section class="resource-section" id="revision-section">
+        <h3 class="section-title">Year 11 Revision Links</h3>
+        <div class="buttonGrid revision-group">
+            <button class="projectButton" onclick="location.href='vault/'">Programming Skills Questions</button>
+            <button class="projectButton" onclick="location.href='https://unnatural-code-master-prep.base44.app/'">Paper 2 Quiz Questions</button>
+            <button class="projectButton" onclick="location.href='https://gate-genius-quest.lovable.app/'">Logic Gates Questions</button>
+        </div>
+    </section>
+
+    <!-- Teacher Links Section -->
+    <section class="resource-section" id="teacher-section">
+        <h3 class="section-title">Teacher Links</h3>
+        <div class="buttonGrid teacher-group">
+            <button class="projectButton" onclick="location.href='BroadcastScreen/'">Broadcast Screen</button>
+            <button class="projectButton" onclick="location.href='RandomNamePicker/'">Random Name Picker</button>
+            <button class="projectButton" onclick="location.href='seatingplan/'">Seating Planner</button>
+            <button class="projectButton" onclick="location.href='ReadingTimer/'">Reading Benefits Timer</button>
+            <button class="projectButton" onclick="location.href='Scoreboard/'">Scoreboard</button>
+            <button class="projectButton" onclick="location.href='TeleScroll/'">Teleprompter</button>
+        </div>
+    </section>
+
+    <!-- Computing Teacher Section -->
+    <section class="resource-section" id="computing-section">
+        <h3 class="section-title">Computing Teacher</h3>
+        <div class="buttonGrid computing-group">
+            <button class="projectButton" onclick="location.href='bitmapimagetool/'">Bitmap Image Visualiser</button>
+            <button class="projectButton" onclick="location.href='soundvisualiser/'">Sound Visualiser</button>
+            <button class="projectButton" onclick="location.href='searches/'">Searching Algorithms Visualiser</button>
+        </div>
+    </section>
+
+    <div id="noResults" class="no-results">
+        No resources matched your search query. Try typing another keyword.
     </div>
 
-    <h3>Teacher Links</h3>
-    <div class="buttonGrid teacher-group">
-        <button class="projectButton" onclick="location.href='BroadcastScreen/'">
-            Broadcast Screen
-        </button>
-        <button class="projectButton" onclick="location.href='RandomNamePicker/'">
-            Random Name Picker
-        </button>
-        <button class="projectButton" onclick="location.href='seatingplan/'">
-            Seating Planner
-        </button>
-        <button class="projectButton" onclick="location.href='ReadingTimer/'">
-            Reading Benefits Timer
-        </button>
-        <button class="projectButton" onclick="location.href='Scoreboard/'">
-            Scoreboard
-        </button>
-        <button class="projectButton" onclick="location.href='TeleScroll/'">
-            Teleprompter
-        </button>
-        
-    </div>
-
-    <h3>Computing Teacher</h3>
-    <div class="buttonGrid computing-group">
-        <button class="projectButton" onclick="location.href='bitmapimagetool/'">
-            Bitmap Image Visualiser
-        </button>
-        <button class="projectButton" onclick="location.href='soundvisualiser/'">
-            Sound Visualiser
-        </button>
-        <button class="projectButton" onclick="location.href='searches/'">
-            Searching Algorithms Visualiser
-        </button>
-    </div>
 </div>
 
+<footer>
+    <p>Mx Brooke's Education Resources. Copy, Use and Modify as you Wish.</p>
+</footer>
+
 <script>
-function toggleTheme() {
-    document.body.classList.toggle('dark-mode');
+function scrollToSection(id) {
+    document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
 }
+
+function filterTools() {
+    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    const buttons = document.querySelectorAll('.projectButton');
+    const sections = document.querySelectorAll('.resource-section');
+    const hero = document.getElementById('featuredHero');
+    let visibleCount = 0;
+
+    if (query.length > 0) {
+        hero.style.display = 'none';
+    } else {
+        hero.style.display = 'block';
+    }
+
+    buttons.forEach(btn => {
+        const text = btn.textContent.toLowerCase();
+        if (text.includes(query)) {
+            btn.classList.remove('hidden-element');
+            visibleCount++;
+        } else {
+            btn.classList.add('hidden-element');
+        }
+    });
+
+    sections.forEach(sec => {
+        const hasVisible = sec.querySelectorAll('.projectButton:not(.hidden-element)').length > 0;
+        if (hasVisible) {
+            sec.classList.remove('hidden-element');
+        } else {
+            sec.classList.add('hidden-element');
+        }
+    });
+
+    const noResults = document.getElementById('noResults');
+    if (visibleCount === 0 && query.length > 0) {
+        noResults.style.display = 'block';
+    } else {
+        noResults.style.display = 'none';
+    }
+}
+
+let stitchParticles = [];
+
+// Preload Logo SVG Image
+const logoImage = new Image();
+logoImage.src = 'logo.svg';
+
+class StitchParticle {
+    constructor(x, y, angle) {
+        this.x = x;
+        this.y = y;
+        this.angle = angle;
+        this.length = 9; // Stitch dash length
+        this.maxLife = 350; // Fade duration
+        this.life = this.maxLife;
+    }
+
+    update() {
+        this.life--;
+    }
+
+    draw(ctx) {
+        const alpha = Math.max(0, this.life / this.maxLife) * 0.45;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+
+        ctx.beginPath();
+        ctx.moveTo(-this.length / 2, 0);
+        ctx.lineTo(this.length / 2, 0);
+
+        ctx.strokeStyle = `rgba(93, 82, 70, ${alpha})`;
+        ctx.lineWidth = 2.0;
+        ctx.lineCap = 'square';
+        ctx.stroke();
+
+        ctx.restore();
+    }
+}
+
+class FlyingLogoBee {
+    constructor(canvasWidth, canvasHeight) {
+        this.reset(canvasWidth, canvasHeight);
+    }
+
+    reset(w, h) {
+        this.x = Math.random() * w;
+        this.y = Math.random() * h;
+        this.vx = (Math.random() - 0.5) * 1.5;
+        this.vy = (Math.random() - 0.5) * 1.5;
+        this.targetSize = 32; // Fixed dimension to preserve aspect ratio
+        this.angle = Math.random() * Math.PI * 2;
+        this.distanceSinceLastStitch = 0;
+        this.stitchInterval = 28;
+    }
+
+    update(w, h) {
+        const oldX = this.x;
+        const oldY = this.y;
+
+        // Curved flight path movement
+        this.angle += (Math.random() - 0.5) * 0.2;
+        this.vx += Math.cos(this.angle) * 0.08;
+        this.vy += Math.sin(this.angle) * 0.08;
+
+        // Speed limit
+        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        const maxSpeed = 1.6;
+        if (speed > maxSpeed) {
+            this.vx = (this.vx / speed) * maxSpeed;
+            this.vy = (this.vy / speed) * maxSpeed;
+        }
+
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Screen wrap
+        if (this.x < -40) this.x = w + 40;
+        if (this.x > w + 40) this.x = -40;
+        if (this.y < -40) this.y = h + 40;
+        if (this.y > h + 40) this.y = -40;
+
+        // Calculate travel distance & drop stitch trail behind bee
+        const distMoved = Math.hypot(this.x - oldX, this.y - oldY);
+        this.distanceSinceLastStitch += distMoved;
+
+        if (this.distanceSinceLastStitch >= this.stitchInterval) {
+            this.distanceSinceLastStitch = 0;
+            const flightAngle = Math.atan2(this.vy, this.vx);
+            
+            const offset = this.targetSize * 0.45;
+            const trailX = this.x - Math.cos(flightAngle) * offset;
+            const trailY = this.y - Math.sin(flightAngle) * offset;
+
+            stitchParticles.push(new StitchParticle(trailX, trailY, flightAngle));
+        }
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Calculate velocity angle
+        const flightAngle = Math.atan2(this.vy, this.vx);
+        
+        // Orient bee head along flight direction (offset by +90deg / Math.PI/2 for upward facing SVG logo)
+        const rotationOffset = Math.PI / 2;
+        const wiggle = Math.sin(Date.now() * 0.01) * 0.08;
+        ctx.rotate(flightAngle + rotationOffset + wiggle);
+
+        // Soft background glow
+        ctx.beginPath();
+        ctx.arc(0, 0, this.targetSize * 0.45, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(158, 94, 26, 0.1)";
+        ctx.fill();
+
+        // Render logo SVG while maintaining original aspect ratio without distortion
+        if (logoImage.complete && logoImage.naturalWidth > 0 && logoImage.naturalHeight > 0) {
+            const aspect = logoImage.naturalWidth / logoImage.naturalHeight;
+            let drawWidth = this.targetSize;
+            let drawHeight = this.targetSize;
+
+            if (aspect > 1) {
+                drawHeight = this.targetSize / aspect;
+            } else {
+                drawWidth = this.targetSize * aspect;
+            }
+
+            ctx.drawImage(logoImage, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+        } else {
+            // Hexagon badge fallback during image load
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                const a = (Math.PI / 3) * i;
+                const hx = Math.cos(a) * (this.targetSize / 2);
+                const hy = Math.sin(a) * (this.targetSize / 2);
+                if (i === 0) ctx.moveTo(hx, hy);
+                else ctx.lineTo(hx, hy);
+            }
+            ctx.closePath();
+            ctx.fillStyle = "#9E5E1A";
+            ctx.fill();
+            ctx.strokeStyle = "#5d5246";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+}
+
+const canvas = document.getElementById('beeCanvas');
+const ctx = canvas.getContext('2d');
+let bees = [];
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+function initBees() {
+    resizeCanvas();
+    bees = [];
+    stitchParticles = [];
+    const count = Math.min(8, Math.max(4, Math.floor(window.innerWidth / 220)));
+    for (let i = 0; i < count; i++) {
+        bees.push(new FlyingLogoBee(canvas.width, canvas.height));
+    }
+}
+
+function animateBees() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 1. Draw dashed stitches
+    for (let i = stitchParticles.length - 1; i >= 0; i--) {
+        const p = stitchParticles[i];
+        p.update();
+        if (p.life <= 0) {
+            stitchParticles.splice(i, 1);
+        } else {
+            p.draw(ctx);
+        }
+    }
+
+    // 2. Draw flying logo bees
+    bees.forEach(bee => {
+        bee.update(canvas.width, canvas.height);
+        bee.draw(ctx);
+    });
+
+    requestAnimationFrame(animateBees);
+}
+
+window.addEventListener('resize', resizeCanvas);
+
+window.onload = function() {
+    initBees();
+    animateBees();
+};
 </script>
 
 </body>
