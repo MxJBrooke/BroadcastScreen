@@ -3,18 +3,65 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rainbow Scoreboard</title>
+<title>Scoreboard - Mx Brooke's Education Resources</title>
 
 <style>
+:root {
+    --bg-main: #FFF4E6;
+    --header-bg: #4A3E32;
+    --accent-amber: #E69A10;
+    --accent-hover: #C5830D;
+    --accent-gold: #E69A10;
+    --text-dark: #2C241D;
+    --text-muted: #6B5B4E;
+    --card-bg: #FFFFFF;
+    --card-border: #F0D5B7;
+    
+    /* Hexagon & Angular Clip Paths */
+    --hex-cut-sm: polygon(8px 0%, calc(100% - 8px) 0%, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0% calc(100% - 8px), 0% 8px);
+    
+    /* Pointy-top Hexagon Clip Path for Tesselation */
+    --hex-block: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
 body {
   margin: 0;
-  font-family: Consolas, monospace;
-  background: #111;
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-dark);
   display: flex;
   justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
   overflow-x: auto;
+  position: relative;
+  background-image: radial-gradient(var(--card-border) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* Background Hollow Hexagons Container */
+.bg-hexagons {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.bg-hex {
+    position: absolute;
+    background: transparent;
+}
+
+.bg-hex svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke-width: 5px;
+    stroke-linejoin: round;
 }
 
 /* Header */
@@ -27,11 +74,12 @@ body {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  background: #111;
-  border-bottom: 2px solid #555;
-  padding: 0 20px;
+  background-color: var(--header-bg);
+  border-bottom: 3px solid #3D3227;
+  padding: 0 24px;
   box-sizing: border-box;
   z-index: 15;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
 }
 
 .header-controls-left {
@@ -47,94 +95,126 @@ body {
 }
 
 button {
-  background: #2b2b2b;
-  color: #f0f0f0;
-  border: 1px solid #4a4a4a;
-  border-radius: 4px;
-  padding: 6px 12px;
+  background-color: var(--accent-amber);
+  color: #2C241D;
+  border: none;
+  border-radius: 0;
+  padding: 8px 16px;
   font-size: 14px;
+  font-weight: bold;
   cursor: pointer;
-  font-family: Consolas, monospace;
-  transition: background 0.2s, border-color 0.2s, color 0.2s;
+  font-family: 'Poppins', sans-serif;
+  clip-path: var(--hex-cut-sm);
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 button:hover {
-  background: #3a3a3a;
-  border-color: #666;
-  color: #ffffff;
+  background-color: var(--accent-hover);
+  transform: translateY(-1px);
 }
 
 #animateButton {
-  background: #1b4d22;
-  border-color: #2e7d32;
-  font-size: 16px;
-  font-weight: bold;
-  padding: 8px 16px;
-}
-
-#animateButton:hover {
-  background: #2e7d32;
-  border-color: #4caf50;
+  background-color: var(--accent-amber);
+  font-size: 15px;
+  padding: 8px 18px;
 }
 
 #settingsBtn {
-  background: #1976d2;
-  border-color: #2196f3;
-  font-size: 16px;
-  font-weight: bold;
-  padding: 8px 16px;
+  background-color: #3D3227;
+  color: #FFF;
+  font-size: 15px;
+  padding: 8px 18px;
 }
 
 #settingsBtn:hover {
-  background: #2196f3;
-  border-color: #64b5f6;
+  background-color: #544638;
 }
 
 #configSwitcher {
-  background: #222;
+  background: #3D3227;
   color: white;
-  border: 1px solid #555;
-  border-radius: 4px;
-  font-size: 16px;
-  padding: 8px;
-  font-family: Consolas, monospace;
+  border: 1px solid #6B5B4E;
+  border-radius: 0;
+  font-size: 14px;
+  padding: 6px;
+  font-family: 'Poppins', sans-serif;
+  clip-path: var(--hex-cut-sm);
 }
 
-#header img {
-  justify-self: center;
-  max-height: 60px;
+.brand-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    justify-self: center;
+    grid-column: 2;
+    text-decoration: none;
+}
+
+.brand-section img.logo {
+    height: 52px;
+    width: auto;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.brand-section img.logo:hover {
+    transform: scale(1.05) rotate(-2deg);
+}
+
+.brand-title {
+    color: #FFFFFF;
+    font-size: 1.1rem;
+    font-weight: bold;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.brand-title::after {
+    content: "⬡";
+    color: var(--accent-amber);
+    font-size: 1.2rem;
 }
 
 #pointsDisplay {
-  color: white;
+  color: #FFE8CF;
   font-weight: bold;
   white-space: nowrap;
 }
 
-/* Sidebar Layout - Shifted down to prevent header cutting off text */
+/* Sidebar Layout */
 #sidebar {
   position: fixed;
   top: 80px; 
   left: 0;
   width: 260px;
   height: calc(100vh - 80px);
-  background: #222;
-  border-right: 2px solid #555;
+  background-color: var(--header-bg);
+  border-right: 3px solid #3D3227;
   padding: 20px;
   box-sizing: border-box;
   color: white;
   z-index: 10;
   overflow-y: auto;
+  box-shadow: 4px 0 15px rgba(0,0,0,0.1);
 }
 
 #sidebar h2 {
   margin-top: 0;
   margin-bottom: 20px;
-  font-size: 18px;
-  border-bottom: 1px solid #444;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #6B5B4E;
   padding-bottom: 10px;
-  color: #fff;
-  letter-spacing: 0.5px;
+  color: var(--accent-amber);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#sidebar h2::before {
+  content: "⬡";
 }
 
 .sidebar-group {
@@ -145,23 +225,23 @@ button:hover {
   display: block;
   margin-bottom: 8px;
   font-size: 13px;
-  color: #aaa;
+  color: #FFE8CF;
   font-weight: bold;
 }
 
 #sidebar textarea {
   width: 100%;
   resize: vertical;
-  background: #333;
+  background: #3D3227;
   color: white;
-  border: 1px solid #555;
+  border: 1px solid #6B5B4E;
   padding: 8px;
   border-radius: 4px;
   box-sizing: border-box;
-  font-family: Consolas, monospace;
+  font-family: 'Poppins', sans-serif;
 }
 
-/* Proportional, Non-stretching Target Row Controls */
+/* Target Row Controls */
 .target-input-group {
   display: flex;
   gap: 6px;
@@ -172,28 +252,26 @@ button:hover {
 .target-input-group input[type="number"] {
   width: 90px;
   height: 34px;
-  background: #333;
+  background: #3D3227;
   color: white;
-  border: 1px solid #555;
+  border: 1px solid #6B5B4E;
   padding: 0 10px;
   border-radius: 4px;
   box-sizing: border-box;
-  font-family: Consolas, monospace;
+  font-family: 'Poppins', sans-serif;
 }
 
 .target-input-group input[type="color"] {
   width: 40px;
   height: 34px;
   background: none;
-  border: 1px solid #555;
+  border: 1px solid #6B5B4E;
   border-radius: 4px;
   cursor: pointer;
   padding: 0;
   box-sizing: border-box;
-  -webkit-appearance: none;
 }
 
-/* Multi-browser color swatch formatting safeguards */
 .target-input-group input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
 .target-input-group input[type="color"]::-webkit-color-swatch { border: none; border-radius: 3px; }
 
@@ -209,11 +287,11 @@ button:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #333;
+  background: #3D3227;
   padding: 6px 10px;
   margin-bottom: 4px;
   font-size: 13px;
-  border: 1px solid #444;
+  border: 1px solid #6B5B4E;
   border-radius: 4px;
 }
 
@@ -221,17 +299,13 @@ button:hover {
   width: auto;
   margin: 0;
   padding: 2px 8px;
-  background: #c62828;
-  border: 1px solid #b71c1c;
+  background: #8b3a3a;
+  border: none;
   font-size: 11px;
   color: white;
+  clip-path: var(--hex-cut-sm);
 }
 
-.target-item button:hover {
-  background: #d32f2f;
-}
-
-/* Config Manager Styling */
 .config-action-group {
   display: flex;
   flex-direction: column;
@@ -245,21 +319,20 @@ button:hover {
 }
 
 #exportBtn {
-  background: #4e342e;
-  border-color: #5d4037;
+  background: #6B5B4E;
+  color: white;
 }
 #exportBtn:hover {
-  background: #5d4037;
-  border-color: #6d4c41;
+  background: #544638;
 }
 
 #importBtn {
-  background: #006064;
-  border-color: #00838f;
+  background: #3D3227;
+  color: white;
+  border: 1px solid #6B5B4E;
 }
 #importBtn:hover {
-  background: #00838f;
-  border-color: #0097a7;
+  background: #544638;
 }
 
 #jsonInput {
@@ -273,14 +346,14 @@ button:hover {
   top: 90px;
   right: 20px;
   width: 280px;
-  background: #222;
-  border: 2px solid #555;
+  background-color: var(--header-bg);
+  border: 2px solid #3D3227;
   border-radius: 6px;
   padding: 15px;
   box-sizing: border-box;
   color: white;
   z-index: 50;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
 }
 
 #floatingSettings.open {
@@ -292,11 +365,11 @@ button:hover {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
-  border-bottom: 1px solid #444;
+  border-bottom: 1px solid #6B5B4E;
   padding-bottom: 10px;
 }
 
-#floatingSettings-header h3 { margin: 0; font-size: 16px; }
+#floatingSettings-header h3 { margin: 0; font-size: 16px; color: var(--accent-amber); }
 
 #closeSettingsBtn {
   background: none;
@@ -311,15 +384,15 @@ button:hover {
   display: block;
   margin-top: 8px;
   font-size: 13px;
-  color: #ccc;
+  color: #FFE8CF;
 }
 #floatingSettings input[type="number"],
 #floatingSettings input[type="range"] {
   width: 100%;
   margin-bottom: 5px;
-  background: #333;
+  background: #3D3227;
   color: white;
-  border: 1px solid #555;
+  border: 1px solid #6B5B4E;
   padding: 6px;
   box-sizing: border-box;
   border-radius: 4px;
@@ -331,23 +404,27 @@ button:hover {
   left: 10px;
   bottom: 10px;
   z-index: 20;
-  background: #424242;
-  border-color: #616161;
+  background-color: var(--header-bg);
+  color: var(--accent-amber);
+  border: 2px solid #3D3227;
+  clip-path: var(--hex-cut-sm);
+  font-weight: bold;
 }
 #toggleSidebar:hover {
-  background: #616161;
-  border-color: #757575;
+  background-color: #3D3227;
 }
 
 /* Board container */
 #boardContainer {
   margin-top: 80px;
   margin-left: 260px;
-  padding: 10px;
+  padding: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: calc(100vh - 80px);
+  z-index: 5;
+  position: relative;
 }
 
 #boardZoom {
@@ -358,7 +435,7 @@ button:hover {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  gap: 10px;
+  gap: 16px;
   position: relative;
 }
 
@@ -376,7 +453,7 @@ button:hover {
 }
 
 .target-label {
-  background: #111;
+  background: var(--bg-main);
   padding: 2px 6px;
   font-size: 12px;
   border-radius: 4px;
@@ -389,47 +466,64 @@ button:hover {
   display: flex;
   flex-direction: column;
   align-items: center;
-  border-left: 2px solid #555;
-  border-right: 2px solid #555;
-  padding: 2px;
+  border-left: 2px solid var(--card-border);
+  border-right: 2px solid var(--card-border);
+  padding: 10px 18px;
   position: relative;
   z-index: 2;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
 .column-text {
   margin-bottom: 16px;
-  color: white;
+  color: var(--text-dark);
   font-weight: bold;
   text-align: center;
   visibility: hidden;
+  width: 100%;
 }
 
-.column-text div { writing-mode: vertical-rl; }
-.column:hover .column-text { transform: scale(1.5); color: gold; }
+.column-text div { 
+  writing-mode: vertical-rl; 
+  margin: 0 auto;
+}
+
+.column:hover .column-text { transform: scale(1.1); color: var(--accent-amber); }
 
 /* Medals */
 .gold { box-shadow: 0 0 25px 8px gold; }
 .silver { box-shadow: 0 0 25px 8px silver; }
 .bronze { box-shadow: 0 0 25px 8px #cd7f32; }
 
-/* Blocks */
+/* Tesselating Hexagon Blocks */
 .blocks-wrapper {
   display: flex;
   flex-direction: column-reverse;
-  gap: 1px;
+  align-items: center;
+  width: 100%;
 }
 
 .block-row {
-  display: grid;
-  gap: 1px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: -7px;
+  width: 100%;
+}
+
+.block-row:nth-child(even) {
+  /* Exact horizontal shift for true honeycomb alignment */
+  transform: translateX(12px);
 }
 
 .block {
-  width: 22px;
-  height: 22px;
-  border: 1px solid #000;
+  width: 24px;
+  height: 28px;
+  clip-path: var(--hex-block);
   opacity: 0;
   transform: translateY(-30px);
+  flex-shrink: 0;
 }
 
 @keyframes fallIn { to { opacity: 1; transform: translateY(0); } }
@@ -439,12 +533,24 @@ button:hover {
 
 <body>
 
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Dynamically Generated Random Background Hexagons -->
+<div class="bg-hexagons" id="bgHexagonsContainer"></div>
+
 <header id="header">
   <div class="header-controls-left">
-    <button id="animateButton">Play</button>
+    <button id="animateButton">Play ⬡</button>
     <select id="configSwitcher" style="display:none;"></select>
   </div>
-  <img src="https://clf.uk/wp-content/uploads/CLF-Logo-Transparent-White-Text.png">
+  
+  <div class="brand-section">
+      <a href="https://www.mxbrooke.co.uk">
+          <img src="https://www.mxbrooke.co.uk/images/logo.svg" alt="MXB Logo" class="logo" title="Mx Brooke's Education Resources">
+      </a>
+      <a href="https://www.mxbrooke.co.uk" class="brand-title">MxBrooke.co.uk</a>
+  </div>
+  
   <div class="header-controls-right">
     <div id="pointsDisplay">5 points per block</div>
     <button id="settingsBtn">Settings</button>
@@ -463,13 +569,13 @@ button:hover {
     <label>Target Lines</label>
     <div class="target-input-group">
       <input type="number" id="targetPointsInput" placeholder="Pts">
-      <input type="color" id="targetColorInput" value="#FF00FF">
+      <input type="color" id="targetColorInput" value="#E69A10">
       <button id="addTargetBtn">Add</button>
     </div>
     <div id="targetListContainer" style="margin-top: 10px;"></div>
   </div>
 
-  <div class="sidebar-group" style="margin-top: 30px; border-top: 1px solid #444; padding-top: 20px;">
+  <div class="sidebar-group" style="margin-top: 30px; border-top: 1px solid #6B5B4E; padding-top: 20px;">
     <label>Config Manager</label>
     <div class="config-action-group">
       <button id="exportBtn" class="full-width">Save Config</button>
@@ -517,6 +623,36 @@ button:hover {
 </div>
 
 <script>
+// Randomly Generate Background Hexagons on Load
+function generateBackgroundHexagons() {
+    const container = document.getElementById('bgHexagonsContainer');
+    const palette = ['#E69A10', '#4A3E32', '#3D3227', '#6B5B4E'];
+    const count = 7;
+
+    for (let i = 0; i < count; i++) {
+        const hex = document.createElement('div');
+        hex.className = 'bg-hex';
+
+        const size = Math.floor(Math.random() * 160) + 120;
+        hex.style.width = size + 'px';
+        hex.style.height = (size * 1.14) + 'px';
+
+        const topPos = Math.random() * 85;
+        const leftPos = Math.random() * 90;
+        hex.style.top = topPos + '%';
+        hex.style.left = leftPos + '%';
+
+        const rotation = Math.random() * 60 - 30;
+        const opacity = (Math.random() * 0.15 + 0.08).toFixed(2);
+        hex.style.transform = `rotate(${rotation}deg)`;
+        hex.style.opacity = opacity;
+
+        const color = palette[Math.floor(Math.random() * palette.length)];
+        hex.innerHTML = `<svg viewBox="0 0 100 100"><polygon points="25,5 75,5 95,50 75,95 25,95 5,50" stroke="${color}" /></svg>`;
+        container.appendChild(hex);
+    }
+}
+
 const board = document.getElementById('board');
 const boardZoom = document.getElementById('boardZoom');
 const boardContainer = document.getElementById('boardContainer');
@@ -550,7 +686,8 @@ const importBtn = document.getElementById('importBtn');
 const jsonInput = document.getElementById('jsonInput');
 const configSwitcher = document.getElementById('configSwitcher');
 
-const rainbowColors = ['#FF0000','#FF7F00','#FFFF00','#00FF00','#0000FF','#4B0082','#8B00FF'];
+// Red, Orange, and Yellow theme palette
+const themeColors = ['#DC2626', '#EA580C', '#D97706', '#EAB308', '#F59E0B', '#EF4444', '#B45309', '#F97316'];
 let dataStore = [];
 let targetLines = [];
 let loadedConfigs = {};
@@ -627,12 +764,10 @@ function renderBoard() {
   
   pointsDisplay.textContent = `${pointsPerBlock} pts/block (Baseline: ${basePoints})`;
 
-  // Calculate grid dimensions based on points above baseline
   const maxRows = Math.max(...sorted.map(s =>
     Math.ceil(Math.max(0, s.points - basePoints) / pointsPerBlock / blocksPerRow)
   ));
 
-  // Render Student Columns
   sorted.forEach((item, index) => {
     const col = document.createElement('div');
     col.className = 'column';
@@ -646,14 +781,12 @@ function renderBoard() {
     const wrap = document.createElement('div');
     wrap.className = 'blocks-wrapper';
 
-    // Calculate total blocks remaining above starting baseline
     const effectivePoints = Math.max(0, item.points - basePoints);
     const totalBlocks = Math.ceil(effectivePoints / pointsPerBlock);
 
     for (let r=0; r<maxRows; r++) {
       const row = document.createElement('div');
       row.className = 'block-row';
-      row.style.gridTemplateColumns = `repeat(${blocksPerRow},22px)`;
 
       for (let c=0; c<blocksPerRow; c++) {
         const i = r*blocksPerRow + c;
@@ -662,7 +795,7 @@ function renderBoard() {
 
         if (i < totalBlocks) {
           b.dataset.active = '1';
-          b.style.backgroundColor = rainbowColors[index % rainbowColors.length];
+          b.style.backgroundColor = themeColors[index % themeColors.length];
         } else {
           b.style.visibility = 'hidden';
         }
@@ -675,7 +808,6 @@ function renderBoard() {
     board.appendChild(col);
   });
 
-  // Target lines math adjusted for baseline offsets
   const pointsPerRow = pointsPerBlock * blocksPerRow;
   
   targetLines.forEach(line => {
@@ -683,7 +815,7 @@ function renderBoard() {
     if (effectiveTargetPoints < 0) return; 
     
     const rowsNeeded = Math.ceil(effectiveTargetPoints / pointsPerRow);
-    const heightInPx = rowsNeeded * 25;
+    const heightInPx = rowsNeeded * 22;
     
     const lineEl = document.createElement('div');
     lineEl.className = 'target-line';
@@ -823,10 +955,13 @@ Donald Knuth,360
 Edsger Dijkstra,340
 Barbara Liskov,320`;
 baseInput.value = 300; 
-targetLines = [{points: 350, color: "#00FF00"}, {points: 400, color: "#00BFFF"}];
+targetLines = [{points: 350, color: "#E69A10"}, {points: 400, color: "#C5830D"}];
 
-parseData();
-updateTargetUI();
+window.onload = function() {
+    generateBackgroundHexagons();
+    parseData();
+    updateTargetUI();
+};
 </script>
 
 </body>
