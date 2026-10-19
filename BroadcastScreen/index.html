@@ -422,21 +422,25 @@ body {
     font-size: 0.9rem;
     user-select: none;
     clip-path: var(--hex-cut-sm);
-    transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
     opacity: 0.65;
     text-align: center;
     padding: 2px;
+    
+    /* Default state: Gray buttons */
+    background-color: #6B5B4E;
+    color: #FFFFFF;
 }
 
 .segment:hover {
     opacity: 0.9;
 }
 
-/* Palette Colors & Readable Text Contrast */
-.segment.silent { background-color: var(--meter-silent); color: #FFFFFF; }
-.segment.quiet  { background-color: var(--meter-quiet);  color: #2C241D; }
-.segment.peer   { background-color: var(--meter-peer);   color: #FFFFFF; }
-.segment.team   { background-color: var(--meter-team);   color: #FFFFFF; }
+/* Selected/Active pressed state: Specific expectation colors */
+.segment.silent.active { background-color: var(--meter-silent); color: #FFFFFF; }
+.segment.quiet.active  { background-color: var(--meter-quiet);  color: #2C241D; }
+.segment.peer.active   { background-color: var(--meter-peer);   color: #FFFFFF; }
+.segment.team.active   { background-color: var(--meter-team);   color: #FFFFFF; }
 
 .segment.active {
     opacity: 1;
@@ -965,7 +969,7 @@ const segmentsCount = segmentsEls.length;
 let currentNoiseIndex = 0;
 
 // Palette Colors: Matching Header, Golden Yellow, Warm Orange, Bright Red
-const expectationColors = ['#4A3E32', '#FED41A', '#E67E22', '#E72B37'];
+const expectationColors = ['#4A3E32', '#E69A10', '#E67E22', '#E72B37'];
 
 function setNoise(index) {
     currentNoiseIndex = index;
