@@ -381,10 +381,18 @@ footer {
             <span>⬡</span> Custom Code Launcher
         </div>
         <div class="input-group">
-            <input type="url" id="customCodeUrl" class="url-input" placeholder="Paste python code URL (e.g. https://www.mxbrooke.co.uk/samplecode/codefiles/turtlesquare.py)" />
+            <input type="url" id="customCodeUrl" class="url-input" placeholder="Paste python code URL (e.g. https://www.mxbrooke.co.uk/samplecode/turtlesquare.py)" />
             <button class="action-btn" onclick="launchCustomCode()">Launch IDE</button>
             <button class="action-btn secondary" onclick="copyCustomLink()">Copy Link</button>
         </div>
+    </div>
+
+    <!-- Presets Section -->
+    <div id="buttonGrid">
+        <button class="projectButton" onclick="openIde('https://www.mxbrooke.co.uk/samplecode/codefiles/turtlesquare.py')">
+            Turtle Graphics Square Demo
+            <span class="btn-sub">Sample Code</span>
+        </button>
     </div>
 </div>
 
