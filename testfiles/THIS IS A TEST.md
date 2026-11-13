@@ -1,0 +1,22 @@
+THIS IS A TEST
+
+2\.
+
+testing testing
+
+
+
+line 5
+
+
+
+**BOLD TEST**
+
+
+
+*Italics test*
+
+
+
+# SIZE TEST
+
