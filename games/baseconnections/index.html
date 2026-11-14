@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/ico" href="./favicon.ico" sizes="128x128">
+<title>Base Connections | Mx Brooke's Education Resources</title>
+
+<style>
+:root {
+    --bg-main: #FFF4E6;
+    --header-bg: #4A3E32;
+    --accent-amber: #E69A10;
+    --accent-hover: #C5830D;
+    --accent-gold: #E69A10;
+    --text-dark: #2C241D;
+    --text-muted: #6B5B4E;
+    --card-bg: #FFFFFF;
+    --card-border: #F0D5B7;
+    
+    /* Base Color Coding */
+    --base-denary: #2563eb;   /* Blue */
+    --base-binary: #059669;   /* Emerald Green */
+    --base-hex:    #7c3aed;   /* Purple */
+    --base-redherring: #DC2626; /* Red */
+
+    /* Hexagon & Angular Clip Paths */
+    --hex-cut-sm: polygon(8px 0%, calc(100% - 8px) 0%, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0% calc(100% - 8px), 0% 8px);
+    --hex-cut-md: polygon(14px 0%, calc(100% - 14px) 0%, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0% calc(100% - 14px), 0% 14px);
+    --hex-cut-lg: polygon(22px 0%, calc(100% - 22px) 0%, 100% 22px, 100% calc(100% - 22px), calc(100% - 22px) 100%, 22px 100%, 0% calc(100% - 22px), 0% 22px);
+    --hex-badge: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    position: relative;
+    background-image: radial-gradient(var(--card-border) 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+
+/* Background Hollow Hexagons Container */
+.bg-hexagons {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.bg-hex {
+    position: absolute;
+    background: transparent;
+}
+
+.bg-hex svg {
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke-width: 5px;
+    stroke-linejoin: round;
+}
+
+/* Background Canvas for Bee Stitch Trails & Mini Bees */
+#beeCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* Header & Angular Navigation */
+.header {
+    width: 100%;
+    height: 80px;
+    background-color: var(--header-bg);
+    border-bottom: 3px solid #3D3227;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 24px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.brand-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+}
+
+.brand-section img.logo {
+    height: 52px;
+    width: auto;
+    transition: transform 0.2s ease;
+}
+
+.brand-section img.logo:hover {
+    transform: scale(1.05) rotate(-2deg);
+}
+
+.brand-title {
+    color: #FFFFFF;
+    font-size: 1.25rem;
+    font-weight: bold;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.brand-title::after {
+    content: "⬡";
+    color: var(--accent-amber);
+    font-size: 1.2rem;
+}
+
+/* Main Container */
+#mainContainer {
+    margin-top: 100px;
+    max-width: 950px;
+    width: 92%;
+    margin-left: auto;
+    margin-right: auto;
+    flex-grow: 1;
+    position: relative;
+    z-index: 10;
+    padding-bottom: 60px;
+}
+
+/* Game Hero / Header Card */
+.game-hero-wrapper {
+    background: var(--accent-amber);
+    padding: 3px;
+    clip-path: var(--hex-cut-lg);
+    margin-bottom: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.game-hero {
+    background-color: var(--card-bg);
+    clip-path: var(--hex-cut-lg);
+    padding: 24px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.game-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.game-title-group h1 {
+    font-size: 1.7rem;
+    font-weight: bold;
+    color: var(--text-dark);
+}
+
+.game-title-group p {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+}
+
+/* Controls Bar */
+.controls-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 2px dashed var(--card-border);
+    padding-top: 14px;
+}
+
+.controls-group-left {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.bit-selector-group, .mode-selector-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--text-muted);
+}
+
+.bit-btn, .mode-btn {
+    background: #EFE7DE;
+    color: var(--text-dark);
+    border: 1px solid var(--card-border);
+    padding: 5px 10px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+    clip-path: var(--hex-cut-sm);
+    transition: all 0.2s ease;
+}
+
+.bit-btn.active, .mode-btn.active {
+    background: var(--accent-amber);
+    color: #2C241D;
+    border-color: var(--accent-amber);
+}
+
+.bit-btn:hover:not(.active), .mode-btn:hover:not(.active) {
+    background: #E5D5C5;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-game {
+    background-color: var(--header-bg);
+    color: #FFFFFF;
+    border: none;
+    padding: 8px 14px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: bold;
+    clip-path: var(--hex-cut-sm);
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-game:hover {
+    background-color: var(--accent-amber);
+    color: #2C241D;
+    transform: translateY(-1px);
+}
+
+.btn-game.primary {
+    background-color: var(--accent-amber);
+    color: #2C241D;
+}
+
+.btn-game.primary:hover {
+    background-color: var(--accent-hover);
+}
+
+/* Legend Bar */
+.legend-bar {
+    display: flex;
+    gap: 16px;
+    background: #FFF9F0;
+    border: 1px solid var(--card-border);
+    padding: 8px 16px;
+    clip-path: var(--hex-cut-sm);
+    font-size: 0.82rem;
+    font-weight: 600;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    clip-path: var(--hex-badge);
+}
+
+/* Solved Groups Container */
+#solvedGroupsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.solved-group-card {
+    background: #E6F4EA;
+    border: 2px solid #34A853;
+    padding: 16px;
+    border-radius: 8px;
+    animation: fadeIn 0.4s ease;
+}
+
+.solved-group-card.red-herring-solved {
+    background: #FEE2E2;
+    border: 2px solid #DC2626;
+    animation: bounceReward 0.6s ease;
+}
+
+@keyframes bounceReward {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.03) rotate(1deg); }
+    60% { transform: scale(0.98) rotate(-1deg); }
+    100% { transform: scale(1); }
+}
+
+.solved-group-title {
+    font-weight: bold;
+    font-size: 0.95rem;
+    color: #137333;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.solved-group-card.red-herring-solved .solved-group-title {
+    color: #991B1B;
+}
+
+.solved-group-items {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.solved-tile {
+    background: #FFFFFF;
+    border: 1px solid #34A853;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.05rem;
+    border-radius: 6px;
+}
+
+.solved-group-card.red-herring-solved .solved-tile {
+    border-color: #DC2626;
+    color: #991B1B;
+}
+
+/* Main Tile Grid */
+.tile-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+    .tile-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Individual Tile */
+.game-tile {
+    background-color: var(--card-bg);
+    border: 3px solid var(--card-border);
+    border-radius: 8px; 
+    min-height: 105px;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+    position: relative;
+}
+
+.game-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+}
+
+.game-tile.selected {
+    background-color: #FEF3C7;
+    border-color: var(--accent-amber);
+    box-shadow: 0 0 0 3px rgba(230, 154, 16, 0.25);
+    transform: translateY(-3px);
+}
+
+/* Wrong Selection Animation Classes */
+.game-tile.shake-red {
+    animation: shakeAndRed 0.5s ease;
+    background-color: #FEE2E2 !important;
+    border-color: #EF4444 !important;
+}
+
+@keyframes shakeAndRed {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+    100% { transform: translateX(0); }
+}
+
+.tile-base-tag {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: #FFFFFF;
+}
+
+.tile-base-tag.denary { background-color: var(--base-denary); }
+.tile-base-tag.binary { background-color: var(--base-binary); }
+.tile-base-tag.hex    { background-color: var(--base-hex); }
+
+.tile-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    letter-spacing: 0.5px;
+    word-break: break-all;
+    text-align: center;
+}
+
+/* Bottom Panel Wrapper for Mistakes & Stats Cards */
+.bottom-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 30px;
+}
+
+@media (max-width: 768px) {
+    .bottom-panel {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Mistakes Card */
+.mistakes-card-wrapper {
+    background: #EF4444;
+    padding: 3px;
+    clip-path: var(--hex-cut-lg);
+}
+
+.mistakes-card {
+    background-color: var(--card-bg);
+    clip-path: var(--hex-cut-lg);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 100%;
+}
+
+.mistakes-card h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+.mistakes-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mistake-hex {
+    width: 24px;
+    height: 28px;
+    background-color: #E2E8F0;
+    clip-path: var(--hex-badge);
+    display: inline-block;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.mistake-hex.active {
+    background-color: #EF4444;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    transform: scale(1.08);
+}
+
+/* Persistent Stats Card */
+.stats-card-wrapper {
+    background: var(--header-bg);
+    padding: 3px;
+    clip-path: var(--hex-cut-lg);
+}
+
+.stats-card {
+    background-color: var(--card-bg);
+    clip-path: var(--hex-cut-lg);
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    text-align: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    height: 100%;
+}
+
+.stat-box h3 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.stat-box .stat-val {
+    font-size: 1.6rem;
+    font-weight: bold;
+    color: var(--header-bg);
+}
+
+/* Modal Overlay for Game Over / Victory */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(44, 36, 29, 0.65);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.modal-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    padding: 32px;
+    width: 90%;
+    max-width: 520px;
+    clip-path: var(--hex-cut-lg);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    text-align: center;
+    transform: translateY(20px);
+    transition: transform 0.25s ease;
+}
+
+.modal-overlay.show .modal-content {
+    transform: translateY(0);
+}
+
+.modal-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+.modal-body {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin-bottom: 24px;
+    line-height: 1.6;
+}
+
+.solution-breakdown {
+    text-align: left;
+    background: #FFF9F0;
+    border: 1px solid var(--card-border);
+    padding: 12px;
+    margin-bottom: 20px;
+    font-size: 0.88rem;
+    max-height: 180px;
+    overflow-y: auto;
+    border-radius: 6px;
+}
+
+footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--card-border);
+    position: relative;
+    z-index: 10;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+
+<body>
+
+<!-- Background Hexagons -->
+<div class="bg-hexagons" id="bgHexagonsContainer"></div>
+
+<!-- Background Canvas for Bees -->
+<canvas id="beeCanvas"></canvas>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<header class="header">
+    <div class="brand-section" onclick="location.href='https://www.mxbrooke.co.uk'" title="Mx Brooke's Education Resources">
+        <img src="https://www.mxbrooke.co.uk/images/logo.svg" alt="MXB Logo" class="logo">
+        <span class="brand-title">MxBrooke.co.uk</span>
+    </div>
+</header>
+
+<div id="mainContainer">
+
+    <!-- Game Hero Card -->
+    <div class="game-hero-wrapper">
+        <div class="game-hero">
+            <div class="game-header-top">
+                <div class="game-title-group">
+                    <h1>Base Connections ⬡</h1>
+                    <p>Find groups of 3 equivalent numbers across Denary, Binary, and Hexadecimal!</p>
+                </div>
+            </div>
+
+            <!-- Legend Bar -->
+            <div class="legend-bar" id="legendBar">
+                <div class="legend-item"><div class="legend-dot" style="background:var(--base-denary)"></div> Denary</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--base-binary)"></div> Binary</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--base-hex)"></div> Hex</div>
+                <div class="legend-item" id="legendRedHerring"><div class="legend-dot" style="background:var(--base-redherring)"></div> Red Herring Trap</div>
+            </div>
+
+            <!-- Controls & Bit Width Selector -->
+            <div class="controls-bar">
+                <div class="controls-group-left">
+                    <div class="bit-selector-group">
+                        <span>Bits:</span>
+                        <button class="bit-btn active" onclick="setBitWidth(4)">4</button>
+                        <button class="bit-btn" onclick="setBitWidth(5)">5</button>
+                        <button class="bit-btn" onclick="setBitWidth(6)">6</button>
+                        <button class="bit-btn" onclick="setBitWidth(7)">7</button>
+                        <button class="bit-btn" onclick="setBitWidth(8)">8</button>
+                    </div>
+
+                    <div class="mode-selector-group">
+                        <span>Red Herrings:</span>
+                        <button class="mode-btn active" onclick="setRedHerringMode(true)" id="modeWithBtn">On</button>
+                        <button class="mode-btn" onclick="setRedHerringMode(false)" id="modeWithoutBtn">Off</button>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn-game" onclick="shuffleTiles()">Shuffle</button>
+                    <button class="btn-game" onclick="deselectAll()">Deselect All</button>
+                    <button class="btn-game primary" onclick="submitSelection()">Submit</button>
+                    <button class="btn-game" onclick="newGame()">New Puzzle</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Solved Groups Container -->
+    <div id="solvedGroupsContainer"></div>
+
+    <!-- Main Tile Grid -->
+    <div class="tile-grid" id="tileGrid"></div>
+
+    <!-- Bottom Panel: Mistakes & Stats Cards -->
+    <div class="bottom-panel">
+        <div class="mistakes-card-wrapper">
+            <div class="mistakes-card">
+                <h3>Mistakes Remaining</h3>
+                <div class="mistakes-container" id="mistakeHexes">
+                    <span class="mistake-hex active"></span>
+                    <span class="mistake-hex active"></span>
+                    <span class="mistake-hex active"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-card-wrapper">
+            <div class="stats-card">
+                <div class="stat-box">
+                    <h3>Today's Connections</h3>
+                    <div class="stat-val" id="statToday">0</div>
+                </div>
+                <div class="stat-box">
+                    <h3>All-Time Connections</h3>
+                    <div class="stat-val" id="statAllTime">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal Dialog for Game Over / Victory -->
+<div class="modal-overlay" id="gameModal">
+    <div class="modal-content">
+        <h2 class="modal-title" id="modalTitle">Puzzle Complete!</h2>
+        <div class="modal-body" id="modalBody">Great job solving the number bases!</div>
+        <div id="modalSolutionContainer" style="display:none;">
+            <div class="solution-breakdown" id="modalSolutionBreakdown"></div>
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 16px;">
+            <button class="btn-game primary" onclick="newGame()">Play Again ⬡</button>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>Mx Brooke's Education Resources. Copy, Use and Modify as you Wish.</p>
+</footer>
+
+<script>
+// --- Game State & Configuration ---
+let currentBits = 4; // Default to 4 bits
+let includeRedHerrings = true; // Toggle mode for red herrings
+let maxMistakes = 3; // Exactly 3 mistakes allowed
+let mistakesMade = 0;
+let puzzleGroups = []; 
+let tilesOnBoard = []; 
+let selectedTileIds = [];
+let solvedGroupIndices = [];
+let solvedRedHerringsFound = 0; 
+
+// --- Persistent Stats ---
+function loadStats() {
+    const todayKey = 'mxbrooke_base_connections_date_' + new Date().toDateString();
+    let stats = JSON.parse(localStorage.getItem('mxbrooke_base_connections_stats') || '{"allTime":0, "today":0, "lastDate":""}');
+    if (stats.lastDate !== new Date().toDateString()) {
+        stats.today = 0;
+        stats.lastDate = new Date().toDateString();
+    }
+    document.getElementById('statToday').innerText = stats.today;
+    document.getElementById('statAllTime').innerText = stats.allTime;
+}
+
+function recordWinStats(groupsWon) {
+    const todayKey = new Date().toDateString();
+    let stats = JSON.parse(localStorage.getItem('mxbrooke_base_connections_stats') || '{"allTime":0, "today":0, "lastDate":""}');
+    if (stats.lastDate !== todayKey) {
+        stats.today = 0;
+        stats.lastDate = todayKey;
+    }
+    stats.today += groupsWon;
+    stats.allTime += groupsWon;
+    localStorage.setItem('mxbrooke_base_connections_stats', JSON.stringify(stats));
+    loadStats();
+}
+
+// --- Helper Functions ---
+function randInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+function formatValue(val, base, bits) {
+    if (base === 'denary') {
+        return val.toString(10);
+    } else if (base === 'binary') {
+        return val.toString(2).padStart(bits, '0');
+    } else if (base === 'hex') {
+        const hexDigits = bits <= 4 ? 1 : 2;
+        return val.toString(16).toUpperCase().padStart(hexDigits, '0');
+    }
+    return val.toString();
+}
+
+function baseShortLabel(base) {
+    if (base === 'denary') return 'Denary';
+    if (base === 'binary') return 'Binary';
+    if (base === 'hex') return 'Hex';
+    return base;
+}
+
+// --- Puzzle Generation ---
+function generatePuzzle() {
+    const maxVal = Math.pow(2, currentBits) - 1;
+    let availableValues = [];
+    for (let i = 0; i <= maxVal; i++) {
+        availableValues.push(i);
+    }
+    shuffleArray(availableValues);
+
+    puzzleGroups = [];
+    tilesOnBoard = [];
+    selectedTileIds = [];
+    solvedGroupIndices = [];
+    solvedRedHerringsFound = 0;
+    mistakesMade = 0;
+    updateMistakesUI();
+
+    let tileIdCounter = 1;
+    let redHerringTilesList = [];
+
+    for (let g = 0; g < 3; g++) {
+        if (availableValues.length === 0) break;
+        let targetVal = availableValues.pop();
+
+        let bases = ['denary', 'binary', 'hex'];
+        shuffleArray(bases);
+
+        let groupTiles = [];
+        for (let i = 0; i < 3; i++) {
+            let base = bases[i];
+            groupTiles.push({
+                id: tileIdCounter++,
+                value: targetVal,
+                formatted: formatValue(targetVal, base, currentBits),
+                base: base,
+                groupIndex: g,
+                isRedHerring: false
+            });
+        }
+
+        let groupObj = {
+            groupIndex: g,
+            targetValue: targetVal,
+            title: `Group ${g+1}: Value ${targetVal} (Denary: ${targetVal}, Bin: ${formatValue(targetVal, 'binary', currentBits)}, Hex: ${formatValue(targetVal, 'hex', currentBits)})`,
+            tiles: groupTiles
+        };
+
+        if (includeRedHerrings) {
+            let decoyVal = generateRedHerring(targetVal, maxVal);
+            let decoyBase = ['denary', 'binary', 'hex'][randInt(0, 2)];
+            let decoyTile = {
+                id: tileIdCounter++,
+                value: decoyVal,
+                formatted: formatValue(decoyVal, decoyBase, currentBits),
+                base: decoyBase,
+                groupIndex: g,
+                isRedHerring: true
+            };
+            groupObj.redHerringTile = decoyTile;
+            tilesOnBoard.push(decoyTile);
+            redHerringTilesList.push(decoyTile);
+        }
+
+        puzzleGroups.push(groupObj);
+        tilesOnBoard.push(...groupTiles);
+    }
+
+    if (includeRedHerrings) {
+        puzzleGroups.push({
+            groupIndex: 99,
+            isRedHerringGroup: true,
+            title: `Special Connection: The 3 Red Herring Traps Found!`,
+            tiles: redHerringTilesList
+        });
+    }
+
+    shuffleArray(tilesOnBoard);
+    renderGame();
+}
+
+function generateRedHerring(targetVal, maxVal) {
+    let options = [];
+    for (let b = 0; b < currentBits; b++) {
+        let flipped = targetVal ^ (1 << b);
+        if (flipped >= 0 && flipped <= maxVal && flipped !== targetVal) {
+            options.push(flipped);
+        }
+    }
+    if (targetVal + 1 <= maxVal) options.push(targetVal + 1);
+    if (targetVal - 1 >= 0) options.push(targetVal - 1);
+    if (targetVal + 2 <= maxVal) options.push(targetVal + 2);
+    if (targetVal - 2 >= 0) options.push(targetVal - 2);
+
+    options = options.filter(v => v !== targetVal);
+    if (options.length === 0) {
+        return targetVal === 0 ? 1 : targetVal - 1;
+    }
+    return options[randInt(0, options.length - 1)];
+}
+
+// --- Handlers ---
+function setBitWidth(bits) {
+    currentBits = bits;
+    document.querySelectorAll('.bit-btn').forEach(btn => {
+        if (parseInt(btn.innerText) === bits) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    newGame();
+}
+
+function setRedHerringMode(status) {
+    includeRedHerrings = status;
+    document.getElementById('modeWithBtn').classList.toggle('active', status);
+    document.getElementById('modeWithoutBtn').classList.toggle('active', !status);
+    document.getElementById('legendRedHerring').style.display = status ? 'flex' : 'none';
+    newGame();
+}
+
+function newGame() {
+    closeModal();
+    generatePuzzle();
+}
+
+// --- UI Rendering ---
+function renderGame() {
+    const solvedContainer = document.getElementById('solvedGroupsContainer');
+    solvedContainer.innerHTML = '';
+    
+    solvedGroupIndices.forEach(gIdx => {
+        let groupData = puzzleGroups.find(g => g.groupIndex === gIdx);
+        if (!groupData) return;
+        let div = document.createElement('div');
+        div.className = 'solved-group-card';
+        div.innerHTML = `
+            <div class="solved-group-title">
+                <span>⬡ Group Solved! Value: ${groupData.targetValue}</span>
+                <span>Denary: ${groupData.targetValue} | Bin: ${formatValue(groupData.targetValue, 'binary', currentBits)} | Hex: ${formatValue(groupData.targetValue, 'hex', currentBits)}</span>
+            </div>
+            <div class="solved-group-items">
+                ${groupData.tiles.map(t => `<div class="solved-tile"><span style="font-size:0.7rem; color:var(--text-muted); display:block;">${baseShortLabel(t.base)}</span>${t.formatted}</div>`).join('')}
+            </div>
+        `;
+        solvedContainer.appendChild(div);
+    });
+
+    if (solvedRedHerringsFound > 0) {
+        let rhGroup = puzzleGroups.find(g => g.isRedHerringGroup);
+        let div = document.createElement('div');
+        div.className = 'solved-group-card red-herring-solved';
+        div.innerHTML = `
+            <div class="solved-group-title">
+                <span>⭐ RED HERRING CONNECTION FOUND! 🎉</span>
+                <span>You spotted all 3 decoy traps!</span>
+            </div>
+            <div class="solved-group-items">
+                ${rhGroup.tiles.map(t => `<div class="solved-tile"><span style="font-size:0.7rem; color:#991B1B; display:block;">Trap (${baseShortLabel(t.base)})</span>${t.formatted}</div>`).join('')}
+            </div>
+        `;
+        solvedContainer.appendChild(div);
+    }
+
+    const grid = document.getElementById('tileGrid');
+    grid.innerHTML = '';
+
+    const activeTiles = tilesOnBoard.filter(t => {
+        if (solvedGroupIndices.includes(t.groupIndex)) return false;
+        if (solvedRedHerringsFound > 0 && t.isRedHerring) return false;
+        return true;
+    });
+
+    const targetSolvedCount = 3;
+    const requiredRedHerrings = includeRedHerrings ? 1 : 0;
+    const totalPossibleSolved = targetSolvedCount + requiredRedHerrings;
+    const currentSolvedCount = solvedGroupIndices.length + solvedRedHerringsFound;
+
+    if (activeTiles.length === 0 || currentSolvedCount >= totalPossibleSolved) {
+        triggerVictory();
+        return;
+    }
+
+    activeTiles.forEach(tile => {
+        let isSelected = selectedTileIds.includes(tile.id);
+        let tileEl = document.createElement('div');
+        tileEl.className = `game-tile ${isSelected ? 'selected' : ''}`;
+        tileEl.setAttribute('data-id', tile.id);
+        tileEl.onclick = () => toggleTileSelection(tile.id);
+
+        tileEl.innerHTML = `
+            <span class="tile-base-tag ${tile.base}">${baseShortLabel(tile.base)}</span>
+            <span class="tile-value">${tile.formatted}</span>
+        `;
+        grid.appendChild(tileEl);
+    });
+}
+
+function toggleTileSelection(id) {
+    if (selectedTileIds.includes(id)) {
+        selectedTileIds = selectedTileIds.filter(i => i !== id);
+    } else {
+        if (selectedTileIds.length >= 3) {
+            selectedTileIds.shift();
+        }
+        selectedTileIds.push(id);
+    }
+    renderGame();
+}
+
+function shuffleTiles() {
+    shuffleArray(tilesOnBoard);
+    renderGame();
+}
+
+function deselectAll() {
+    selectedTileIds = [];
+    renderGame();
+}
+
+function updateMistakesUI() {
+    const container = document.getElementById('mistakeHexes');
+    let html = '';
+    for (let i = 0; i < maxMistakes; i++) {
+        let activeClass = i < (maxMistakes - mistakesMade) ? 'active' : '';
+        html += `<span class="mistake-hex ${activeClass}"></span>`;
+    }
+    container.innerHTML = html;
+}
+
+// --- Submission & Validation ---
+function submitSelection() {
+    if (selectedTileIds.length !== 3) {
+        alert("Please select exactly 3 tiles to test a group connection.");
+        return;
+    }
+
+    const currentSelectedIds = [...selectedTileIds];
+    const selectedTiles = tilesOnBoard.filter(t => currentSelectedIds.includes(t.id));
+    
+    const firstVal = selectedTiles[0].value;
+    const allSameValue = selectedTiles.every(t => t.value === firstVal);
+    const uniqueBases = new Set(selectedTiles.map(t => t.base)).size === 3;
+
+    if (allSameValue && uniqueBases) {
+        let matchedGroup = puzzleGroups.find(g => g.targetValue === firstVal);
+        if (matchedGroup && !solvedGroupIndices.includes(matchedGroup.groupIndex)) {
+            solvedGroupIndices.push(matchedGroup.groupIndex);
+            selectedTileIds = [];
+            recordWinStats(1);
+            renderGame();
+            return;
+        }
+    }
+
+    if (includeRedHerrings) {
+        const allRedHerrings = selectedTiles.every(t => t.isRedHerring);
+        if (allRedHerrings && solvedRedHerringsFound === 0) {
+            solvedRedHerringsFound = 1;
+            selectedTileIds = [];
+            recordWinStats(1);
+            renderGame();
+            return;
+        }
+    }
+
+    let isOneAway = false;
+    puzzleGroups.forEach(group => {
+        if (!group.isRedHerringGroup && !solvedGroupIndices.includes(group.groupIndex)) {
+            let matchCount = selectedTiles.filter(t => t.value === group.targetValue).length;
+            if (matchCount === 2) {
+                isOneAway = true;
+            }
+        }
+    });
+
+    mistakesMade++;
+    updateMistakesUI();
+
+    currentSelectedIds.forEach(id => {
+        const el = document.querySelector(`.game-tile[data-id="${id}"]`);
+        if (el) {
+            el.classList.add('shake-red');
+        }
+    });
+
+    setTimeout(() => {
+        selectedTileIds = [];
+        renderGame();
+    }, 500);
+
+    if (mistakesMade >= maxMistakes) {
+        setTimeout(() => {
+            triggerGameOver();
+        }, 550);
+    }
+}
+
+// --- Modal End States ---
+function triggerVictory() {
+    document.getElementById('modalTitle').innerText = "Puzzle Solved! 🎉";
+    document.getElementById('modalBody').innerText = "Fantastic computing skills! You successfully completed the number base puzzle.";
+    document.getElementById('modalSolutionContainer').style.display = 'none';
+    document.getElementById('gameModal').classList.add('show');
+}
+
+function triggerGameOver() {
+    document.getElementById('modalTitle').innerText = "Game Over";
+    document.getElementById('modalBody').innerText = "You've run out of mistakes. Here is the solution breakdown:";
+    
+    let breakdownHtml = '';
+    puzzleGroups.forEach(g => {
+        if (!g.isRedHerringGroup) {
+            breakdownHtml += `<strong>${g.title}</strong><br>`;
+            g.tiles.forEach(t => {
+                breakdownHtml += `&bull; ${baseShortLabel(t.base)}: ${t.formatted}<br>`;
+            });
+            if (g.redHerringTile) {
+                breakdownHtml += `&bull; <span style="color:#DC2626;">Red Herring Trap</span>: ${g.redHerringTile.formatted} (${baseShortLabel(g.redHerringTile.base)})<br>`;
+            }
+            breakdownHtml += `<br>`;
+        }
+    });
+
+    document.getElementById('modalSolutionBreakdown').innerHTML = breakdownHtml;
+    document.getElementById('modalSolutionContainer').style.display = 'block';
+    document.getElementById('gameModal').classList.add('show');
+}
+
+function closeModal() {
+    document.getElementById('gameModal').classList.remove('show');
+}
+
+// --- Background Hexagons & Bee Animation ---
+function generateBackgroundHexagons() {
+    const container = document.getElementById('bgHexagonsContainer');
+    const palette = ['#E69A10', '#4A3E32', '#3D3227', '#6B5B4E'];
+    const count = 7;
+
+    for (let i = 0; i < count; i++) {
+        const hex = document.createElement('div');
+        hex.className = 'bg-hex';
+
+        const size = Math.floor(Math.random() * 160) + 120;
+        hex.style.width = size + 'px';
+        hex.style.height = (size * 1.14) + 'px';
+
+        const topPos = Math.random() * 85;
+        const leftPos = Math.random() * 90;
+        hex.style.top = topPos + '%';
+        hex.style.left = leftPos + '%';
+
+        const rotation = Math.random() * 60 - 30;
+        const opacity = (Math.random() * 0.15 + 0.08).toFixed(2);
+        hex.style.transform = `rotate(${rotation}deg)`;
+        hex.style.opacity = opacity;
+
+        const color = palette[Math.floor(Math.random() * palette.length)];
+        hex.innerHTML = `<svg viewBox="0 0 100 100"><polygon points="25,5 75,5 95,50 75,95 25,95 5,50" stroke="${color}" /></svg>`;
+        container.appendChild(hex);
+    }
+}
+
+let stitchParticles = [];
+let mouseX = -1000;
+let mouseY = -1000;
+
+window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+});
+
+window.addEventListener('mouseleave', () => {
+    mouseX = -1000;
+    mouseY = -1000;
+});
+
+const logoImage = new Image();
+logoImage.src = 'https://www.mxbrooke.co.uk/images/logo.svg';
+
+class StitchParticle {
+    constructor(x, y, angle) {
+        this.x = x;
+        this.y = y;
+        this.angle = angle;
+        this.length = 9; 
+        this.maxLife = 350; 
+        this.life = this.maxLife;
+    }
+
+    update() {
+        this.life--;
+    }
+
+    draw(ctx) {
+        const alpha = Math.max(0, this.life / this.maxLife) * 0.45;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+
+        ctx.beginPath();
+        ctx.moveTo(-this.length / 2, 0);
+        ctx.lineTo(this.length / 2, 0);
+
+        ctx.strokeStyle = `rgba(74, 62, 50, ${alpha})`;
+        ctx.lineWidth = 2.0;
+        ctx.lineCap = 'square';
+        ctx.stroke();
+        ctx.restore();
+    }
+}
+
+class FlyingLogoBee {
+    constructor(canvasWidth, canvasHeight) {
+        this.reset(canvasWidth, canvasHeight);
+    }
+
+    reset(w, h) {
+        this.x = Math.random() * w;
+        this.y = Math.random() * h;
+        this.vx = (Math.random() - 0.5) * 1.5;
+        this.vy = (Math.random() - 0.5) * 1.5;
+        this.targetSize = 32; 
+        this.angle = Math.random() * Math.PI * 2;
+        this.distanceSinceLastStitch = 0;
+        this.stitchInterval = 28;
+    }
+
+    update(w, h) {
+        const oldX = this.x;
+        const oldY = this.y;
+
+        const dx = mouseX - this.x;
+        const dy = mouseY - this.y;
+        const distToCursor = Math.hypot(dx, dy);
+        const attractionRadius = 220;
+
+        if (distToCursor < attractionRadius && distToCursor > 25) {
+            const angleToCursor = Math.atan2(dy, dx);
+            this.vx += Math.cos(angleToCursor) * 0.12;
+            this.vy += Math.sin(angleToCursor) * 0.12;
+        } else {
+            this.angle += (Math.random() - 0.5) * 0.2;
+            this.vx += Math.cos(this.angle) * 0.08;
+            this.vy += Math.sin(this.angle) * 0.08;
+        }
+
+        const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        const maxSpeed = 1.9;
+        if (speed > maxSpeed) {
+            this.vx = (this.vx / speed) * maxSpeed;
+            this.vy = (this.vy / speed) * maxSpeed;
+        }
+
+        this.x += this.vx;
+        this.y += this.vy;
+
+        if (this.x < -40) this.x = w + 40;
+        if (this.x > w + 40) this.x = -40;
+        if (this.y < -40) this.y = h + 40;
+        if (this.y > h + 40) this.y = -40;
+
+        const distMoved = Math.hypot(this.x - oldX, this.y - oldY);
+        this.distanceSinceLastStitch += distMoved;
+
+        if (this.distanceSinceLastStitch >= this.stitchInterval) {
+            this.distanceSinceLastStitch = 0;
+            const flightAngle = Math.atan2(this.vy, this.vx);
+            const offset = this.targetSize * 0.45;
+            const trailX = this.x - Math.cos(flightAngle) * offset;
+            const trailY = this.y - Math.sin(flightAngle) * offset;
+            stitchParticles.push(new StitchParticle(trailX, trailY, flightAngle));
+        }
+    }
+
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        const flightAngle = Math.atan2(this.vy, this.vx);
+        const rotationOffset = Math.PI / 2;
+        const wiggle = Math.sin(Date.now() * 0.01) * 0.08;
+        ctx.rotate(flightAngle + rotationOffset + wiggle);
+
+        ctx.beginPath();
+        ctx.arc(0, 0, this.targetSize * 0.45, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(230, 154, 16, 0.12)";
+        ctx.fill();
+
+        if (logoImage.complete && logoImage.naturalWidth > 0 && logoImage.naturalHeight > 0) {
+            const aspect = logoImage.naturalWidth / logoImage.naturalHeight;
+            let drawWidth = this.targetSize;
+            let drawHeight = this.targetSize;
+
+            if (aspect > 1) {
+                drawHeight = this.targetSize / aspect;
+            } else {
+                drawWidth = this.targetSize * aspect;
+            }
+
+            ctx.drawImage(logoImage, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+        } else {
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                const a = (Math.PI / 3) * i;
+                const hx = Math.cos(a) * (this.targetSize / 2);
+                const hy = Math.sin(a) * (this.targetSize / 2);
+                if (i === 0) ctx.moveTo(hx, hy);
+                else ctx.lineTo(hx, hy);
+            }
+            ctx.closePath();
+            ctx.fillStyle = "#E69A10";
+            ctx.fill();
+            ctx.strokeStyle = "#4A3E32";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+}
+
+const canvas = document.getElementById('beeCanvas');
+const ctx = canvas.getContext('2d');
+let bees = [];
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+function initBees() {
+    resizeCanvas();
+    bees = [];
+    stitchParticles = [];
+    const count = Math.min(8, Math.max(4, Math.floor(window.innerWidth / 220)));
+    for (let i = 0; i < count; i++) {
+        bees.push(new FlyingLogoBee(canvas.width, canvas.height));
+    }
+}
+
+function animateBees() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = stitchParticles.length - 1; i >= 0; i--) {
+        const p = stitchParticles[i];
+        p.update();
+        if (p.life <= 0) {
+            stitchParticles.splice(i, 1);
+        } else {
+            p.draw(ctx);
+        }
+    }
+
+    bees.forEach(bee => {
+        bee.update(canvas.width, canvas.height);
+        bee.draw(ctx);
+    });
+
+    requestAnimationFrame(animateBees);
+}
+
+window.addEventListener('resize', resizeCanvas);
+
+window.onload = function() {
+    generateBackgroundHexagons();
+    initBees();
+    animateBees();
+    loadStats();
+    generatePuzzle();
+};
+</script>
+
+</body>
+</html>
